@@ -24,3 +24,7 @@ go.work.sum
 # env file
 .env
 music-connect/src/firebase/firebase.ts
+
+# remove node modules folder
+
+node_modules/
