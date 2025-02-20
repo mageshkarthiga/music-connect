@@ -118,7 +118,7 @@ const toggleMode = () => {
         class="rounded-[56px] p-[0.3rem] bg-gradient-to-b from-[var(--primary-color)] via-transparent to-transparent w-full"
       >
         <div
-          class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20 rounded-[53px]"
+          class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 md:w-[30rem] lg:w-[35rem] sm:px-20 rounded-[53px]"
         >
           <div class="w-full flex flex-col items-center">
             <img
@@ -162,7 +162,7 @@ const toggleMode = () => {
                 id="email1"
                 type="text"
                 placeholder="Email address"
-                class="w-full md:w-[30rem] mb-8"
+                class="w-full mb-8"
                 v-model="email"
               />
 
