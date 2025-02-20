@@ -1,5 +1,4 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
 import { ref } from "vue";
 import {
   applyPreset,
@@ -7,7 +6,8 @@ import {
   surfaces,
   primaryColors,
   presets,
-} from "./AppConfig";
+  useLayout,
+} from "@/layout/composables/stateConfig";
 const { layoutConfig, isDarkTheme } = useLayout();
 
 const preset = ref(layoutConfig.preset);
