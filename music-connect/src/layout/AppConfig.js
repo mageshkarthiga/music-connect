@@ -1,6 +1,5 @@
 import { layoutConfig } from "@/layout/composables/layout";
 import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
-// const { layoutConfig } = useLayout();
 import Aura from "@primevue/themes/aura";
 import Lara from "@primevue/themes/lara";
 import Nora from "@primevue/themes/nora";
@@ -402,13 +401,11 @@ export const surfaces = ref([
     },
   },
 ]);
-const presets = {
+export const presets = {
   Aura,
   Lara,
   Nora,
 };
-// const preset = ref(layoutConfig.preset);
-
 function getPresetExt() {
   const color = primaryColors.value.find(
     (c) => c.name === layoutConfig.primary
