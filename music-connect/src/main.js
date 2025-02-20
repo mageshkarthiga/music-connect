@@ -8,7 +8,7 @@ import ConfirmationService from "primevue/confirmationservice";
 import ToastService from "primevue/toastservice";
 import { initLayoutFromFirestore } from "@/layout/composables/layoutController";
 import "@/assets/styles.scss";
-await initLayoutFromFirestore();
+
 const app = createApp(App);
 
 app.use(router);
