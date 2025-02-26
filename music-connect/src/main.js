@@ -33,6 +33,11 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     await initLayoutFromFirestore(user.uid);
     watchLayoutChanges(user.uid);
+  } else {
+    router.replace("/auth/login");
   }
-  app.mount("#app");
+
+  if (!app._instance) {
+    app.mount("#app");
+  }
 });
