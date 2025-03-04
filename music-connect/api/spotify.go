@@ -11,8 +11,8 @@ import (
 func main() {
 	// to authenticate and get token
 	authConfig := &clientcredentials.Config{
-		ClientID:     "f2726120b049453a9af9dbf0551add00",
-		ClientSecret: "47f81105840d46c4b9938e33cb976a3d",
+		ClientID:     "",
+		ClientSecret: "",
 		TokenURL:     spotify.TokenURL,
 	}
 	accessToken, err := authConfig.Token(context.Background())
