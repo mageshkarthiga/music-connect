@@ -54,7 +54,7 @@ const signUp = async () => {
   authError.value = "";
   try {
     await createUserWithEmailAndPassword(auth, email.value, password.value);
-    router.push("/");
+    router.push("/createaccount");
   } catch (error) {
     console.error("Sign Up error:", error);
     switch (error.code) {
@@ -182,7 +182,7 @@ const toggleMode = () => {
                 :feedback="false"
               />
 
-              <Message v-if="authError" closable severity="error" class="mb-8">
+              <Message v-if="authError" severity="error" class="mb-8">
                 {{ authError }}
               </Message>
               <Button

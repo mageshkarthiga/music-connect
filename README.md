@@ -9,3 +9,17 @@ cd music-connect
 npm install
 npm run dev
 ```
+
+## Backend
+
+```bash
+cd backend
+```
+
+### Location autofill service
+
+```bash
+cd map
+go mod tidy
+go run filename.go
+```
