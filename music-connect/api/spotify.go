@@ -3,16 +3,29 @@ package main
 import (
 	"context"
 	"fmt"
-
+	"os"
+	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+		return
+	}
+
+	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
+	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
+	if clientId == "" || clientSecret == "" {
+		fmt.Println("Spotify client id or client secret not found")
+		return
+	}
 	// to authenticate and get token
 	authConfig := &clientcredentials.Config{
-		ClientID:     "",
-		ClientSecret: "",
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
 		TokenURL:     spotify.TokenURL,
 	}
 	accessToken, err := authConfig.Token(context.Background())
