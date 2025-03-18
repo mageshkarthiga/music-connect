@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-
 	"gorm.io/driver/postgres" // ORM for Golang
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"os"
+	"github.com/joho/godotenv"
 )
 
 // definition of table structure starts here
@@ -75,10 +76,22 @@ type Playlist struct {
 // definition of table structure ends here
 
 func main() {
-	dsn := "host=localhost user=postgres dbname=music_connect port=5432" // please change your username and include password (if you have one)
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+		return
+	}
+
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		fmt.Println("DB_PASSWORD environment variable is not set")
+		return
+	}
+
+	dsn := fmt.Sprintf("postgresql://postgres:%s@db.kzxuobrnlppliqiwwgvu.supabase.co:5432/postgres",dbPassword) 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
-	}) // open DB connection to postgres via gorm
+	}) // open DB connection to supabase postgres via gorm
 	if err != nil {
 		fmt.Println("Error connecting to database ⚠️", err)
 		return
@@ -86,18 +99,18 @@ func main() {
 	fmt.Println("Successfully connected to the database! ✅", db)
 
 	// Check if tables exist and drop if they do
-    tables := []interface{}{&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{}}
-    for _, table := range tables {
-        if db.Migrator().HasTable(table) {
-            db.Migrator().DropTable(table)
-        }
-    }
+	tables := []interface{}{&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{}}
+	for _, table := range tables {
+		if db.Migrator().HasTable(table) {
+			db.Migrator().DropTable(table)
+		}
+	}
 
 	// Commit tables to DB
 	err = db.AutoMigrate(&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{})
-    if err != nil {
-        fmt.Println("Error during migration ⚠️", err)
-        return
-    }
+	if err != nil {
+		fmt.Println("Error during migration ⚠️", err)
+		return
+	}
 
 }
