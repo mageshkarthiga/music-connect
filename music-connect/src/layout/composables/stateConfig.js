@@ -572,20 +572,19 @@ export const toggleMenu = () => {
   }
 };
 
-export function useLayout() {
+export const toggleDarkMode = () => {
+  if (!document.startViewTransition) {
+    executeDarkModeToggle();
+    return;
+  }
   const executeDarkModeToggle = () => {
     layoutConfig.darkTheme = !layoutConfig.darkTheme;
     document.documentElement.classList.toggle("app-dark");
   };
+  document.startViewTransition(() => executeDarkModeToggle());
+};
 
-  const toggleDarkMode = () => {
-    if (!document.startViewTransition) {
-      executeDarkModeToggle();
-      return;
-    }
-    document.startViewTransition(() => executeDarkModeToggle());
-  };
-
+export function useLayout() {
   const isSidebarActive = computed(
     () => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive
   );
@@ -601,6 +600,5 @@ export function useLayout() {
     isDarkTheme,
     getPrimary,
     getSurface,
-    toggleDarkMode,
   };
 }

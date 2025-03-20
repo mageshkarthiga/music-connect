@@ -8,8 +8,9 @@ import {
   menuModeOptions,
   presetOptions,
   layoutConfig,
+  toggleMenu,
 } from "@/layout/composables/stateConfig";
-const { isDarkTheme, toggleMenu } = useLayout();
+const { isDarkTheme } = useLayout();
 </script>
 
 <template>
