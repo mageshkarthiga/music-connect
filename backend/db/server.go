@@ -25,7 +25,7 @@ func main() {
 		log.Fatal("DB_PASSWORD environment variable is not set")
 	}
 
-	dsn := fmt.Sprintf("postgresql://postgres:%s@db.kzxuobrnlppliqiwwgvu.supabase.co:5432/postgres", dbPassword)
+	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres", dbPassword)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
