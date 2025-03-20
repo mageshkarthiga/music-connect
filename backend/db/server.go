@@ -1,14 +1,46 @@
+// backend/db/server.go
 package main
 
 import (
-	"net/http"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"music-connect/db/controllers"
 )
 
+
+
+
 func main() {
-	e := echo.New() // new instance of Echo server
-	e.GET("/", func (c echo.Context) error { // context of API endpoint
-		return c.String(http.StatusOK, "Hello, World")
+	_ = godotenv.Load("../../.env")
+
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		log.Fatal("DB_PASSWORD environment variable is not set")
+	}
+
+	dsn := fmt.Sprintf("postgresql://postgres:%s@db.kzxuobrnlppliqiwwgvu.supabase.co:5432/postgres", dbPassword)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
 	})
-	e.Logger.Fatal(e.Start(":1323")) // starts the server on the specified port number
-} 
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+
+	e := echo.New()
+
+	userController := controllers.NewUserController(db)
+	e.POST("/users", userController.CreateUser)
+	e.GET("/users", userController.GetAllUsers)
+	e.GET("/users/:id", userController.GetUser)
+	e.PUT("/users/:id", userController.UpdateUser)
+	e.DELETE("/users/:id", userController.DeleteUser)
+
+	e.Logger.Fatal(e.Start(":1323"))
+}
