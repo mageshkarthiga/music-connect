@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres" // ORM for Golang
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"os"
-	"github.com/joho/godotenv"
 )
 
 // definition of table structure starts here
@@ -19,10 +19,11 @@ type User struct {
 	UserName     string
 	Events       []*Event `gorm:"many2many:user_events;joinForeignKey:UserID;joinReferences:EventID"`
 	Tracks       []*Track `gorm:"many2many:music_preferences;joinForeignKey:UserID;joinReferences:TrackID"`
+	Devices      []Device
 }
 
 type Event struct {
-	EventID          uint   `gorm:"primaryKey;autoIncrement"`
+	EventID          uint `gorm:"primaryKey;autoIncrement"`
 	EventName        string
 	EventDescription string
 	EventURL         string
@@ -73,6 +74,12 @@ type Playlist struct {
 	Tracks       []*Track `gorm:"many2many:playlist_tracks;joinForeignKey:PlaylistID;joinReferences:TrackID"`
 }
 
+type Device struct {
+	DeviceID   uint `gorm:"primaryKey;autoIncrement"`
+	DeviceName string
+	DeviceUUID string `gorm:"uniqueIndex"`
+	UserID     uint 
+}
 
 // definition of table structure ends here
 
@@ -89,7 +96,7 @@ func main() {
 		return
 	}
 
-	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",dbPassword) 
+	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres", dbPassword)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	}) // open DB connection to supabase postgres via gorm
@@ -110,7 +117,7 @@ func main() {
 		}
 	}
 
-	tables := []interface{}{&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{}}
+	tables := []interface{}{&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{}, &Device{}}
 	for _, table := range tables {
 		if db.Migrator().HasTable(table) {
 			db.Migrator().DropTable(table)
@@ -118,7 +125,7 @@ func main() {
 	}
 
 	// Commit tables to DB
-	err = db.AutoMigrate(&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{})
+	err = db.AutoMigrate(&User{}, &Event{}, &Attraction{}, &Venue{}, &Artist{}, &Track{}, &Playlist{}, &Device{})
 	if err != nil {
 		fmt.Println("Error during migration ⚠️", err)
 		return
