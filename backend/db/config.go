@@ -67,5 +67,6 @@ func main() {
 		fmt.Println("Error during migration ⚠️", err)
 		return
 	}
+	
 
 }

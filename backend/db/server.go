@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"music-connect/db/controllers"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 
@@ -34,6 +35,11 @@ func main() {
 	}
 
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+	}))
+	//TODO: Change this before deployment
 
 	userController := controllers.NewUserController(db)
 	e.POST("/users", userController.CreateUser)

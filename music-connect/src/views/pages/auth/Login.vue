@@ -54,7 +54,8 @@ const signUp = async () => {
   authError.value = "";
   try {
     await createUserWithEmailAndPassword(auth, email.value, password.value);
-    router.push("/createaccount");
+
+    router.push({ path: "/createaccount", query: { email: email.value } });
   } catch (error) {
     console.error("Sign Up error:", error);
     switch (error.code) {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import PlaceAutoComplete from "@/components/map/PlaceAutoComplete.vue";
 import FileUpload from "primevue/fileupload";
 import InputGroup from "primevue/inputgroup";
@@ -9,7 +9,16 @@ import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import FloatingConfigurator from "@/components/FloatingConfigurator.vue";
 import { useLayout } from "@/layout/composables/stateConfig";
+import userService from "@/service/UserService";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import { storage } from "@/firebase/firebase";
+import { getAuth } from "firebase/auth";
 
+const route = useRoute();
 const { isDarkTheme } = useLayout();
 const router = useRouter();
 
@@ -18,7 +27,6 @@ const defaultProfilePhotoUrl = computed(() =>
     ? "/demo/images/person_dark.svg"
     : "/demo/images/person_light.svg"
 );
-
 const username = ref("");
 const phoneNumber = ref("");
 const profilePhoto = ref(null);
@@ -43,7 +51,23 @@ const handlePlaceSelected = (place) => {
   selectedLocation.value = place;
 };
 
-const handleSubmit = () => {
+const uploadProfilePhoto = async (file) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    console.error("User not found.");
+    router.push("/auth/login");
+  }
+  const uid = user.uid;
+  const filePath = `profile_photos/${uid}/${file.name}`;
+  const fileRef = storageRef(storage, filePath);
+
+  await uploadBytes(fileRef, file);
+  return await getDownloadURL(fileRef);
+};
+
+const handleSubmit = async () => {
   const errors = [];
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
@@ -63,8 +87,32 @@ const handleSubmit = () => {
       : "Default image used",
   });
 
-  // TODO: Upload user profile picture to object store
-  // TODO: Save user data to DB
+  const email = route.query.email || "";
+
+  if (!email) {
+    console.error("Email not found in query params.");
+    router.push("/auth/login");
+    return;
+  }
+  let photoURL = "";
+
+  try {
+    if (profilePhoto.value) {
+      photoURL = await uploadProfilePhoto(profilePhoto.value);
+      console.log("Profile photo uploaded successfully.");
+      console.log("Photo URL:", photoURL);
+    }
+
+    await userService.createUser({
+      userName: username.value,
+      phoneNumber: phoneNumber.value,
+      location: selectedLocation.value,
+      emailAddress: email,
+      profilePhotoUrl: photoURL,
+    });
+  } catch (error) {
+    ("CREATE USER FAILED");
+  }
 
   router.push("/");
 };

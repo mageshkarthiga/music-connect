@@ -62,6 +62,7 @@ func (uc *UserController) UpdateUser(c echo.Context) error {
 	user.EmailAddress = updates.EmailAddress
 	user.Location = updates.Location
 	user.UserName = updates.UserName
+	user.ProfilePhotoUrl = updates.ProfilePhotoUrl
 
 	if err := uc.DB.Save(&user).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
