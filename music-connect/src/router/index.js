@@ -90,6 +90,11 @@ const router = createRouter({
           component: () => import("@/views/uikit/TimelineDoc.vue"),
         },
         {
+          path: "/uikit/map",
+          name: "map",
+          component: () => import("@/views/uikit/Map.vue"),
+        },
+        {
           path: "/pages/crud",
           name: "crud",
           component: () => import("@/views/pages/Crud.vue"),
@@ -98,6 +103,11 @@ const router = createRouter({
           path: "/documentation",
           name: "documentation",
           component: () => import("@/views/pages/Documentation.vue"),
+        },
+        {
+          path: "/profile",
+          name: "profile",
+          component: () => import("@/views/pages/Profile.vue"),
         },
       ],
     },
@@ -132,6 +142,11 @@ const router = createRouter({
       name: "createaccount",
       component: () => import("@/views/pages/CreateAccount.vue"),
     },
+    // {
+    //   path: "/profile",
+    //   name: "profile",
+    //   component: () => import("@/views/pages/Profile.vue"),
+    // },
   ],
 });
 

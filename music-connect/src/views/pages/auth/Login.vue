@@ -53,9 +53,17 @@ const login = async () => {
 const signUp = async () => {
   authError.value = "";
   try {
-    await createUserWithEmailAndPassword(auth, email.value, password.value);
+    const user = await createUserWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
+    console.log(user);
 
-    router.push({ path: "/createaccount", query: { email: email.value } });
+    router.push({
+      path: "/createaccount",
+      query: { email: email.value, fb_id: user.user.uid },
+    });
   } catch (error) {
     console.error("Sign Up error:", error);
     switch (error.code) {

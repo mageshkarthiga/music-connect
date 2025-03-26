@@ -39,6 +39,7 @@ const model = ref([
         to: "/uikit/timeline",
       },
       { label: "Misc", icon: "pi pi-fw pi-circle", to: "/uikit/misc" },
+      { label: "Map", icon: "pi pi-fw pi-map", to: "/uikit/map" },
     ],
   },
   {
@@ -91,6 +92,11 @@ const model = ref([
         label: "Create Account",
         icon: "pi pi-fw pi-user-plus",
         to: "/createaccount",
+      },
+      {
+        label: "Profile",
+        icon: "pi pi-fw pi-user",
+        to: "/profile",
       },
     ],
   },

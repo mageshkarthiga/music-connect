@@ -12,7 +12,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"music-connect/db/controllers"
+	// "music-connect/db/models"
 	"github.com/labstack/echo/v4/middleware"
+
 )
 
 
@@ -26,13 +28,15 @@ func main() {
 		log.Fatal("DB_PASSWORD environment variable is not set")
 	}
 
-	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres", dbPassword)
+	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=describe", dbPassword)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Info),		
 	})
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
+
+	
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -47,6 +51,7 @@ func main() {
 	e.GET("/users/:id", userController.GetUser)
 	e.PUT("/users/:id", userController.UpdateUser)
 	e.DELETE("/users/:id", userController.DeleteUser)
+	e.GET("/users/firebase/:uid", userController.GetUserByFirebaseUID)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

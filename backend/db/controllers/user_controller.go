@@ -1,4 +1,4 @@
-// backend/db/controllers/user_controller.go
+
 package controllers
 
 import (
@@ -76,4 +76,13 @@ func (uc *UserController) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (uc *UserController) GetUserByFirebaseUID(c echo.Context) error {
+	uid := c.Param("uid")
+	var user models.User
+	if err := uc.DB.Where("firebase_uid = ?", uid).First(&user).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	}
+	return c.JSON(http.StatusOK, user)
 }

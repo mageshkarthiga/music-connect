@@ -5,8 +5,12 @@ import {
   toggleDarkMode,
 } from "@/layout/composables/stateConfig";
 import AppConfigurator from "./AppConfigurator.vue";
-
+import { useRoute, useRouter } from "vue-router";
 const { isDarkTheme } = useLayout();
+const router = useRouter();
+function goToProfile() {
+  router.push("/profile");
+}
 </script>
 
 <template>
@@ -106,7 +110,11 @@ const { isDarkTheme } = useLayout();
             <i class="pi pi-inbox"></i>
             <span>Messages</span>
           </button>
-          <button type="button" class="layout-topbar-action">
+          <button
+            type="button"
+            class="layout-topbar-action"
+            @click="goToProfile"
+          >
             <i class="pi pi-user"></i>
             <span>Profile</span>
           </button>

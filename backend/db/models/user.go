@@ -3,6 +3,7 @@ package models
 
 type User struct {
 	UserID       uint   `gorm:"primaryKey;autoIncrement"`
+	FirebaseUID  string `gorm:"size:128;uniqueIndex"`
 	PhoneNumber  string `gorm:"size:11;unique"`
 	EmailAddress string
 	Location     string

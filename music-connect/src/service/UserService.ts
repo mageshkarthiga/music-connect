@@ -36,4 +36,11 @@ export default {
   async deleteUser(id: number) {
     await axios.delete(`${USER_URL}/${id}`);
   },
+
+  async getUserByFirebaseUID(firebaseUID: string) {
+    const response = await axios.get<User>(
+      `${USER_URL}/firebase/${firebaseUID}`
+    );
+    return response.data;
+  },
 };

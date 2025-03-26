@@ -69,6 +69,18 @@ const uploadProfilePhoto = async (file) => {
 
 const handleSubmit = async () => {
   const errors = [];
+  const email = route.query.email || "";
+  const fb_id = route.query.fb_id || "";
+  if (!email) {
+    console.error("Email not found in query params.");
+    router.push("/auth/login");
+    return;
+  }
+  if (!fb_id) {
+    console.error("firebase uid not found in query params.");
+    router.push("/auth/login");
+    return;
+  }
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
   if (!selectedLocation.value) errors.push("Location is not selected.");
@@ -87,13 +99,6 @@ const handleSubmit = async () => {
       : "Default image used",
   });
 
-  const email = route.query.email || "";
-
-  if (!email) {
-    console.error("Email not found in query params.");
-    router.push("/auth/login");
-    return;
-  }
   let photoURL = "";
 
   try {
@@ -109,6 +114,7 @@ const handleSubmit = async () => {
       location: selectedLocation.value,
       emailAddress: email,
       profilePhotoUrl: photoURL,
+      firebaseUID: fb_id,
     });
   } catch (error) {
     ("CREATE USER FAILED");
