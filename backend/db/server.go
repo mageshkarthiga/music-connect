@@ -27,9 +27,13 @@ func main() {
 		log.Fatal("DB_PASSWORD environment variable is not set")
 	}
 
-	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=describe", dbPassword)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),		
+	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=off", dbPassword)
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn,
+		PreferSimpleProtocol: true, // also disables prep statements at protocol level
+	}), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+		PrepareStmt: false,
 	})
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)

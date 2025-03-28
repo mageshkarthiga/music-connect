@@ -3,11 +3,23 @@
     <Button label="Load Map" icon="pi pi-map" @click="initMap" class="mb-3" />
     <div ref="map" class="map-container" v-show="mapLoaded"></div>
 
-    <ul>
-      <li v-for="(loc, userId) in userLocations" :key="userId">
-        {{ userId }}: {{ loc.lat }}, {{ loc.lon }}
-      </li>
-    </ul>
+    <Popover ref="overlay" :dismissable="true" style="width: 450px">
+      <Card class="w-72">
+        <template #header>
+          <img
+            :src="cardData.image"
+            alt="Profile"
+            class="w-full h-32 object-cover"
+          />
+        </template>
+        <template #title>
+          {{ cardData.title }}
+        </template>
+        <template #content>
+          <p>{{ cardData.description }}</p>
+        </template>
+      </Card>
+    </Popover>
   </div>
 </template>
 
@@ -19,45 +31,75 @@ import { getAllUserLocations } from "@/firebase/locationController";
 const map = ref(null);
 const mapLoaded = ref(false);
 const userLocations = ref({});
+const overlay = ref();
+const cardData = ref({ title: "", description: "", image: "" });
 let mapInstance;
 
-// Google Maps loader
 const loader = new Loader({
-  apiKey: process.env.GOOGLE_API_KEY, // Replace with your actual API key
+  apiKey: process.env.GOOGLE_API_KEY,
   version: "weekly",
   libraries: ["maps", "marker"],
 });
 
-// Static landmarks
 const mockLandmarks = [
-  { name: "SMU", lat: 1.28944, lng: 103.849983 },
-  { name: "Springleaf Prata", lat: 1.401419, lng: 103.824061 },
-  { name: "Cafe", lat: 1.355, lng: 103.812 },
+  {
+    name: "SMU",
+    lat: 1.28944,
+    lng: 103.849983,
+    description: "Singapore Management University – heart of city campus life.",
+    image: "/demo/images/smu.jpg",
+  },
+  {
+    name: "Springleaf Prata",
+    lat: 1.401419,
+    lng: 103.824061,
+    description: "Late-night favourite for crispy prata and curry.",
+    image: "/demo/images/prata.jpg",
+  },
+  {
+    name: "Tiong Bahru Bakery",
+    lat: 1.2842,
+    lng: 103.828,
+    description: "Famed for its buttery croissants and rustic charm.",
+    image: "/demo/images/bakery.jpg",
+  },
+  {
+    name: "Marina Bay Sands",
+    lat: 1.2834,
+    lng: 103.8607,
+    description: "Iconic hotel with infinity pool and rooftop views.",
+    image: "/demo/images/mbs.jpg",
+  },
+  {
+    name: "HortPark",
+    lat: 1.2753,
+    lng: 103.7996,
+    description: "Nature-lovers' hub for walks and gardening.",
+    image: "/demo/images/hortpark.jpg",
+  },
+  {
+    name: "Cafe",
+    lat: 1.355,
+    lng: 103.812,
+    description: "Hidden gem for quiet study and rich espresso.",
+    image: "/demo/images/cafe.jpg",
+  },
 ];
-
-const person_icon = document.createElement("img");
-person_icon.src = "/demo/images/person_light.svg"; // or any valid path or URL
-person_icon.style.width = "40px";
-person_icon.style.height = "40px";
-
-const other_people_icon = document.createElement("img");
-other_people_icon.src = "/demo/images/person_dark.svg"; // or any valid path or URL
-other_people_icon.style.width = "40px";
-other_people_icon.style.height = "40px";
 
 onMounted(async () => {
   userLocations.value = await getAllUserLocations();
-  console.log("User Locations:", userLocations.value);
 });
+
+function showPopover(event, title, description, image) {
+  cardData.value = { title, description, image };
+  overlay.value.show(event);
+}
 
 async function initMap() {
   try {
     await loader.load();
 
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
+    if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -72,42 +114,67 @@ async function initMap() {
           mapTypeId: "roadmap",
           mapId: "DEMO_MAP_ID",
         });
+        function createMarkerImage(src) {
+          const img = document.createElement("img");
+          img.src = src;
+          img.style.width = "40px";
+          img.style.height = "40px";
+          return img;
+        }
 
-        // You
-        new google.maps.marker.AdvancedMarkerElement({
+        const youMarker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
           position: userLocation,
           title: "You are here",
-          content: person_icon,
+          content: createMarkerImage("/demo/images/person_light.svg"),
         });
 
-        // Landmarks
+        youMarker.addListener("click", (e) => {
+          showPopover(
+            e.domEvent,
+            "You",
+            "This is your current location.",
+            "/demo/images/person_light.svg"
+          );
+        });
+
         mockLandmarks.forEach((loc) => {
-          new google.maps.marker.AdvancedMarkerElement({
+          const marker = new google.maps.marker.AdvancedMarkerElement({
             map: mapInstance,
             position: { lat: loc.lat, lng: loc.lng },
             title: `Landmark: ${loc.name}`,
+            content: createMarkerImage("/demo/images/logo.svg"),
+          });
+
+          marker.addListener("click", (e) => {
+            showPopover(e.domEvent, loc.name, loc.description, loc.image);
           });
         });
 
-        // Other users from Firestore
         Object.entries(userLocations.value).forEach(([userId, loc]) => {
-          new google.maps.marker.AdvancedMarkerElement({
+          const person = new google.maps.marker.AdvancedMarkerElement({
             map: mapInstance,
             position: {
               lat: loc.lat,
               lng: loc.lon,
             },
             title: `User: ${userId}`,
-            content: other_people_icon,
+            content: createMarkerImage("/demo/images/person_dark.svg"),
+          });
+
+          person.addListener("click", (e) => {
+            showPopover(
+              e.domEvent,
+              `User: ${userId}`,
+              "Recently active in this area.",
+              "/demo/images/person_dark.svg"
+            );
           });
         });
 
         mapLoaded.value = true;
       },
-      () => {
-        alert("Unable to retrieve your location");
-      }
+      () => {}
     );
   } catch (error) {
     console.error("Google Maps failed to load:", error);

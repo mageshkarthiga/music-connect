@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import PlaceAutoComplete from "@/components/map/PlaceAutoComplete.vue";
 import FileUpload from "primevue/fileupload";
 import InputGroup from "primevue/inputgroup";
@@ -16,9 +16,10 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { storage } from "@/firebase/firebase";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const route = useRoute();
+const auth = getAuth();
+
 const { isDarkTheme } = useLayout();
 const router = useRouter();
 
@@ -33,6 +34,27 @@ const profilePhoto = ref(null);
 const profilePhotoUrl = ref(defaultProfilePhotoUrl.value);
 const selectedLocation = ref("");
 const authError = ref("");
+
+var email = "";
+var fb_id = "";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    router.push("/auth/login");
+    return;
+  }
+
+  email = user.email;
+  fb_id = user.uid;
+
+  if (!email) {
+    console.error("Email not found in query params.");
+    router.push("/auth/login");
+  }
+  if (!fb_id) {
+    console.error("firebase uid not found in query params.");
+    router.push("/auth/login");
+  }
+});
 
 const handleFileUpload = (event) => {
   if (event.files && event.files.length > 0) {
@@ -69,18 +91,7 @@ const uploadProfilePhoto = async (file) => {
 
 const handleSubmit = async () => {
   const errors = [];
-  const email = route.query.email || "";
-  const fb_id = route.query.fb_id || "";
-  if (!email) {
-    console.error("Email not found in query params.");
-    router.push("/auth/login");
-    return;
-  }
-  if (!fb_id) {
-    console.error("firebase uid not found in query params.");
-    router.push("/auth/login");
-    return;
-  }
+
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
   if (!selectedLocation.value) errors.push("Location is not selected.");

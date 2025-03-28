@@ -60,10 +60,7 @@ const signUp = async () => {
     );
     console.log(user);
 
-    router.push({
-      path: "/createaccount",
-      query: { email: email.value, fb_id: user.user.uid },
-    });
+    router.push("/createaccount");
   } catch (error) {
     console.error("Sign Up error:", error);
     switch (error.code) {
