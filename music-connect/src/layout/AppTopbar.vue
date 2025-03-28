@@ -6,10 +6,22 @@ import {
 } from "@/layout/composables/stateConfig";
 import AppConfigurator from "./AppConfigurator.vue";
 import { useRoute, useRouter } from "vue-router";
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebase/firebase"; // adjust path if needed
+
 const { isDarkTheme } = useLayout();
 const router = useRouter();
 function goToProfile() {
   router.push("/profile");
+}
+function logout() {
+  signOut(auth)
+    .then(() => {
+      router.replace("/auth/login");
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+    });
 }
 </script>
 
@@ -117,6 +129,10 @@ function goToProfile() {
           >
             <i class="pi pi-user"></i>
             <span>Profile</span>
+          </button>
+          <button type="button" class="layout-topbar-action" @click="logout">
+            <i class="pi pi-sign-out"></i>
+            <span>Logout</span>
           </button>
         </div>
       </div>

@@ -13,7 +13,14 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   initLayoutFromFirestore,
   watchLayoutChanges,
-} from "@/layout/composables/layoutController";
+} from "@/firebase/layoutController";
+import {
+  startLocationWatcher,
+  stopLocationWatcher,
+} from "@/firebase/locationController";
+import { ref } from "vue";
+
+const userLocation = ref({ lat: null, lon: null });
 
 const app = createApp(App);
 
@@ -33,7 +40,9 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     await initLayoutFromFirestore(user.uid);
     watchLayoutChanges(user.uid);
+    startLocationWatcher(user.uid, userLocation);
   } else {
+    stopLocationWatcher();
     router.replace("/auth/login");
   }
 
