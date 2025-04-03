@@ -1,7 +1,7 @@
 package models
 
 type Attraction struct {
-	AttractionID       uint `json "attraction_id" gorm:"primaryKey;autoIncrement"`
+	AttractionID       uint `json:"attraction_id" gorm:"primaryKey;autoIncrement"`
 	AttractionName     string `json:"attraction_name"`
 	AttractionType     string `json:"attraction_type"`
 	AttractionURL      string `json:"attraction_url"`
