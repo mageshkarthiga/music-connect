@@ -1,62 +1,58 @@
-package spotify
+package services
 
 import (
-    "context"
-    "fmt"
-    "net/http"
-    "os"
+	"context"
+	"fmt"
+	"net/http"
+	"os"
 
-    "github.com/joho/godotenv"
-    "github.com/labstack/echo/v4"
-    "github.com/zmb3/spotify"
-    "golang.org/x/oauth2/clientcredentials"
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
-var (
-    authConfig *clientcredentials.Config
-)
+// Global Spotify Auth Config
+var authConfig *clientcredentials.Config
 
-// InitSpotify initializes the Spotify client and registers the /token route
-func InitSpotify(e *echo.Echo) error {
-    // Load environment variables
-    err := godotenv.Load("../../.env")
-    if err != nil {
-        fmt.Println("Error loading .env file")
-        return err
-    }
+// SpotifyAuth initializes the Spotify authentication configuration
+func SpotifyAuth() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		fmt.Println("Error loading .env file:", err)
+		return
+	}
 
-    clientId := os.Getenv("SPOTIFY_CLIENT_ID")
-    clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
-    if clientId == "" || clientSecret == "" {
-        fmt.Println("Spotify client ID or client secret not found")
-        return fmt.Errorf("missing Spotify client credentials")
-    }
+	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
+	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
-    // Configure Spotify client credentials
-    authConfig = &clientcredentials.Config{
-        ClientID:     clientId,
-        ClientSecret: clientSecret,
-        TokenURL:     spotify.TokenURL,
-        Scopes:       []string{"user-read-playback-state", "user-modify-playback-state", "streaming"},
-    }
+	if clientId == "" || clientSecret == "" {
+		fmt.Println("Spotify credentials missing. Ensure .env contains SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET")
+		return
+	}
 
-    // Register the /token route
-    e.GET("/spotify/token", getTokenHandler)
+	authConfig = &clientcredentials.Config{
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
+		TokenURL:     spotify.TokenURL,
+		Scopes:       []string{"user-read-playback-state", "user-modify-playback-state", "streaming"},
+	}
 
-    fmt.Println("Spotify service initialized successfully")
-    return nil
+	fmt.Println("✅ Spotify authentication initialized successfully!")
 }
 
-// getTokenHandler handles requests to /spotify/token
-func getTokenHandler(c echo.Context) error {
-    // Get the Spotify token
-    token, err := authConfig.Token(context.Background())
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, map[string]string{
-            "error": "Failed to get token",
-        })
-    }
 
-    // Return the token as JSON
-    return c.JSON(http.StatusOK, token)
+// GetSpotifyToken is the handler function for the /spotify/token route
+func GetSpotifyToken(c echo.Context) error {
+    SpotifyAuth() // Ensure SpotifyAuth is called to initialize authConfig
+	if authConfig == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Spotify authentication is not initialized"})
+	}
+
+	token, err := authConfig.Token(context.Background())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get token"})
+	}
+	return c.JSON(http.StatusOK, token)
 }
+
