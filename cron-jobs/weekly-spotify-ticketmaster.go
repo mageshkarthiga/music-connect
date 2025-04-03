@@ -79,17 +79,34 @@ func callSpotifyAPI(url string) {
     fmt.Printf("Response from %s: %s\n", url, body)
 }
 
-// func callTicketMasterAPI(url string) {
-//     resp, err := http.Get(url)
-//     if err != nil {
-//         fmt.Printf("Error calling %s: %v\n", url, err)
-//         return
-//     }
-//     defer resp.Body.Close()
+func callTicketMasterAPI(ticketMasterUrl string) {
+	apikey := os.Getenv("TICKETMASTER_API_KEY")
 
-//     body, _ := io.ReadAll(resp.Body)
-//     fmt.Printf("Response from %s: %s\n", url, body)
-// }
+	req, err := http.NewRequest("GET", ticketMasterUrl, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	queries := req.URL.Query()
+	queries.Add("size", "1")
+	queries.Add("apikey", apikey)
+
+	req.URL.RawQuery = queries.Encode()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Response:", string(body))
+}
 
 func main() {
 	if err := godotenv.Load("../.env"); 
@@ -98,5 +115,5 @@ func main() {
 	}
 
     callSpotifyAPI("https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl") // to be updated
-    // callTicketMasterAPI("https://api.example.com/endpoint2")
+    callTicketMasterAPI("https://app.ticketmaster.com/discovery/v2/events.json")
 }
