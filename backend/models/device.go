@@ -3,7 +3,7 @@ package models
 
 type Device struct {
 	DeviceID   uint `gorm:"primaryKey;autoIncrement"`
-	DeviceName string
+	DeviceName string `json:"device_name"`
 	DeviceUUID string `gorm:"uniqueIndex"`
-	UserID     uint 
+	UserID     uint `json:"user_id"`
 }
