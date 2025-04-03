@@ -5,6 +5,9 @@ import { auth } from "@/firebase/firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  getAdditionalUserInfo,
 } from "firebase/auth";
 import { useRouter } from "vue-router";
 
@@ -28,9 +31,10 @@ const login = async () => {
       case "auth/invalid-email":
         authError.value = "Please enter a valid email address.";
         break;
+      case "auth/invalid-credential":
       case "auth/invalid-password":
       case "auth/wrong-password":
-        authError.value = "Incorrect password. Please try again.";
+        authError.value = "Incorrect email or password. Please try again.";
         break;
       case "auth/too-many-requests":
         authError.value = "Too many failed attempts. Try again later.";
@@ -53,13 +57,7 @@ const login = async () => {
 const signUp = async () => {
   authError.value = "";
   try {
-    const user = await createUserWithEmailAndPassword(
-      auth,
-      email.value,
-      password.value
-    );
-    console.log(user);
-
+    await createUserWithEmailAndPassword(auth, email.value, password.value);
     router.push("/createaccount");
   } catch (error) {
     console.error("Sign Up error:", error);
@@ -73,7 +71,6 @@ const signUp = async () => {
         authError.value = "Please enter a valid email address.";
         break;
       case "auth/weak-password":
-      case "auth/invalid-password":
         authError.value = "Your password must be at least 6 characters long.";
         break;
       case "auth/missing-email":
@@ -112,107 +109,165 @@ const toggleMode = () => {
   authError.value = "";
   mode.value = mode.value === "login" ? "signup" : "login";
 };
+
+const googleProvider = new GoogleAuthProvider();
+
+const signInWithGoogle = async () => {
+  authError.value = "";
+  try {
+    const userCredential = await signInWithPopup(auth, googleProvider);
+    const additionalUserInfo = getAdditionalUserInfo(userCredential);
+    if (additionalUserInfo?.isNewUser) {
+      router.push("/createaccount");
+    } else {
+      router.push("/");
+    }
+  } catch (error) {
+    console.error("Google Sign-In error:", error);
+    if (error.code === "auth/popup-closed-by-user") {
+      authError.value = "Google Sign-In cancelled.";
+    } else if (error.code === "auth/cancelled-popup-request") {
+      return;
+    } else if (error.code === "auth/account-exists-with-different-credential") {
+      authError.value =
+        "An account already exists with this email using a different sign-in method. Try logging in with that method.";
+    } else {
+      authError.value = "Google Sign-In failed. Please try again.";
+    }
+  }
+};
 </script>
 
 <template>
   <FloatingConfigurator />
   <div
-    class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden"
+    class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden py-10"
   >
     <div class="flex flex-col items-center justify-center">
       <div
         class="rounded-[56px] p-[0.3rem] bg-gradient-to-b from-[var(--primary-color)] via-transparent to-transparent w-full"
       >
         <div
-          class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 md:w-[30rem] lg:w-[35rem] sm:px-20 rounded-[53px]"
+          class="w-full bg-surface-0 dark:bg-surface-900 py-12 px-8 md:w-[30rem] lg:w-[35rem] sm:px-16 rounded-[53px]"
         >
-          <div class="w-full flex flex-col items-center">
+          <div class="w-full flex flex-col items-center mb-8">
             <img
               src="/demo/images/logo.svg"
               alt="Logo"
-              class="mb-8"
+              class="mb-6"
               width="30%"
             />
             <div
-              class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4"
-              v-if="mode === 'login'"
+              class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2"
             >
-              Welcome back
+              {{ mode === "login" ? "Welcome back" : "Let's get started" }}
             </div>
-            <div
-              class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4"
-              v-else
-            >
-              Let's get started
-            </div>
-            <span
-              class="text-muted-color font-medium mb-2"
-              v-if="mode === 'login'"
-            >
-              Sign in to continue
-            </span>
-            <span class="text-muted-color font-medium mb-2" v-else>
-              Sign up to continue
+            <span class="text-muted-color font-medium">
+              {{
+                mode === "login" ? "Sign in to continue" : "Sign up to continue"
+              }}
             </span>
           </div>
 
-          <div>
-            <form @submit.prevent="onSubmit">
-              <label
-                for="email1"
-                class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2 ml-1"
-              >
-                Email
-              </label>
-              <InputText
-                id="email1"
-                type="text"
-                placeholder="Email address"
-                class="w-full mb-8"
-                v-model="email"
-              />
+          <Message
+            v-if="authError"
+            severity="error"
+            class="mb-6"
+            :closable="false"
+          >
+            {{ authError }}
+          </Message>
 
-              <label
-                for="password1"
-                class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2 ml-1"
-              >
-                Password
-              </label>
-              <Password
-                id="password1"
-                v-model="password"
-                placeholder="Password"
-                :toggleMask="true"
-                class="mb-8"
-                fluid
-                :feedback="false"
-              />
+          <form @submit.prevent="onSubmit">
+            <div class="flex flex-col gap-6">
+              <div>
+                <label
+                  for="email1"
+                  class="block text-surface-900 dark:text-surface-0 text-base font-medium mb-2 ml-1"
+                >
+                  Email
+                </label>
+                <InputText
+                  id="email1"
+                  type="text"
+                  placeholder="Email address"
+                  class="w-full"
+                  v-model="email"
+                  aria-describedby="email-help"
+                  :invalid="
+                    !!authError &&
+                    (authError.includes('email') ||
+                      authError.includes('credential') ||
+                      authError.includes('account'))
+                  "
+                />
+              </div>
 
-              <Message v-if="authError" severity="error" class="mb-8">
-                {{ authError }}
-              </Message>
+              <div>
+                <label
+                  for="password1"
+                  class="block text-surface-900 dark:text-surface-0 font-medium text-base mb-2 ml-1"
+                >
+                  Password
+                </label>
+                <Password
+                  id="password1"
+                  v-model="password"
+                  placeholder="Password"
+                  :toggleMask="true"
+                  class="w-full"
+                  fluid
+                  :feedback="mode === 'signup'"
+                  inputClass="w-full"
+                  :invalid="
+                    !!authError &&
+                    (authError.includes('password') ||
+                      authError.includes('credential'))
+                  "
+                />
+              </div>
+
               <Button
                 :label="mode === 'login' ? 'Sign In' : 'Sign Up'"
-                class="w-full mb-4"
+                class="w-full"
                 type="submit"
+                :loading="false"
               ></Button>
-            </form>
-
-            <div class="flex items-center justify-center mb-8 gap-1">
-              <span>{{
-                mode === "login"
-                  ? "Don't have an account?"
-                  : "Already have an account?"
-              }}</span>
-              <Button
-                variant="link"
-                @click="toggleMode"
-                unstyled
-                class="font-medium cursor-pointer underline text-primary"
-              >
-                {{ mode === "login" ? "Sign up now" : "Sign in now" }}
-              </Button>
             </div>
+          </form>
+
+          <div class="flex items-center my-6">
+            <div
+              class="h-px bg-surface-200 dark:bg-surface-700 flex-grow"
+            ></div>
+            <span class="mx-4 text-muted-color text-sm font-medium">OR</span>
+            <div
+              class="h-px bg-surface-200 dark:bg-surface-700 flex-grow"
+            ></div>
+          </div>
+
+          <Button
+            label="Sign in with Google"
+            icon="pi pi-google"
+            severity="contrast"
+            class="w-full mb-6"
+            @click="signInWithGoogle"
+          ></Button>
+
+          <div class="flex items-center justify-center gap-1">
+            <span class="text-muted-color">{{
+              mode === "login"
+                ? "Don't have an account?"
+                : "Already have an account?"
+            }}</span>
+            <Button
+              variant="link"
+              @click="toggleMode"
+              unstyled
+              class="font-medium cursor-pointer !p-0 text-primary hover:underline"
+            >
+              {{ mode === "login" ? "Sign up now" : "Sign in now" }}
+            </Button>
           </div>
         </div>
       </div>
