@@ -5,6 +5,7 @@ import (
     "backend/models"
     "github.com/labstack/echo/v4"
     "net/http"
+    "log"
 )
 
 // GetUsers fetches all users
@@ -28,15 +29,32 @@ func GetUser(c echo.Context) error {
 
 // CreateUser creates a new user
 func CreateUser(c echo.Context) error {
-    var user models.User
-    if err := c.Bind(&user); err != nil {
-        return c.JSON(http.StatusBadRequest, err.Error())
-    }
-    if err := config.DB.Create(&user).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to create user")
-    }
-    return c.JSON(http.StatusCreated, user)
+	var user models.User
+
+	// Bind the request body to the user struct
+	if err := c.Bind(&user); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
+	}
+
+	// Log the user object to check if it's being populated correctly
+	log.Printf("User data received: %+v", user)
+
+	// Validate the fields (for example, ensure required fields are present)
+	if user.PhoneNumber == "" || user.EmailAddress == "" || user.UserName == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Missing required fields"})
+	}
+
+	// Insert the user into the database
+	if err := config.DB.Create(&user).Error; err != nil {
+		// This will capture database insertion errors, such as duplicate key violations
+		log.Printf("Error creating user: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create user"})
+	}
+
+	// Successfully created user
+	return c.JSON(http.StatusOK, user)
 }
+
 
 // UpdateUser updates an existing user by ID
 func UpdateUser(c echo.Context) error {
