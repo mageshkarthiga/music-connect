@@ -3,3 +3,4 @@ music-connect/src/.DS_Store
 .env
 
 music-connect/node_modules
+.DS_Store
