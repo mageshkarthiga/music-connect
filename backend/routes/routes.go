@@ -1,11 +1,12 @@
 package routes
 
 import (
-    "backend/controllers"
-    "github.com/labstack/echo/v4"
+	"backend/controllers"
+	"backend/services/spotify"
+	"github.com/labstack/echo/v4"
 )
 
-// RegisterRoutes sets up API endpoints for users, tracks, and events
+// RegisterRoutes sets up API endpoints for users, tracks, events and third party services.
 func RegisterRoutes(e *echo.Echo) {
     // User Routes
     e.GET("/users", controllers.GetUsers)             // Fetch all users
@@ -27,4 +28,7 @@ func RegisterRoutes(e *echo.Echo) {
     e.POST("/events", controllers.CreateEvent)        // Create a new event
     e.PUT("/events/:id", controllers.UpdateEvent)     // Update an existing event by ID
     e.DELETE("/events/:id", controllers.DeleteEvent)  // Delete an event by ID
+
+    // Service Routes
+    e.GET("/spotify/token", services.GetSpotifyToken)
 }
