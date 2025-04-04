@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { useSpotifyStore } from "@/stores/spotifyStore";
+// import { useSpotifyStore } from "@/stores/spotifyStore";
 import axios from "axios";
 
 export default {
@@ -46,7 +46,7 @@ export default {
         };
     },
     async mounted() {
-        const response = await axios.get("http://localhost:8080/token");
+        const response = await axios.get("http://localhost:1323/spotify/token");
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent("spotify:track:5r7egnfTIQjaKSGREhIky9");
 
@@ -59,11 +59,11 @@ export default {
     },
     methods: {
         loadSpotifyContent(uri) {
-            const spotifyStore = useSpotifyStore();
+            // const spotifyStore = useSpotifyStore();
 
             this.iframeSrc = `https://open.spotify.com/embed/${uri.split(":")[1]}/${uri.split(":")[2]}?autoplay=1`;
 
-            spotifyStore.setCurrentUri(uri);
+            // spotifyStore.setCurrentUri(uri);
         },
         loadtracks() {
             const apiUrl = "https://api.spotify.com/v1/tracks"
