@@ -23,7 +23,7 @@ func InitDB() error {
 	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=off", dbPassword)
 
 
-	DB, err = gorm.Open(postgres.New(postgres.Config{
+	DB, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: dsn,
 		PreferSimpleProtocol: true, // also disables prep statements at protocol level
 	   }), &gorm.Config{
@@ -31,7 +31,7 @@ func InitDB() error {
 		PrepareStmt: false,
 	   })
 	   if err != nil {
-		log.Fatal("Error connecting to database:", err)
+		log.Fatal("Error connecting to database:", err, DB)
 	   }
 
 
