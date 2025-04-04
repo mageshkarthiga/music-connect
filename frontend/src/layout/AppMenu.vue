@@ -73,6 +73,11 @@ const model = ref([
                 label: 'Music',
                 icon: 'pi pi-fw pi-play-circle',
                 to: '/pages/music'
+            },
+            {
+                label: 'Chat',
+                icon: 'pi pi-fw pi-comments',
+                to: '/pages/chat'
             }
         ]
     },

@@ -4,6 +4,7 @@ import (
 	"backend/controllers"
 	"backend/services/spotify"
 	"github.com/labstack/echo/v4"
+    "backend/services/chat"
 )
 
 // RegisterRoutes sets up API endpoints for users, tracks, events and third party services.
@@ -31,4 +32,11 @@ func RegisterRoutes(e *echo.Echo) {
 
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
+    // WebSocket Route
+    wsServer := chat.NewWsServer()
+    go wsServer.Run()
+    e.GET("/ws", func(c echo.Context) error {
+        chat.ServeWs(wsServer, c.Response().Writer, c.Request())
+        return nil
+    })
 }

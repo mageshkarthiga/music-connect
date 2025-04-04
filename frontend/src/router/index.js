@@ -95,6 +95,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/Music.vue')
                 },
                 {
+                    path: '/pages/chat',
+                    name: 'chat',
+                    component: () => import('@/views/pages/Chat.vue')
+                },
+                {
                     path: '/pages/crud',
                     name: 'crud',
                     component: () => import('@/views/pages/Crud.vue')
