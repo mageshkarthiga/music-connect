@@ -16,11 +16,6 @@ var DB *gorm.DB
 
 // InitDB initializes the database connection
 func InitDB() error {
-	err := godotenv.Load()
-	if err != nil {
-		return fmt.Errorf("Error loading .env file")
-	}
-
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
 		return fmt.Errorf("DB_PASSWORD environment variable is not set")
