@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
@@ -17,12 +16,6 @@ var authConfig *clientcredentials.Config
 
 // SpotifyAuth initializes the Spotify authentication configuration
 func SpotifyAuth() {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		fmt.Println("Error loading .env file:", err)
-		return
-	}
-
 	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
 	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
