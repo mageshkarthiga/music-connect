@@ -70,9 +70,9 @@ const model = ref([
                 to: '/pages/notfound'
             },
             {
-                label: 'Empty',
-                icon: 'pi pi-fw pi-circle-off',
-                to: '/pages/empty'
+                label: 'Music',
+                icon: 'pi pi-fw pi-play-circle',
+                to: '/pages/music'
             }
         ]
     },

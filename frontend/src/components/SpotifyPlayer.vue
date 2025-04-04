@@ -72,7 +72,7 @@ export default {
                     Authorization: `Bearer ${this.accessToken}`,
                 },
                 params: {
-                    ids: "5biPEkF6O8snl96CWzsdK3,6GygzQ98i5iORNo45s5KwF,5r7egnfTIQjaKSGREhIky9,0fK7ie6XwGxQTIkpFoWkd1,1QuZBM0iHDlr1oRVyeZypC,0b0Dz0Gi86SVdBxYeiQcCP",
+                    ids: "5biPEkF6O8snl96CWzsdK3,6GygzQ98i5iORNo45s5KwF,5r7egnfTIQjaKSGREhIky9,0fK7ie6XwGxQTIkpFoWkd1,0b0Dz0Gi86SVdBxYeiQcCP",
                 },
             })
                 .then((response) => {

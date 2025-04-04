@@ -90,9 +90,9 @@ const router = createRouter({
                     component: () => import('@/views/uikit/TimelineDoc.vue')
                 },
                 {
-                    path: '/pages/empty',
-                    name: 'empty',
-                    component: () => import('@/views/pages/Empty.vue')
+                    path: '/pages/music',
+                    name: 'music',
+                    component: () => import('@/views/pages/Music.vue')
                 },
                 {
                     path: '/pages/crud',
