@@ -2,16 +2,16 @@ package chat
 
 import (
 	"fmt"
+	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
-	"github.com/gorilla/websocket"
 )
 
 // for readPump goroutine
 const (
-	writeWait = 10*time.Second
-	pongWait  = 60*time.Second
-	pingPeriod = (pongWait * 9) / 10
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 10000
 )
 
@@ -22,21 +22,31 @@ var (
 
 // Upgrader used to upgrade the HTTP connection to a WebSocket connection.
 var upgrader = websocket.Upgrader{
-	ReadBufferSize: 4096,
+	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
+	CheckOrigin: func(r *http.Request) bool {
+        return true
+    },
 }
 
 // Client represents a WebSocket client.
 type Client struct {
-	conn *websocket.Conn
+	conn     *websocket.Conn
 	wsServer *WsServer
+	send    chan []byte
 }
 
-func newClient (conn *websocket.Conn, wsServer *WsServer) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer) *Client {
 	return &Client{
-		conn: conn,
+		conn:     conn,
 		wsServer: wsServer,
+		send:    make(chan []byte, 256),
 	}
+}
+
+func (client *Client) disconnect() {
+	client.wsServer.unregister <- client
+	client.conn.Close()
 }
 
 // Read new messages from the WebSocket connection and broadcast them to all clients.
@@ -113,7 +123,7 @@ func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(conn,wsServer)
+	client := newClient(conn, wsServer)
 
 	go client.writePump()
 	go client.readPump()
