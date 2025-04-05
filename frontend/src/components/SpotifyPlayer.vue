@@ -1,4 +1,5 @@
 <template>
+    
     <div class="spotify-player">
         <div class="tracks">
             <Card v-for="track in tracks" style="width: 25rem; overflow: hidden; margin-bottom: 20px;"
@@ -34,6 +35,8 @@
 <script>
 import { useSpotifyStore } from "@/stores/spotifyStore";
 import axios from "axios";
+
+
 
 export default {
     name: "SpotifyPlayer",

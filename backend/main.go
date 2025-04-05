@@ -6,6 +6,7 @@ import (
 	"backend/routes"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"backend/services/spotify" 
 )
 
 func main() {
@@ -16,6 +17,14 @@ func main() {
 	} else {
 		log.Println("Database connection initialized successfully! ✅")
 	}
+	services.SpotifyAuth()
+	token, err := services.GetSpotifyTokenRaw()
+	if err != nil {
+		log.Fatalf("❌ Failed to get Spotify token: %v", err)
+	}
+	log.Println("🎧 Spotify token retrieved successfully!")
+	log.Printf("🔐 Access token: %s", token.AccessToken)
+
 
 	// Initialize Echo
 	e := echo.New()
