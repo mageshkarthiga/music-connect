@@ -14,15 +14,14 @@ export default defineComponent({
     onMounted(async () => {
       const userId = Number(route.query.user_id);
       if (!isNaN(userId)) {
-        // Public profile of others
         try {
           user.value = await UserService.getUser(userId);
-          console.log(user.value);
         } catch (error) {
           console.error("Error fetching user:", error);
+        } finally {
+          loading.value = false;
         }
       } else {
-        // Personal profile
         const auth = getAuth();
         onAuthStateChanged(auth, async (firebaseUser) => {
           if (firebaseUser) {
@@ -32,13 +31,15 @@ export default defineComponent({
               );
             } catch (error) {
               console.error("Error fetching user by Firebase UID:", error);
+            } finally {
+              loading.value = false;
             }
           } else {
             console.warn("No Firebase user signed in.");
+            loading.value = false;
           }
         });
       }
-      loading.value = false;
     });
 
     return {
@@ -64,7 +65,7 @@ export default defineComponent({
     </div>
     <div v-else-if="user" class="profile-details p-card p-p-4 p-shadow-4">
       <img
-        :src="user.ProfilePhotoUrl"
+        :src="user.profilePhotoUrl"
         alt="Profile Photo"
         class="profile-photo"
         style="
@@ -76,9 +77,9 @@ export default defineComponent({
         "
       />
       <h1 class="p-mt-3">{{ user.userName }}</h1>
-      <p><strong>Email:</strong> {{ user.EmailAddress }}</p>
-      <p><strong>Phone:</strong> {{ user.PhoneNumber }}</p>
-      <p><strong>Location:</strong> {{ user.Location }}</p>
+      <p><strong>Email:</strong> {{ user.emailAddress }}</p>
+      <p><strong>Phone:</strong> {{ user.phoneNumber }}</p>
+      <p><strong>Location:</strong> {{ user.location }}</p>
     </div>
     <div v-else class="error p-error" style="font-size: 1.2rem; padding: 2rem">
       <p>User not found.</p>
