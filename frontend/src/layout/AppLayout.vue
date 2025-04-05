@@ -1,11 +1,15 @@
 <script setup>
-import { useLayout } from "@/layout/composables/stateConfig";
+import {
+  useLayout,
+  layoutConfig,
+  layoutState,
+} from "@/layout/composables/stateConfig";
 import { computed, ref, watch } from "vue";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
 import AppTopbar from "./AppTopbar.vue";
 
-const { layoutConfig, layoutState, isSidebarActive } = useLayout();
+const { isSidebarActive } = useLayout();
 
 const outsideClickListener = ref(null);
 
