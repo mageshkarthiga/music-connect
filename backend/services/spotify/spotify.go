@@ -16,7 +16,7 @@ var authConfig *clientcredentials.Config
 
 // SpotifyAuth initializes the Spotify authentication configuration
 func SpotifyAuth() {
-	if os.Getenv("ENV") != "production" {
+	if os.Getenv("ENV") != "prod" {
 		err := godotenv.Load()
 		if err != nil {
 			fmt.Println("Error loading .env file:", err)

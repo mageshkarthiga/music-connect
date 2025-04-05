@@ -45,7 +45,7 @@ export default {
     },
     methods: {
         connectToWebsocket() {
-            this.ws = new WebSocket("ws://localhost:8080/ws");
+            this.ws = new WebSocket("wss://music-connect-test-226566573804.us-central1.run.app/ws");
 
             this.ws.onopen = () => {
                 console.log("WebSocket connection established");
