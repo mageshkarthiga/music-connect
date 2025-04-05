@@ -1,8 +1,0 @@
-cron:
-- description: "Call Spotify and TicketMaster every Sunday at 12:00 AM"
-  url: /run-weekly-task
-  schedule: "0 0 * * 0" # Runs every Sunday 12:00 AM
-  timezone: "UTC"
-  httpMethod: GET
-  retry_parameters:
-    retry_limit: 3
