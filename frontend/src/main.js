@@ -13,11 +13,24 @@ import { initLayoutFromFirestore } from "@/layout/composables/layoutController";
 import { watchLayoutChanges } from "@/layout/composables/layoutController";
 import "@/assets/styles.scss";
 
+import { auth } from "@/firebase/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  initLayoutFromFirestore,
+  watchLayoutChanges,
+} from "@/firebase/layoutController";
+import {
+  startLocationWatcher,
+  stopLocationWatcher,
+} from "@/firebase/locationController";
+import { ref } from "vue";
+
+const userLocation = ref({ lat: null, lon: null });
+
 const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia);
 app.use(router);
-
 
 // Use PrimeVue with configurations only once
 app.use(PrimeVue, {
@@ -30,9 +43,22 @@ app.use(PrimeVue, {
 });
 
 await initLayoutFromFirestore();
-watchLayoutChanges();  // Call the function to start watching
+watchLayoutChanges(); // Call the function to start watching
 
 app.use(ToastService);
 app.use(ConfirmationService);
 
-app.mount("#app");
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    await initLayoutFromFirestore(user.uid);
+    watchLayoutChanges(user.uid);
+    startLocationWatcher(user.uid, userLocation);
+  } else {
+    stopLocationWatcher();
+    router.replace("/auth/login");
+  }
+
+  if (!app._instance) {
+    app.mount("#app");
+  }
+});

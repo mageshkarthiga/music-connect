@@ -1,8 +1,28 @@
 <script setup>
-import { useLayout } from "@/layout/composables/stateConfig";
+import {
+  useLayout,
+  toggleMenu,
+  toggleDarkMode,
+} from "@/layout/composables/stateConfig";
 import AppConfigurator from "./AppConfigurator.vue";
+import { useRoute, useRouter } from "vue-router";
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebase/firebase"; // adjust path if needed
 
-const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+const { isDarkTheme } = useLayout();
+const router = useRouter();
+function goToProfile() {
+  router.push("/profile");
+}
+function logout() {
+  signOut(auth)
+    .then(() => {
+      router.replace("/auth/login");
+    })
+    .catch((error) => {
+      console.error("Logout failed:", error);
+    });
+}
 </script>
 
 <template>
@@ -102,9 +122,17 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
             <i class="pi pi-inbox"></i>
             <span>Messages</span>
           </button>
-          <button type="button" class="layout-topbar-action">
+          <button
+            type="button"
+            class="layout-topbar-action"
+            @click="goToProfile"
+          >
             <i class="pi pi-user"></i>
             <span>Profile</span>
+          </button>
+          <button type="button" class="layout-topbar-action" @click="logout">
+            <i class="pi pi-sign-out"></i>
+            <span>Logout</span>
           </button>
         </div>
       </div>

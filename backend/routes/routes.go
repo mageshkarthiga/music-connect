@@ -11,6 +11,7 @@ func RegisterRoutes(e *echo.Echo) {
     // User Routes
     e.GET("/users", controllers.GetUsers)             // Fetch all users
     e.GET("/users/:id", controllers.GetUser)          // Fetch a user by ID
+    e.GET("/users/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch a user by Firebase UID
     e.POST("/users", controllers.CreateUser)          // Create a new user
     e.PUT("/users/:id", controllers.UpdateUser)       // Update an existing user by ID
     e.DELETE("/users/:id", controllers.DeleteUser)    // Delete a user by ID

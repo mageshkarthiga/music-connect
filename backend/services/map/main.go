@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -18,7 +19,6 @@ type AutoCompleteResponse struct {
 }
 
 func autocompleteHandler(w http.ResponseWriter, r *http.Request) {
-	// Allow cross-origin requests if needed
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	input := r.URL.Query().Get("input")
@@ -64,7 +64,6 @@ func autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract the descriptions from predictions and return as a list of strings.
 	descriptions := make([]string, 0, len(acResp.Predictions))
 	for _, prediction := range acResp.Predictions {
 		descriptions = append(descriptions, prediction.Description)
@@ -76,12 +75,37 @@ func autocompleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func mapsJSHandler(w http.ResponseWriter, r *http.Request) {
+	apiKey := os.Getenv("GOOGLE_API_KEY")
+	if apiKey == "" {
+		http.Error(w, "API key not set", http.StatusInternalServerError)
+		return
+	}
+
+	query := r.URL.Query()
+	query.Set("key", apiKey)
+
+	targetURL := "https://maps.googleapis.com/maps/api/js?" + query.Encode()
+	resp, err := http.Get(targetURL)
+	if err != nil {
+		http.Error(w, "Error reaching Google Maps API", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
+}
+
 func main() {
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load("../../.env"); err != nil {
 		log.Println("Warning: .env file not found, relying on environment variables")
 	}
 
 	http.HandleFunc("/api/autocomplete", autocompleteHandler)
+	http.HandleFunc("/api/maps", mapsJSHandler)
+
 	log.Println("Server starting on :3000")
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }

@@ -1,11 +1,13 @@
 <script setup>
-import { useLayout } from "@/layout/composables/stateConfig";
+import {
+  layoutState,
+  setActiveMenuItem,
+  toggleMenu,
+} from "@/layout/composables/stateConfig";
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-
-const { layoutState, setActiveMenuItem, toggleMenu } = useLayout();
 
 const props = defineProps({
   item: {

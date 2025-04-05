@@ -1,32 +1,16 @@
 <script setup>
-import { ref } from "vue";
 import {
   applyPreset,
   updateColors,
   surfaces,
   primaryColors,
-  presets,
   useLayout,
+  menuModeOptions,
+  presetOptions,
+  layoutConfig,
+  toggleMenu,
 } from "@/layout/composables/stateConfig";
-const { layoutConfig, isDarkTheme } = useLayout();
-
-const preset = ref(layoutConfig.preset);
-const presetOptions = ref(Object.keys(presets));
-
-const menuMode = ref(layoutConfig.menuMode);
-const menuModeOptions = ref([
-  { label: "Static", value: "static" },
-  { label: "Overlay", value: "overlay" },
-]);
-
-function onPresetChange() {
-  layoutConfig.preset = preset.value;
-  applyPreset();
-}
-
-function onMenuModeChange() {
-  layoutConfig.menuMode = menuMode.value;
-}
+const { isDarkTheme } = useLayout();
 </script>
 
 <template>
@@ -79,8 +63,8 @@ function onMenuModeChange() {
       <div class="flex flex-col gap-2">
         <span class="text-sm text-muted-color font-semibold">Presets</span>
         <SelectButton
-          v-model="preset"
-          @change="onPresetChange"
+          v-model="layoutConfig.preset"
+          @change="applyPreset"
           :options="presetOptions"
           :allowEmpty="false"
         />
@@ -88,8 +72,8 @@ function onMenuModeChange() {
       <div class="flex flex-col gap-2">
         <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
         <SelectButton
-          v-model="menuMode"
-          @change="onMenuModeChange"
+          v-model="layoutConfig.menuMode"
+          @change="toggleMenu"
           :options="menuModeOptions"
           :allowEmpty="false"
           optionLabel="label"

@@ -9,6 +9,16 @@ import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import FloatingConfigurator from "@/components/FloatingConfigurator.vue";
 import { useLayout } from "@/layout/composables/stateConfig";
+import userService from "@/service/UserService";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import { storage } from "@/firebase/firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
+const auth = getAuth();
 
 const { isDarkTheme } = useLayout();
 const router = useRouter();
@@ -18,13 +28,33 @@ const defaultProfilePhotoUrl = computed(() =>
     ? "/demo/images/person_dark.svg"
     : "/demo/images/person_light.svg"
 );
-
 const username = ref("");
 const phoneNumber = ref("");
 const profilePhoto = ref(null);
 const profilePhotoUrl = ref(defaultProfilePhotoUrl.value);
 const selectedLocation = ref("");
 const authError = ref("");
+
+var email = "";
+var fb_id = "";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    router.push("/auth/login");
+    return;
+  }
+
+  email = user.email;
+  fb_id = user.uid;
+
+  if (!email) {
+    console.error("Email not found in query params.");
+    router.push("/auth/login");
+  }
+  if (!fb_id) {
+    console.error("firebase uid not found in query params.");
+    router.push("/auth/login");
+  }
+});
 
 const handleFileUpload = (event) => {
   if (event.files && event.files.length > 0) {
@@ -43,8 +73,25 @@ const handlePlaceSelected = (place) => {
   selectedLocation.value = place;
 };
 
-const handleSubmit = () => {
+const uploadProfilePhoto = async (file) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    console.error("User not found.");
+    router.push("/auth/login");
+  }
+  const uid = user.uid;
+  const filePath = `profile_photos/${uid}/${file.name}`;
+  const fileRef = storageRef(storage, filePath);
+
+  await uploadBytes(fileRef, file);
+  return await getDownloadURL(fileRef);
+};
+
+const handleSubmit = async () => {
   const errors = [];
+
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
   if (!selectedLocation.value) errors.push("Location is not selected.");
@@ -54,17 +101,34 @@ const handleSubmit = () => {
     return;
   }
 
-  console.log({
-    username: username.value,
-    phoneNumber: phoneNumber.value,
-    location: selectedLocation.value,
-    profilePhoto: profilePhoto.value
-      ? profilePhoto.value.name
-      : "Default image used",
-  });
+  let photoURL = "";
 
-  // TODO: Upload user profile picture to object store
-  // TODO: Save user data to DB
+  try {
+    if (profilePhoto.value) {
+      photoURL = await uploadProfilePhoto(profilePhoto.value);
+      console.log("Profile photo uploaded successfully.");
+      console.log("Photo URL:", photoURL);
+    }
+
+    await userService.createUser({
+      userName: username.value,
+      phoneNumber: phoneNumber.value,
+      location: selectedLocation.value,
+      emailAddress: email,
+      profilePhotoUrl: photoURL,
+      firebaseUID: fb_id,
+    });
+    console.log({
+      userName: username.value,
+      phoneNumber: phoneNumber.value,
+      location: selectedLocation.value,
+      emailAddress: email,
+      profilePhotoUrl: photoURL,
+      firebaseUID: fb_id,
+    });
+  } catch (error) {
+    ("CREATE USER FAILED");
+  }
 
   router.push("/");
 };

@@ -19,7 +19,7 @@ func GetUsers(c echo.Context) error {
 
 // GetUser fetches a user by ID
 func GetUser(c echo.Context) error {
-    id := c.Param("id")
+    id := c.Param("UserID")
     var user models.User
     if err := config.DB.First(&user, id).Error; err != nil {
         return c.JSON(http.StatusNotFound, "User not found")
@@ -58,7 +58,7 @@ func CreateUser(c echo.Context) error {
 
 // UpdateUser updates an existing user by ID
 func UpdateUser(c echo.Context) error {
-    id := c.Param("id")
+    id := c.Param("UserID")
     var user models.User
     if err := config.DB.First(&user, id).Error; err != nil {
         return c.JSON(http.StatusNotFound, "User not found")
@@ -86,4 +86,14 @@ func DeleteUser(c echo.Context) error {
         return c.JSON(http.StatusInternalServerError, "Failed to delete user")
     }
     return c.JSON(http.StatusOK, "User deleted successfully")
+}
+
+
+func GetUserByFirebaseUID(c echo.Context) error {
+	uid := c.Param("uid")
+	var user models.User
+	if err := config.DB.Where("firebase_uid = ?", uid).First(&user).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	}
+	return c.JSON(http.StatusOK, user)
 }
