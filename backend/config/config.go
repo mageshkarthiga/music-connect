@@ -2,12 +2,12 @@ package config
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"os"
 	"log"
-
+	"os"
 )
 
 // Global DB variable to hold the connection
@@ -15,6 +15,12 @@ var DB *gorm.DB
 
 // InitDB initializes the database connection
 func InitDB() error {
+	if os.Getenv("ENV") != "prod" {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Println("Error loading .env file:", err)
+		}
+	}
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
 		return fmt.Errorf("DB_PASSWORD environment variable is not set")
@@ -22,22 +28,19 @@ func InitDB() error {
 
 	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=off", dbPassword)
 
-
 	DB, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: dsn,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true, // also disables prep statements at protocol level
-	   }), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+	}), &gorm.Config{
+		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: false,
-	   })
-	   if err != nil {
+	})
+	if err != nil {
 		log.Fatal("Error connecting to database:", err, DB)
-	   }
-
+	}
 
 	// Check if the 'users' table exists before running migrations
-	// if !tableExists(DB, "users") 
-
+	// if !tableExists(DB, "users")
 
 	// 	err = DB.AutoMigrate(&models.User{}, &models.Event{}, &models.Attraction{}, &models.Venue{}, &models.Artist{}, &models.Track{}, &models.Playlist{}, &models.Device{})
 	// 	if err != nil {
@@ -46,7 +49,7 @@ func InitDB() error {
 	// 	fmt.Println("Migration completed successfully! ✅")
 	// } else {
 	// 	fmt.Println("Tables already exist, skipping migration.")
-	// 
+	//
 
 	return nil
 }

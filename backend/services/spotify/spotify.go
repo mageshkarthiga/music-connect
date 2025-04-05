@@ -3,12 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
-
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
+	"net/http"
+	"os"
 )
 
 // Global Spotify Auth Config
@@ -16,6 +16,12 @@ var authConfig *clientcredentials.Config
 
 // SpotifyAuth initializes the Spotify authentication configuration
 func SpotifyAuth() {
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Println("Error loading .env file:", err)
+		}
+	}
 	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
 	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
@@ -34,10 +40,9 @@ func SpotifyAuth() {
 	fmt.Println("✅ Spotify authentication initialized successfully!")
 }
 
-
 // GetSpotifyToken is the handler function for the /spotify/token route
 func GetSpotifyToken(c echo.Context) error {
-    SpotifyAuth() // Ensure SpotifyAuth is called to initialize authConfig
+	SpotifyAuth() // Ensure SpotifyAuth is called to initialize authConfig
 	if authConfig == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Spotify authentication is not initialized"})
 	}
@@ -48,4 +53,3 @@ func GetSpotifyToken(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, token)
 }
-
