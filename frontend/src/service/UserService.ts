@@ -13,8 +13,21 @@ export interface User {
 }
 
 export default {
-  async createUser(user: User) {
-    const response = await axios.post<User>(USER_URL, user);
+  async createUser(user: User & { firebaseUID: string }) {
+    const snakeCaseUser = {
+      user_name: user.userName,
+      phone_number: user.phoneNumber,
+      email_address: user.emailAddress,
+      location: user.location,
+      profile_photo_url: user.profilePhotoUrl,
+      firebase_uid: user.firebaseUID,
+    };
+
+    const response = await axios.post(USER_URL, snakeCaseUser, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   },
 

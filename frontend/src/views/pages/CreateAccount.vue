@@ -28,18 +28,15 @@ const defaultProfilePhotoUrl = computed(() =>
     ? "/demo/images/person_dark.svg"
     : "/demo/images/person_light.svg"
 );
-
 const username = ref("");
 const phoneNumber = ref("");
 const profilePhoto = ref(null);
 const profilePhotoUrl = ref(defaultProfilePhotoUrl.value);
 const selectedLocation = ref("");
 const authError = ref("");
-const isExistingUser = ref(false);
 
-let email = "";
-let fb_id = "";
-let user_id = "";
+var email = "";
+var fb_id = "";
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     router.push("/auth/login");
@@ -49,31 +46,18 @@ onAuthStateChanged(auth, async (user) => {
   email = user.email;
   fb_id = user.uid;
 
-  if (!email || !fb_id) {
-    console.error("Missing auth credentials.");
+  if (!email) {
+    console.error("Email not found in query params.");
     router.push("/auth/login");
-    return;
   }
-
-  try {
-    const existingUser = await userService.getUserByFirebaseUID(fb_id);
-    if (existingUser) {
-      console.log("Existing user found:", existingUser);
-      user_id = existingUser.UserID;
-      isExistingUser.value = true;
-      username.value = existingUser.UserName || "";
-      phoneNumber.value = existingUser.PhoneNumber || "";
-      selectedLocation.value = existingUser.Location || "";
-      profilePhotoUrl.value =
-        existingUser.ProfilePhotoUrl || defaultProfilePhotoUrl.value;
-    }
-  } catch (e) {
-    console.warn("User not found, proceeding with new account setup.");
+  if (!fb_id) {
+    console.error("firebase uid not found in query params.");
+    router.push("/auth/login");
   }
 });
 
 const handleFileUpload = (event) => {
-  if (event.files?.length > 0) {
+  if (event.files && event.files.length > 0) {
     profilePhoto.value = event.files[0];
     profilePhotoUrl.value = URL.createObjectURL(event.files[0]);
   }
@@ -90,12 +74,13 @@ const handlePlaceSelected = (place) => {
 };
 
 const uploadProfilePhoto = async (file) => {
+  const auth = getAuth();
   const user = auth.currentUser;
+
   if (!user) {
-    console.error("No authenticated user.");
+    console.error("User not found.");
     router.push("/auth/login");
   }
-
   const uid = user.uid;
   const filePath = `profile_photos/${uid}/${file.name}`;
   const fileRef = storageRef(storage, filePath);
@@ -106,6 +91,7 @@ const uploadProfilePhoto = async (file) => {
 
 const handleSubmit = async () => {
   const errors = [];
+
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
   if (!selectedLocation.value) errors.push("Location is not selected.");
@@ -115,32 +101,36 @@ const handleSubmit = async () => {
     return;
   }
 
-  let photoURL = profilePhotoUrl.value;
+  let photoURL = "";
+
   try {
     if (profilePhoto.value) {
       photoURL = await uploadProfilePhoto(profilePhoto.value);
+      console.log("Profile photo uploaded successfully.");
+      console.log("Photo URL:", photoURL);
     }
 
-    const payload = {
+    await userService.createUser({
       userName: username.value,
       phoneNumber: phoneNumber.value,
       location: selectedLocation.value,
       emailAddress: email,
       profilePhotoUrl: photoURL,
       firebaseUID: fb_id,
-    };
-
-    if (isExistingUser.value) {
-      await userService.updateUser(user_id, payload);
-    } else {
-      await userService.createUser(payload);
-    }
-
-    router.push("/");
+    });
+    console.log({
+      userName: username.value,
+      phoneNumber: phoneNumber.value,
+      location: selectedLocation.value,
+      emailAddress: email,
+      profilePhotoUrl: photoURL,
+      firebaseUID: fb_id,
+    });
   } catch (error) {
-    authError.value = "Failed to save user information.";
-    console.error(error);
+    ("CREATE USER FAILED");
   }
+
+  router.push("/");
 };
 </script>
 
@@ -152,7 +142,7 @@ const handleSubmit = async () => {
     <div class="flex flex-col items-center w-full">
       <div class="card p-6 w-full max-w-lg">
         <h2 class="text-2xl font-semibold mb-4 text-center">
-          {{ isExistingUser ? "Update Your Account" : "Set Up Your Account" }}
+          Set Up Your Account
         </h2>
         <img
           :src="profilePhotoUrl"
@@ -168,11 +158,15 @@ const handleSubmit = async () => {
             chooseLabel="Upload Profile Photo"
           />
           <InputGroup>
-            <InputGroupAddon><i class="pi pi-user"></i></InputGroupAddon>
+            <InputGroupAddon>
+              <i class="pi pi-user"></i>
+            </InputGroupAddon>
             <InputText v-model="username" placeholder="Username" />
           </InputGroup>
           <InputGroup>
-            <InputGroupAddon><i class="pi pi-phone"></i></InputGroupAddon>
+            <InputGroupAddon>
+              <i class="pi pi-phone"></i>
+            </InputGroupAddon>
             <InputText
               v-model="phoneNumber"
               placeholder="Phone Number"
@@ -180,7 +174,9 @@ const handleSubmit = async () => {
             />
           </InputGroup>
           <InputGroup>
-            <InputGroupAddon><i class="pi pi-map-marker"></i></InputGroupAddon>
+            <InputGroupAddon>
+              <i class="pi pi-map-marker"></i>
+            </InputGroupAddon>
             <PlaceAutoComplete
               @place-selected="handlePlaceSelected"
               v-model="selectedLocation"
@@ -190,7 +186,7 @@ const handleSubmit = async () => {
             {{ authError }}
           </Message>
           <Button
-            :label="isExistingUser ? 'Update' : 'Continue'"
+            label="Continue"
             @click="handleSubmit"
             class="p-button-success w-full"
           />
