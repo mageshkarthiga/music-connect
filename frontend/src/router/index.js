@@ -131,6 +131,11 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
+        },
+        {
+            path:'/pages/spotify',
+            name:'spotify',
+            component: () => import('@/views/pages/Music.vue')
         }
     ]
 });
