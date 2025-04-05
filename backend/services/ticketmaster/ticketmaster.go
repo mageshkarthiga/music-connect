@@ -20,8 +20,11 @@ type Event struct {
 // GetTicketmasterEvents fetches events from the Ticketmaster API
 func GetTicketmasterEvents() ([]Event, error) {
     // Load environment variables from .env
-    if err := godotenv.Load(); err != nil {
-        return nil, fmt.Errorf("Error loading .env file")
+    if os.Getenv("ENV") != "prod" {
+        err := godotenv.Load()
+        if err != nil {
+            fmt.Println("Error loading .env file:", err)
+        }
     }
 
     apiKey := os.Getenv("TICKETMASTER_API_KEY")

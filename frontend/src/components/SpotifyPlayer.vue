@@ -49,7 +49,7 @@ export default {
         };
     },
     async mounted() {
-        const response = await axios.get("http://localhost:1323/spotify/token");
+        const response = await axios.get("http://localhost:8080/spotify/token");
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent("spotify:track:5r7egnfTIQjaKSGREhIky9");
 

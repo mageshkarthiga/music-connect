@@ -13,9 +13,6 @@ RUN go mod download
 # Copy the entire project directory
 COPY . .
 
-# Set environment variables for Go
-COPY .env .env
-
 # Build the Go application
 RUN CGO_ENABLED=0 GOOS=linux go build -o /music-connect
 
@@ -31,11 +28,8 @@ WORKDIR /
 # Copy the compiled binary from the build stage
 COPY --from=build /music-connect /music-connect
 
-# Copy the .env file from the build stage
-COPY --from=build /app/.env .env 
-
 # Expose the port the application runs on
-EXPOSE 1323
+EXPOSE 8080
 
 # Command to run the application
 CMD ["/music-connect"]

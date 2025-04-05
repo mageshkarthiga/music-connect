@@ -43,15 +43,15 @@ func main() {
 
 	// Define a simple route to check if the server is running
 	e.GET("/", func(c echo.Context) error {
-		return c.String(200, "Database connection is live and the server is running on port 1323! ✅")
+		return c.String(200, "Database connection is live and the server is running on port 8080! ✅")
 	})
 
-	// Start the server on port 1323
-	log.Printf("Starting server on port 1323... 🚀")
-	err = e.Start(":1323")
+	// Start the server on port 8080
+	log.Printf("Starting server on port 8080... 🚀")
+	err = e.Start(":8080")
 	if err != nil {
 		log.Fatal("Error starting server ⚠️", err)
 	} else {
-		log.Println("Server started successfully on port 1323 ✅")
+		log.Println("Server started successfully on port 8080 ✅")
 	}
 }
