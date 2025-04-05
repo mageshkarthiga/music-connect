@@ -9,8 +9,6 @@ import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
 import ToastService from "primevue/toastservice";
 
-import { initLayoutFromFirestore } from "@/layout/composables/layoutController";
-import { watchLayoutChanges } from "@/layout/composables/layoutController";
 import "@/assets/styles.scss";
 
 import { auth } from "@/firebase/firebase";
