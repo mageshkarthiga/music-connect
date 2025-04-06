@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>PersonIcon</title>
+  <desc>Icon representing a person with a neutral grey background.</desc>
+  <rect x="0" y="0" width="24" height="24" fill="#808080"/>
+  <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="PersonIcon" fill="#FFFFFF" transform="translate(1.2,1.2) scale(0.9)">
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4
+               m0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4"/>
+    </g>
+  </g>
+</svg>

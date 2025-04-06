@@ -1,20 +1,20 @@
 import { watch } from "vue";
 import { readDocument, updateDocument } from "@/firebase/fireStoreService";
 import {
-  primaryColors,
-  surfaces,
   layoutConfig,
   layoutState,
+  primaryColors,
+  surfaces,
   updateColors,
   applyPreset,
 } from "@/layout/composables/stateConfig";
 
 const COLLECTION_NAME = "layoutConfigs";
-const DOC_ID = "defaultLayout";
 
-export async function initLayoutFromFirestore() {
+export async function initLayoutFromFirestore(userId) {
+  if (!userId) return;
   try {
-    const docData = await readDocument(COLLECTION_NAME, DOC_ID);
+    const docData = await readDocument(COLLECTION_NAME, userId);
     if (docData) {
       if (docData.layoutConfig) {
         Object.assign(layoutConfig, docData.layoutConfig);
@@ -41,31 +41,32 @@ export async function initLayoutFromFirestore() {
   }
 }
 
-// Watchers to save changes to Firestore
-watch(
-  () => layoutConfig,
-  async (newVal) => {
-    try {
-      await updateDocument(COLLECTION_NAME, DOC_ID, {
-        layoutConfig: { ...newVal },
-      });
-    } catch (error) {
-      console.error("Failed to update layoutConfig in Firestore:", error);
-    }
-  },
-  { deep: true }
-);
+export function watchLayoutChanges(userId) {
+  watch(
+    () => layoutConfig,
+    async (newVal) => {
+      try {
+        await updateDocument(COLLECTION_NAME, userId, {
+          layoutConfig: { ...newVal },
+        });
+      } catch (error) {
+        console.error("Failed to update layoutConfig in Firestore:", error);
+      }
+    },
+    { deep: true }
+  );
 
-watch(
-  () => layoutState,
-  async (newVal) => {
-    try {
-      await updateDocument(COLLECTION_NAME, DOC_ID, {
-        layoutState: { ...newVal },
-      });
-    } catch (error) {
-      console.error("Failed to update layoutState in Firestore:", error);
-    }
-  },
-  { deep: true }
-);
+  watch(
+    () => layoutState,
+    async (newVal) => {
+      try {
+        await updateDocument(COLLECTION_NAME, userId, {
+          layoutState: { ...newVal },
+        });
+      } catch (error) {
+        console.error("Failed to update layoutState in Firestore:", error);
+      }
+    },
+    { deep: true }
+  );
+}

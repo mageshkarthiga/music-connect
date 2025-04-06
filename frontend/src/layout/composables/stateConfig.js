@@ -22,6 +22,11 @@ export const layoutState = reactive({
   activeMenuItem: null,
 });
 
+export const menuModeOptions = ref([
+  { label: "Static", value: "static" },
+  { label: "Overlay", value: "overlay" },
+]);
+
 export const primaryColors = ref([
   { name: "noir", palette: {} },
   {
@@ -281,6 +286,7 @@ export const primaryColors = ref([
     },
   },
 ]);
+
 export const surfaces = ref([
   {
     name: "slate",
@@ -419,11 +425,13 @@ export const surfaces = ref([
     },
   },
 ]);
-export const presets = {
+
+const presets = {
   Aura,
   Lara,
   Nora,
 };
+export const presetOptions = ref(Object.keys(presets));
 function getPresetExt() {
   const color = primaryColors.value.find(
     (c) => c.name === layoutConfig.primary
@@ -548,36 +556,35 @@ export function applyPreset() {
     .use({ useDefaultOptions: true });
 }
 
-export function useLayout() {
-  const setActiveMenuItem = (item) => {
-    layoutState.activeMenuItem = item.value || item;
-  };
+export const setActiveMenuItem = (item) => {
+  layoutState.activeMenuItem = item.value || item;
+};
 
-  const toggleDarkMode = () => {
-    if (!document.startViewTransition) {
-      executeDarkModeToggle();
-      return;
-    }
-    document.startViewTransition(() => executeDarkModeToggle(event));
-  };
+export const toggleMenu = () => {
+  if (layoutConfig.menuMode === "overlay") {
+    layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
+  }
+  if (window.innerWidth > 991) {
+    layoutState.staticMenuDesktopInactive =
+      !layoutState.staticMenuDesktopInactive;
+  } else {
+    layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
+  }
+};
 
+export const toggleDarkMode = () => {
+  if (!document.startViewTransition) {
+    executeDarkModeToggle();
+    return;
+  }
   const executeDarkModeToggle = () => {
     layoutConfig.darkTheme = !layoutConfig.darkTheme;
     document.documentElement.classList.toggle("app-dark");
   };
+  document.startViewTransition(() => executeDarkModeToggle());
+};
 
-  const toggleMenu = () => {
-    if (layoutConfig.menuMode === "overlay") {
-      layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
-    }
-    if (window.innerWidth > 991) {
-      layoutState.staticMenuDesktopInactive =
-        !layoutState.staticMenuDesktopInactive;
-    } else {
-      layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
-    }
-  };
-
+export function useLayout() {
   const isSidebarActive = computed(
     () => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive
   );
@@ -589,14 +596,9 @@ export function useLayout() {
   const getSurface = computed(() => layoutConfig.surface);
 
   return {
-    layoutConfig,
-    layoutState,
-    toggleMenu,
     isSidebarActive,
     isDarkTheme,
     getPrimary,
     getSurface,
-    setActiveMenuItem,
-    toggleDarkMode,
   };
 }

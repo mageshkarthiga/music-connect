@@ -1,4 +1,5 @@
 <template>
+    
     <div class="spotify-player">
         <div class="tracks">
             <Card v-for="track in tracks" style="width: 25rem; overflow: hidden; margin-bottom: 20px;"
@@ -35,6 +36,8 @@
 // import { useSpotifyStore } from "@/stores/spotifyStore";
 import axios from "axios";
 
+
+
 export default {
     name: "SpotifyPlayer",
     data() {
@@ -46,7 +49,7 @@ export default {
         };
     },
     async mounted() {
-        const response = await axios.get("https://music-connect-test-226566573804.us-central1.run.app/spotify/token");
+        const response = await axios.get("https://music-connect-226566573804.us-central1.run.app/spotify/token");
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent("spotify:track:5r7egnfTIQjaKSGREhIky9");
 

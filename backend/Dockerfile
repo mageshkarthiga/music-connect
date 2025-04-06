@@ -28,7 +28,6 @@ WORKDIR /
 # Copy the compiled binary from the build stage
 COPY --from=build /music-connect /music-connect
 
-
 # Expose the port the application runs on
 EXPOSE 8080
 
