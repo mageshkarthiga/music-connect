@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
   return {
     optimizeDeps: {
       noDiscovery: true,
+        include: ['@supabase/supabase-js']
     },
     plugins: [
       vue(),

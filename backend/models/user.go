@@ -11,3 +11,5 @@ type User struct {
 	Events       []*Event `json:"events" gorm:"many2many:user_events;joinForeignKey:UserID;joinReferences:EventID"`
 	Tracks       []*Track `json:"tracks" gorm:"many2many:music_preferences;joinForeignKey:UserID;joinReferences:TrackID"`
 }
+
+

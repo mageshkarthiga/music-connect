@@ -1,22 +1,37 @@
 package main
 
 import (
-	"log"
 	"backend/config"
+	"backend/middleware" // Make sure this is the correct path
 	"backend/routes"
+	"backend/services/spotify"
+	"log"
+	"os"
+
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"backend/services/spotify" 
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	// Initialize the database connection
-	err := config.InitDB()
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
-	} else {
-		log.Println("Database connection initialized successfully! ✅")
+	// Load Firebase project ID from environment or hardcode for now
+	projectID := os.Getenv("FIREBASE_PROJECT_ID")
+	if projectID == "" {
+		projectID = "your-firebase-project-id" // TODO: Replace with your real Firebase project ID
 	}
+
+	// Initialize JWKS (needed before parsing Firebase JWTs)
+	if err := middleware.InitJWKS(); err != nil {
+		log.Fatalf("❌ Failed to initialize JWKS: %v", err)
+	}
+	log.Println("🔑 JWKS initialized successfully!")
+
+	// Initialize DB
+	if err := config.InitDB(); err != nil {
+		log.Fatalf("❌ Failed to initialize database: %v", err)
+	}
+	log.Println("✅ Database connection initialized!")
+
+	// Authenticate with Spotify
 	services.SpotifyAuth()
 	token, err := services.GetSpotifyTokenRaw()
 	if err != nil {
@@ -25,33 +40,38 @@ func main() {
 	log.Println("🎧 Spotify token retrieved successfully!")
 	log.Printf("🔐 Access token: %s", token.AccessToken)
 
-
 	// Initialize Echo
 	e := echo.New()
 
-	// Register routes
-	routes.RegisterRoutes(e)
-	log.Println("Routes registered successfully ✅")
-
-	// Middleware: CORS
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"}, // Allow all origins (change it to more restrictive rules as needed)
+	// CORS middleware
+	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
-	log.Println("CORS middleware applied ✅")
+	log.Println("✅ CORS middleware applied")
 
-	// Define a simple route to check if the server is running
+	// Register routes
+	routes.RegisterRoutes(e)
+	log.Println("✅ Routes registered")
+
+	// Health check
 	e.GET("/", func(c echo.Context) error {
-		return c.String(200, "Database connection is live and the server is running on port 8080! ✅")
+		return c.String(200, "✅ Server is live on port 8080!")
 	})
 
-	// Start the server on port 8080
-	log.Printf("Starting server on port 8080... 🚀")
-	err = e.Start(":8080")
-	if err != nil {
-		log.Fatal("Error starting server ⚠️", err)
-	} else {
-		log.Println("Server started successfully on port 8080 ✅")
+	// Example secure route with JWT
+	e.GET("/secure", func(c echo.Context) error {
+		uid := c.Get("uid").(string)
+		return c.JSON(200, map[string]string{
+			"message": "Authenticated ✅",
+			"uid":     uid,
+		})
+	}, middleware.AuthMiddleware(projectID))
+
+	// Start server
+	log.Println("🚀 Starting server on port 8080...")
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("❌ Error starting server: %v", err)
 	}
 }

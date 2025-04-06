@@ -1,7 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
 import { API_BASE_URL } from "./apiConfig";
+import { supabase } from "../service/supabaseClient";
 
-const USER_URL = `${API_BASE_URL}/users`;
+const USER_URL = `${API_BASE_URL}`;
 
 export interface User {
   id?: number;
@@ -14,21 +15,26 @@ export interface User {
 
 export default {
   async createUser(user: User & { firebaseUID: string }) {
-    const snakeCaseUser = {
-      user_name: user.userName,
-      phone_number: user.phoneNumber,
-      email_address: user.emailAddress,
-      location: user.location,
-      profile_photo_url: user.profilePhotoUrl,
-      firebase_uid: user.firebaseUID,
-    };
-
-    const response = await axios.post(USER_URL, snakeCaseUser, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return response.data;
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          user_name: user.userName,
+          phone_number: user.phoneNumber,
+          email_address: user.emailAddress,
+          location: user.location,
+          profile_photo_url: user.profilePhotoUrl,
+          firebase_uid: user.firebaseUID,
+        },
+      ])
+      .single(); // Use `.single()` to get a single response
+  
+    if (error) {
+      console.error("Error creating user:", error.message);
+      throw error; // or return null/error
+    }
+  
+    return data; // Return the inserted user data
   },
 
   async getUser(id: number) {
@@ -62,5 +68,19 @@ export default {
       location: data.location,
       profilePhotoUrl: data.profile_photo_url,
     };
+  },
+
+  async fetchSecureData(idToken: string) {
+    try {
+      const response = await axios.get(`${USER_URL}/secure`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching secure data", error);
+      throw error;
+    }
   },
 };
