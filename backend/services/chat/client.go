@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // for readPump goroutine
@@ -25,27 +28,38 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
 	CheckOrigin: func(r *http.Request) bool {
-        return true
-    },
+		return true
+	},
 }
 
 // Client represents a WebSocket client.
 type Client struct {
 	conn     *websocket.Conn
 	wsServer *WsServer
-	send    chan []byte
+	send     chan []byte
+	rooms    map[*Room]bool
+	Name     string `json:"name"`
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
 	return &Client{
 		conn:     conn,
 		wsServer: wsServer,
-		send:    make(chan []byte, 256),
+		send:     make(chan []byte, 256),
+		rooms:    make(map[*Room]bool),
+		Name: name,
 	}
+}
+
+func (client *Client) GetName() string {
+	return client.Name
 }
 
 func (client *Client) disconnect() {
 	client.wsServer.unregister <- client
+	for room := range client.rooms {
+		room.unregister <- client
+	}
 	client.conn.Close()
 }
 
@@ -61,6 +75,15 @@ func (client *Client) readPump() {
 		return nil
 	})
 
+	testMessage := &Message{
+        Action:  SendMessageAction,
+        Message: "Hello from the server!",
+        Target:  "Alice", // Replace with the target user
+        Sender:  client,
+    }
+    client.wsServer.broadcast <- testMessage.encode()
+
+
 	for {
 		_, jsonMessage, err := client.conn.ReadMessage()
 		if err != nil {
@@ -69,7 +92,7 @@ func (client *Client) readPump() {
 			}
 			break
 		}
-		client.wsServer.broadcast <- jsonMessage
+		client.handleNewMessage(jsonMessage) // Handle the new message
 	}
 }
 
@@ -116,14 +139,67 @@ func (client *Client) writePump() {
 	}
 }
 
+func (client *Client) handleNewMessage(jsonMessage []byte) {
+	var message Message
+	if err := json.Unmarshal(jsonMessage, &message); err != nil {
+		log.Printf("Error while unmarshalling message: %v", err)
+	}
+
+	message.Sender = client
+	switch message.Action {
+	case SendMessageAction:
+		// send the message to a specific room, which depends on message target
+		roomName := message.Target
+		if room := client.wsServer.findRoom(roomName); room != nil {
+			room.broadcast <- &message
+		} else {
+			log.Printf("Room %s not found", roomName)
+		}
+	case JoinRoomAction:
+		client.handleJoinRoom(message)
+	case LeaveRoomAction:
+		client.handleLeaveRoom(message)
+	}
+}
+
+// client.go
+func (client *Client) handleJoinRoom(message Message) {
+	roomName := message.Message
+
+	room := client.wsServer.findRoom(roomName)
+	if room == nil {
+		room = client.wsServer.createRoom(roomName)
+	}
+
+	client.rooms[room] = true
+
+	room.register <- client
+}
+
+func (client *Client) handleLeaveRoom(message Message) {
+	room := client.wsServer.findRoom(message.Message)
+	if _, ok := client.rooms[room]; ok {
+		delete(client.rooms, room)
+	}
+
+	room.unregister <- client
+}
+
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
+	name, ok := r.URL.Query()["name"]
+
+	if !ok || len(name[0]) < 1 {
+		log.Println("Url Param 'name' is missing")
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Error while upgrading connection:", err)
 		return
 	}
 
-	client := newClient(conn, wsServer)
+	client := newClient(conn, wsServer,name[0])
 
 	go client.writePump()
 	go client.readPump()
