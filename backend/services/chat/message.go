@@ -10,16 +10,30 @@ const JoinRoomAction = "join-room"
 const LeaveRoomAction = "leave-room"
 
 type Message struct {
-	Action  string  `json:"action"`
-	Message string  `json:"message"`
-	Target  string  `json:"target"`
-	Sender  *Client `json:"sender"`
+	Action  string `json:"action"`
+	Message string `json:"message"`
+	Target  string `json:"target"`
+	Sender  string `json:"sender"` // Use user_id instead of Client
 }
 
-func (message *Message) encode() []byte{
-	json,err := json.Marshal(message)
-	if err !=nil{
+func (message *Message) encode() []byte {
+	type MessageDTO struct {
+		Action  string `json:"action"`
+		Message string `json:"message"`
+		Target  string `json:"target"`
+		Sender  string `json:"sender"`
+	}
+
+	dto := MessageDTO{
+		Action:  message.Action,
+		Message: message.Message,
+		Target:  message.Target,
+		Sender:  message.Sender, // Use user_id
+	}
+
+	jsonMessage, err := json.Marshal(dto)
+	if err != nil {
 		log.Println(err)
 	}
-	return json
+	return jsonMessage
 }

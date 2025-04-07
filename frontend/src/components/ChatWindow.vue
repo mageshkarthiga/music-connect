@@ -4,21 +4,21 @@
         <div class="user-list">
             <h3>Users</h3>
             <ul>
-                <li v-for="user in users" :key="user.user_id" @click="joinRoom(user.user_name)"
+                <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user.user_id)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
                     <img :src="user.profile_photo_url" alt="Profile" class="profile-photo" />
-                    {{ user.user_name }}
+                    {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
                 </li>
             </ul>
         </div>
 
         <!-- Chat Rooms -->
-        <div class="chat-window" v-if="rooms.length > 0">
-            <div v-for="room in rooms" :key="room.name" class="chat-room">
+        <div class="chat-window" v-if="currentRoom && rooms.length > 0">
+            <div v-for="room in rooms" :key="room.name" v-show="room.name === currentRoom" class="chat-room">
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <h3>💬 Chat Room: {{ room.name }}</h3>
+                            <h3>💬 Chat With: {{ room.name }}</h3>
                             <Button label="Leave Room" class="p-button-danger" @click="leaveRoom(room)" />
                         </div>
                     </template>
@@ -46,6 +46,10 @@
                 </Card>
             </div>
         </div>
+
+        <div v-if="loading" class="loading-overlay">
+            <p>Connecting to the chat room...</p>
+        </div>
     </div>
 </template>
 
@@ -55,38 +59,41 @@ export default {
     data() {
         return {
             currentUser: {
-                user_id: 4, // Simulated current user ID
-                user_name: "You", // Simulated current user name
-                profile_photo_url: "https://via.placeholder.com/50", // Simulated profile photo
+                user_id: 1,
+                user_name: 'karthiga',
+                profile_photo_url: 'https://ui-avatars.com/api/?name=Karthiga'
             },
             users: [
                 {
-                    user_id: 1,
-                    user_name: "Alice",
-                    profile_photo_url: "https://via.placeholder.com/50",
-                },
-                {
                     user_id: 2,
-                    user_name: "Bob",
-                    profile_photo_url: "https://via.placeholder.com/50",
+                    user_name: 'alex',
+                    profile_photo_url: 'https://ui-avatars.com/api/?name=Alex'
                 },
                 {
                     user_id: 3,
-                    user_name: "Charlie",
-                    profile_photo_url: "https://via.placeholder.com/50",
-                },
+                    user_name: 'jordan',
+                    profile_photo_url: 'https://ui-avatars.com/api/?name=Jordan'
+                }
             ],
-            rooms: [], // List of chat rooms
-            roomInput: "", // Input for joining a room
-            ws: null, // WebSocket connection
+            rooms: [], 
+            roomInput: "", 
+            ws: null, 
+            sockets: {},
+            currentRoom: null,
+            loading: false,
         };
     },
+    computed: {
+        filteredUsers() {
+            return this.users.filter(user => user.user_id !== this.currentUser.user_id);
+        }
+    },
     mounted() {
-        this.connectToWebsocket();
+        window.chatWindow = this // Expose the chat window instance globally for testing
     },
     methods: {
         connectToWebsocket() {
-            this.ws = new WebSocket("ws://localhost:8080/ws");
+            this.ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${this.currentRoom}`);
 
             this.ws.onopen = () => {
                 console.log("WebSocket connection established");
@@ -94,6 +101,10 @@ export default {
 
             this.ws.onclose = () => {
                 console.log("WebSocket connection closed");
+                // Optionally, attempt to reconnect
+                setTimeout(() => {
+                    this.connectToWebsocket();
+                }, 5000);
             };
 
             this.ws.onerror = (error) => {
@@ -111,32 +122,51 @@ export default {
             data = data.split(/\r?\n/);
 
             for (let i = 0; i < data.length; i++) {
-                let msg = JSON.parse(data[i]);
-                const room = this.findRoom(msg.target);
-                if (typeof room !== "undefined") {
-                    room.messages.push(msg);
+                try {
+                    let msg = JSON.parse(data[i]);
+
+                    // Validate the message structure
+                    if (!msg.message || !msg.target) {
+                        console.warn("Invalid message received:", msg);
+                        continue;
+                    }
+
+                    const room = this.findRoom(msg.target);
+                    if (room && room.name === msg.target) { // Ensure the message belongs to the correct room
+                        room.messages.push({
+                            message: msg.message.trim(), // Trim any extra whitespace or newlines
+                            sender: msg.sender || "Unknown", // Fallback to "Unknown" if sender is undefined
+                            isSent: msg.sender === this.currentUser.user_name
+                        });
+                        console.log(`Message added to room ${room.name}:`, room.messages);
+                    }
+                } catch (error) {
+                    console.error("Error parsing message:", error);
                 }
             }
         },
 
         sendMessage(room) {
-            if (room.newMessage !== "") {
-                const message = {
+            const ws = this.sockets[room.name];
+            if (ws && ws.readyState === WebSocket.OPEN && room.newMessage.trim()) {
+                const messageData = {
                     action: "send-message",
-                    message: room.newMessage.trim(), // Trim the message to remove unnecessary spaces or newlines
-                    target: room.name,
+                    message: room.newMessage,
+                    target: room.name
                 };
 
-                console.log("Sending message:", message); // Log the message being sent
+                ws.send(JSON.stringify(messageData));
+                console.log("Message sent:", messageData);
 
-                this.ws.send(JSON.stringify(message));
                 room.messages.push({
                     message: room.newMessage,
-                    isSent: true,
-                    sender: "You",
+                    sender: this.currentUser.user_name,
+                    isSent: true
                 });
 
-                room.newMessage = "";
+                room.newMessage = '';
+            } else {
+                console.error("WebSocket is not open. Cannot send message.");
             }
         },
 
@@ -144,15 +174,95 @@ export default {
             return this.rooms.find((room) => room.name === roomName);
         },
 
-        joinRoom(roomName) {
-            this.ws.send(JSON.stringify({ action: "join-room", message: roomName }));
-            this.rooms.push({ name: roomName, messages: [], newMessage: "" });
+        joinRoom(userId) {
+            const user = this.users.find(u => u.user_id === userId);
+
+            // Check if the user exists
+            if (!user) {
+                console.error(`User with user_id ${userId} not found`);
+                return;
+            }
+
+            // Generate a consistent room name by sorting user IDs
+            const roomName = [this.currentUser.user_id, userId].sort().join("-");
+
+            console.log(`User ${this.currentUser.user_name} is joining room: ${roomName}`);
+
+            // Check if room already exists
+            const existingRoom = this.rooms.find(r => r.name === roomName);
+            if (existingRoom) {
+                this.currentRoom = roomName;  // Set the current room when it's found
+                this.currentChatUser = user;
+                return;
+            }
+
+            const newRoom = {
+                name: roomName,
+                messages: [],
+                newMessage: ''
+            };
+
+            // Set loading state to true
+            this.loading = true;
+
+            // Establish WebSocket connection for the room
+            const ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
+
+            ws.onopen = () => {
+                console.log(`WebSocket connection established for room: ${roomName}`);
+                this.loading = false; // Set loading state to false
+
+                // Send the join-room action
+                const joinRoomMessage = {
+                    action: "join-room",
+                    message: roomName,
+                    target: roomName
+                };
+                ws.send(JSON.stringify(joinRoomMessage));
+                console.log("Join room message sent:", joinRoomMessage);
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                newRoom.messages.push({
+                    message: data.message,
+                    sender: data.sender,
+                    isSent: data.sender === this.currentUser.user_name
+                });
+
+                this.$nextTick(() => {
+                    const body = this.$refs.chatBody;
+                    if (body && body.scrollTop !== undefined) {
+                        body.scrollTop = body.scrollHeight;
+                    }
+                });
+            };
+
+            ws.onclose = () => {
+                console.log(`WebSocket connection closed for room: ${roomName}`);
+                this.loading = false; // Reset loading state
+            };
+
+            ws.onerror = (error) => {
+                console.error(`WebSocket error for room: ${roomName}`, error);
+                this.loading = false; // Reset loading state
+            };
+
+            this.rooms.push(newRoom);
+            this.sockets[roomName] = ws;
+            this.currentChatUser = user;
+            this.currentRoom = roomName;  // Set the current room when a new room is created
         },
 
         leaveRoom(room) {
-            this.ws.send(JSON.stringify({ action: "leave-room", message: room.name }));
-            this.rooms = this.rooms.filter((r) => r.name !== room.name);
-        },
+            const socket = this.sockets[room.name];
+            if (socket) {
+                socket.close();
+                delete this.sockets[room.name];
+            }
+            this.rooms = this.rooms.filter(r => r.name !== room.name);
+            this.currentChatUser = null;
+        }
     },
 };
 </script>
@@ -275,5 +385,20 @@ export default {
 
 .chat-input {
     flex: 1;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    z-index: 1000;
 }
 </style>

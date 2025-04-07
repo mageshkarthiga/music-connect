@@ -38,21 +38,17 @@ type Client struct {
 	wsServer *WsServer
 	send     chan []byte
 	rooms    map[*Room]bool
-	Name     string `json:"name"`
+	UserID   string `json:"user_id"`
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, userID string) *Client {
 	return &Client{
 		conn:     conn,
 		wsServer: wsServer,
 		send:     make(chan []byte, 256),
 		rooms:    make(map[*Room]bool),
-		Name: name,
+		UserID:   userID,
 	}
-}
-
-func (client *Client) GetName() string {
-	return client.Name
 }
 
 func (client *Client) disconnect() {
@@ -74,15 +70,6 @@ func (client *Client) readPump() {
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
-
-	testMessage := &Message{
-        Action:  SendMessageAction,
-        Message: "Hello from the server!",
-        Target:  "Alice", // Replace with the target user
-        Sender:  client,
-    }
-    client.wsServer.broadcast <- testMessage.encode()
-
 
 	for {
 		_, jsonMessage, err := client.conn.ReadMessage()
@@ -143,32 +130,33 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 	var message Message
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
 		log.Printf("Error while unmarshalling message: %v", err)
+		return
 	}
 
-	message.Sender = client
+	message.Sender = client.UserID
 	switch message.Action {
 	case SendMessageAction:
-		// send the message to a specific room, which depends on message target
 		roomName := message.Target
 		if room := client.wsServer.findRoom(roomName); room != nil {
 			room.broadcast <- &message
-		} else {
-			log.Printf("Room %s not found", roomName)
 		}
 	case JoinRoomAction:
+		log.Printf("Processing join-room action for room: %s", message.Message)
 		client.handleJoinRoom(message)
 	case LeaveRoomAction:
 		client.handleLeaveRoom(message)
 	}
 }
 
-// client.go
 func (client *Client) handleJoinRoom(message Message) {
 	roomName := message.Message
 
 	room := client.wsServer.findRoom(roomName)
 	if room == nil {
+		fmt.Printf("Creating new room: %s\n", roomName)
 		room = client.wsServer.createRoom(roomName)
+	} else {
+		fmt.Printf("Room %s already exists\n", roomName)
 	}
 
 	client.rooms[room] = true
@@ -186,12 +174,16 @@ func (client *Client) handleLeaveRoom(message Message) {
 }
 
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
-	name, ok := r.URL.Query()["name"]
+	userID := r.URL.Query().Get("userid")
+	room := r.URL.Query().Get("room")
 
-	if !ok || len(name[0]) < 1 {
-		log.Println("Url Param 'name' is missing")
+	if userID == "" || room == "" {
+		log.Println("Missing 'userID' or 'room' query parameter")
+		http.Error(w, "Missing 'userID' or 'room' query parameter", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("New WebSocket connection: userID=%s, room=%s", userID, room)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -199,7 +191,7 @@ func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(conn, wsServer,name[0])
+	client := newClient(conn, wsServer, userID)
 
 	go client.writePump()
 	go client.readPump()

@@ -1,5 +1,9 @@
 package chat
 
+import (
+	"log"
+)
+
 type WsServer struct {
 	clients    map[*Client]bool
 	register   chan *Client
@@ -50,14 +54,15 @@ func (s *WsServer) broadcastToClients(message []byte) {
 	}
 }
 
-func (s *WsServer) createRoom(name string) *Room{
-	room := NewRoom(name)
-	go room.RunRoom()
-	s.rooms[room]=true
-	return room
+func (s *WsServer) createRoom(name string) *Room {
+    room := NewRoom(name)
+    log.Printf("Starting RunRoom for room: %s\n", name)
+    go room.RunRoom()
+    s.rooms[room] = true
+    return room
 }
 
-func (s *WsServer) findRoom(room *Room) {
+func (s *WsServer) findRoom(name string) *Room{
 	var foundRoom *Room
 	for room := range s.rooms {
 		if room.GetName() == name{
