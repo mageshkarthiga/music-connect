@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -36,31 +37,31 @@ func (room *Room) notifyClientJoined(client *Client) {
 
 // RunRoom to run the room and accept various requests
 func (room *Room) RunRoom() {
-    fmt.Printf("RunRoom started for room: %s\n", room.name)
-    for {
-        select {
-        case client := <-room.register:
-            fmt.Printf("Registering client %s in room %s\n", client.UserID, room.name)
-            room.registerClientInRoom(client)
-        case client := <-room.unregister:
-            fmt.Printf("Unregistering client %s from room %s\n", client.UserID, room.name)
-            room.unregisterClientInRoom(client)
-        case message := <-room.broadcast:
-            fmt.Printf("Broadcasting message in room %s: %s\n", room.name, string(message.encode()))
-            room.broadcastMessageToClients(message.encode())
-        }
-    }
+	fmt.Printf("RunRoom started for room: %s\n", room.name)
+	for {
+		select {
+		case client := <-room.register:
+			fmt.Printf("Registering client %s in room %s\n", client.UserID, room.name)
+			room.registerClientInRoom(client)
+		case client := <-room.unregister:
+			fmt.Printf("Unregistering client %s from room %s\n", client.UserID, room.name)
+			room.unregisterClientInRoom(client)
+		case message := <-room.broadcast:
+			fmt.Printf("Broadcasting message in room %s: %s\n", room.name, string(message.encode()))
+			room.broadcastMessageToClients(message.encode())
+		}
+	}
 }
 
 func (room *Room) registerClientInRoom(client *Client) {
-    room.notifyClientJoined(client)
-    room.clients[client] = true
-    fmt.Printf("Client %s joined room %s\n", client.UserID, room.name)
-    fmt.Printf("Current clients in room %s: ", room.name)
-    for c := range room.clients {
-        fmt.Printf("%s ", c.UserID)
-    }
-    fmt.Println()
+	room.notifyClientJoined(client)
+	room.clients[client] = true
+	fmt.Printf("Client %s joined room %s\n", client.UserID, room.name)
+	fmt.Printf("Current clients in room %s: ", room.name)
+	for c := range room.clients {
+		fmt.Printf("%s ", c.UserID)
+	}
+	fmt.Println()
 }
 
 func (room *Room) unregisterClientInRoom(client *Client) {
@@ -70,16 +71,29 @@ func (room *Room) unregisterClientInRoom(client *Client) {
 }
 
 func (room *Room) broadcastMessageToClients(message []byte) {
-    fmt.Printf("Broadcasting message to room %s: %s\n", room.name, string(message))
-    for client := range room.clients {
-        fmt.Printf("Sending message to client %s\n", client.UserID)
-        select {
-        case client.send <- message:
-            fmt.Printf("Message sent to client %s\n", client.UserID)
-        default:
-            fmt.Printf("Failed to send message to client %s (channel blocked)\n", client.UserID)
-        }
-    }
+	fmt.Printf("Broadcasting message to room %s: %s\n", room.name, string(message))
+	for client := range room.clients {
+		// Parse the message to check the sender
+		var msg Message
+		if err := json.Unmarshal(message, &msg); err != nil {
+			fmt.Printf("Error unmarshalling message: %v\n", err)
+			continue
+		}
+
+		// Skip sending the message back to the sender
+		if client.UserID == msg.Sender {
+			fmt.Printf("Skipping message for sender %s\n", client.UserID)
+			continue
+		}
+
+		fmt.Printf("Sending message to client %s\n", client.UserID)
+		select {
+		case client.send <- message:
+			fmt.Printf("Message sent to client %s\n", client.UserID)
+		default:
+			fmt.Printf("Failed to send message to client %s (channel blocked)\n", client.UserID)
+		}
+	}
 }
 
 func (room *Room) GetName() string {

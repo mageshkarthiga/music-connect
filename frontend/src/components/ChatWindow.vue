@@ -19,7 +19,7 @@
                     <template #header>
                         <div class="chat-header">
                             <h3>💬 Chat With: {{ room.name }}</h3>
-                            <Button label="Leave Room" class="p-button-danger" @click="leaveRoom(room)" />
+                            <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" />
                         </div>
                     </template>
 
@@ -29,7 +29,7 @@
                                 :class="{ 'sent': message.isSent, 'received': !message.isSent }">
                                 <div class="message-bubble">
                                     {{ message.message }}
-                                    <span v-if="message.sender" class="msg-sender">{{ message.sender }}</span>
+                                    <!-- <span v-if="message.sender" class="msg-sender">{{ message.sender }}</span> -->
                                 </div>
                             </div>
                         </div>
@@ -73,11 +73,16 @@ export default {
                     user_id: 3,
                     user_name: 'jordan',
                     profile_photo_url: 'https://ui-avatars.com/api/?name=Jordan'
+                },
+                {
+                    user_id: 4,
+                    user_name: 'charles',
+                    profile_photo_url: 'https://ui-avatars.com/api/?name=Charles'
                 }
             ],
-            rooms: [], 
-            roomInput: "", 
-            ws: null, 
+            rooms: [],
+            roomInput: "",
+            ws: null,
             sockets: {},
             currentRoom: null,
             loading: false,
@@ -132,12 +137,15 @@ export default {
                     }
 
                     const room = this.findRoom(msg.target);
-                    if (room && room.name === msg.target) { // Ensure the message belongs to the correct room
-                        room.messages.push({
-                            message: msg.message.trim(), // Trim any extra whitespace or newlines
-                            sender: msg.sender || "Unknown", // Fallback to "Unknown" if sender is undefined
-                            isSent: msg.sender === this.currentUser.user_name
-                        });
+                    if (room && room.name === msg.target) { 
+                        room.messages = [
+                            ...room.messages,
+                            {
+                                message: msg.message.trim(), 
+                                sender: msg.sender || "Unknown", 
+                                isSent: msg.sender === this.currentUser.user_name
+                            }
+                        ];
                         console.log(`Message added to room ${room.name}:`, room.messages);
                     }
                 } catch (error) {
@@ -240,18 +248,18 @@ export default {
 
             ws.onclose = () => {
                 console.log(`WebSocket connection closed for room: ${roomName}`);
-                this.loading = false; // Reset loading state
+                this.loading = false;
             };
 
             ws.onerror = (error) => {
                 console.error(`WebSocket error for room: ${roomName}`, error);
-                this.loading = false; // Reset loading state
+                this.loading = false; 
             };
 
             this.rooms.push(newRoom);
             this.sockets[roomName] = ws;
             this.currentChatUser = user;
-            this.currentRoom = roomName;  // Set the current room when a new room is created
+            this.currentRoom = roomName;  
         },
 
         leaveRoom(room) {
@@ -268,7 +276,6 @@ export default {
 </script>
 
 <style scoped>
-/* Add your styles here */
 .chat-container {
     display: flex;
     max-width: 900px;
