@@ -11,10 +11,6 @@ import {
 } from "firebase/auth";
 
 
-import supabaseUserService from "@/service/supabaseUserService";
-import { supabase } from "@/service/supabaseClient";
-
-
 import { useRouter } from "vue-router";
 
 const email = ref("");
@@ -24,61 +20,13 @@ const mode = ref("login");
 const router = useRouter();
 
 
-async function storeUserInSupabase(firebaseUID) {
-  try {
-    const user = auth.currentUser;
-    console.log("Firebase user:", user);
-
-    if (!user) throw new Error('No user logged in with Firebase');
-
-    const user_name = user.displayName || null;
-    const email_address = user.email || null;
-    const phone_number = user.phoneNumber || null;
-    const profile_photo_url = user.photoURL || null;
-    const location = null; // Set this if you have it from elsewhere
-
-
-    console.log('Storing user in Supabase:', {
-      firebaseUID,
-      user_name,
-      email_address,
-      phone_number,
-      location,
-      profile_photo_url,
-    });
-
-    const { data, error } = await supabase
-      .from('users')
-      .insert([
-        {
-          firebase_uid: firebaseUID,
-          user_name: user_name,
-          email_address: email_address,
-          phone_number: phone_number,
-          location: location,
-          profile_photo_url: profile_photo_url,
-        }
-      ]);
-
-    if (error) {
-      throw new Error(`Error inserting user into Supabase: ${error.message}`);
-    }
-
-    
-    console.log('✅ User stored successfully in Supabase:');
-  } catch (error) {
-    console.error('❌ Error storing user in Supabase:', error);
-    throw error;
-  }
-}
-
-
 const login = async () => {
   authError.value = "";
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value);
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-    await storeUserInSupabase(userCredential.user.uid); 
+    console.log("User logged in:", userCredential.user);
+
     router.push("/");
   } catch (error) {
     console.error("Login error:", error);
@@ -117,7 +65,8 @@ const signUp = async () => {
   try {
     await createUserWithEmailAndPassword(auth, email.value, password.value);
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-    await storeUserInSupabase(userCredential.user.uid); 
+    console.log("User signed up:", userCredential.user);
+
 
     router.push("/createaccount");
   } catch (error) {
@@ -178,7 +127,7 @@ const signInWithGoogle = async () => {
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     const additionalUserInfo = getAdditionalUserInfo(userCredential);
-    await storeUserInSupabase(userCredential.user.uid); 
+    console.log("Google Sign-In successful:", userCredential.user);
 
     if (additionalUserInfo?.isNewUser) {
       router.push("/createaccount");

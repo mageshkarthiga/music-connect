@@ -3,10 +3,12 @@ package main
 import (
 	"backend/config"
 	"backend/middleware" // Make sure this is the correct path
+	"backend/auth"
 	"backend/routes"
 	"backend/services/spotify"
 	"log"
 	"os"
+	"fmt"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -15,9 +17,7 @@ import (
 func main() {
 	// Load Firebase project ID from environment or hardcode for now
 	projectID := os.Getenv("FIREBASE_PROJECT_ID")
-	if projectID == "" {
-		projectID = "your-firebase-project-id" // TODO: Replace with your real Firebase project ID
-	}
+	print("Project ID: ", projectID)
 
 	// Initialize JWKS (needed before parsing Firebase JWTs)
 	if err := middleware.InitJWKS(); err != nil {
@@ -28,8 +28,13 @@ func main() {
 	// Initialize DB
 	if err := config.InitDB(); err != nil {
 		log.Fatalf("❌ Failed to initialize database: %v", err)
+		fmt.Println("Database connection status:", config.DB)
 	}
-	log.Println("✅ Database connection initialized!")
+	if config.DB == nil {
+		log.Fatal("❌ Database connection is nil!")
+	} else {
+		log.Println("✅ Database connection initialized!")
+	}
 
 	// Authenticate with Spotify
 	services.SpotifyAuth()
@@ -68,6 +73,9 @@ func main() {
 			"uid":     uid,
 		})
 	}, middleware.AuthMiddleware(projectID))
+
+	auth.RegisterAuthRoutes(e, projectID)
+	log.Println("✅ Auth routes registered")
 
 	// Start server
 	log.Println("🚀 Starting server on port 8080...")

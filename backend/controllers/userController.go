@@ -8,7 +8,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"log"
+	"fmt"
+	"strconv"
 )
+
+
 
 // GetUsers fetches all users
 func GetUsers(c echo.Context) error {
@@ -21,13 +25,36 @@ func GetUsers(c echo.Context) error {
 
 // GetUser fetches a user by ID
 func GetUser(c echo.Context) error {
-	id := c.Param("UserID")
-	var user models.User
-	if err := config.DB.First(&user, id).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "User not found")
-	}
-	return c.JSON(http.StatusOK, user)
+
+
+    id := c.Param("UserID")
+
+    fmt.Println("Fetching user by ID")
+    fmt.Println("UserID:", id)
+
+    if id == "" {
+        return c.JSON(http.StatusBadRequest, "UserID is missing in the URL")
+    }
+
+    // Check if config.DB is initialized
+    if config.DB == nil {
+        return c.JSON(http.StatusInternalServerError, "Database connection not established")
+    }
+
+    // Convert the UserID to int8
+    userID, err := strconv.ParseInt(id, 10, 8) // Convert string to int8
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "Invalid UserID format")
+    }
+
+    var user models.User
+    if err := config.DB.First(&user, userID).Error; err != nil {
+        return c.JSON(http.StatusNotFound, "User not found")
+    }
+
+    return c.JSON(http.StatusOK, user)
 }
+
 
 // CreateUser creates a new user
 func CreateUser(c echo.Context) error {
