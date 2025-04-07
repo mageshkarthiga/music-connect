@@ -13,7 +13,7 @@ type Message struct {
 	Action  string `json:"action"`
 	Message string `json:"message"`
 	Target  string `json:"target"`
-	Sender  string `json:"sender"` // Use user_id instead of Client
+	Sender  string `json:"sender"`
 }
 
 func (message *Message) encode() []byte {
@@ -28,7 +28,7 @@ func (message *Message) encode() []byte {
 		Action:  message.Action,
 		Message: message.Message,
 		Target:  message.Target,
-		Sender:  message.Sender, // Use user_id
+		Sender:  message.Sender, 
 	}
 
 	jsonMessage, err := json.Marshal(dto)

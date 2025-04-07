@@ -79,7 +79,7 @@ func (client *Client) readPump() {
 			}
 			break
 		}
-		client.handleNewMessage(jsonMessage) // Handle the new message
+		client.handleNewMessage(jsonMessage) 
 	}
 }
 
@@ -94,9 +94,8 @@ func (client *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-client.send:
-			client.conn.SetWriteDeadline(time.Now().Add(writeWait)) // Set the write deadline
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The WebSocket connection is closed.
 				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}

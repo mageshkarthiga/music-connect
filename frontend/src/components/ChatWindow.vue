@@ -15,6 +15,8 @@
         <!-- Chat Rooms -->
         <div class="chat-window" v-if="currentRoom && rooms.length > 0">
             <div v-for="room in rooms" :key="room.name" v-show="room.name === currentRoom" class="chat-room">
+                <!-- Error Message -->
+                <Message v-if="errorMessage" severity="error" :content="errorMessage" class="error-message" />
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
@@ -28,8 +30,7 @@
                             <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
                                 :class="{ 'sent': message.isSent, 'received': !message.isSent }">
                                 <div class="message-bubble">
-                                    {{ message.message }}
-                                    <!-- <span v-if="message.sender" class="msg-sender">{{ message.sender }}</span> -->
+                                    {{ message.message }} {{ message.timestamp }}
                                 </div>
                             </div>
                         </div>
@@ -47,8 +48,8 @@
             </div>
         </div>
 
+        <!-- Loading -->
         <div v-if="loading" class="loading-overlay">
-            <p>Connecting to the chat room...</p>
         </div>
     </div>
 </template>
@@ -106,7 +107,6 @@ export default {
 
             this.ws.onclose = () => {
                 console.log("WebSocket connection closed");
-                // Optionally, attempt to reconnect
                 setTimeout(() => {
                     this.connectToWebsocket();
                 }, 5000);
@@ -114,39 +114,46 @@ export default {
 
             this.ws.onerror = (error) => {
                 console.error("WebSocket error:", error);
+                this.errorMessage = "WebSocket connection error. Please try again later.";
             };
 
             this.ws.addEventListener("message", (event) => {
-                console.log("Message received:", event.data); // Log incoming messages
+                console.log("Message received:", event.data);
                 this.handleNewMessage(event);
             });
         },
 
         handleNewMessage(event) {
+            console.log("Raw WebSocket message:", event.data); // Log raw WebSocket message
             let data = event.data;
             data = data.split(/\r?\n/);
 
             for (let i = 0; i < data.length; i++) {
                 try {
                     let msg = JSON.parse(data[i]);
+                    console.log("Parsed message:", msg); // Log parsed message
 
                     // Validate the message structure
-                    if (!msg.message || !msg.target) {
+                    if (!msg.message || !msg.target || !msg.timestamp) {
                         console.warn("Invalid message received:", msg);
                         continue;
                     }
 
                     const room = this.findRoom(msg.target);
-                    if (room && room.name === msg.target) { 
-                        room.messages = [
+                    if (room && room.name === msg.target) {
+                        console.log("Room found:", room.name); // Log the room being updated
+                        this.$set(room, 'messages', [
                             ...room.messages,
                             {
-                                message: msg.message.trim(), 
-                                sender: msg.sender || "Unknown", 
-                                isSent: msg.sender === this.currentUser.user_name
+                                message: msg.message.trim(),
+                                sender: msg.sender || "Unknown",
+                                isSent: msg.sender === this.currentUser.user_name,
+                                timestamp: msg.timestamp
                             }
-                        ];
-                        console.log(`Message added to room ${room.name}:`, room.messages);
+                        ]);
+                        console.log(`Updated messages for room ${room.name}:`, room.messages); // Log updated messages
+                    } else {
+                        console.warn("Room not found for target:", msg.target);
                     }
                 } catch (error) {
                     console.error("Error parsing message:", error);
@@ -160,7 +167,8 @@ export default {
                 const messageData = {
                     action: "send-message",
                     message: room.newMessage,
-                    target: room.name
+                    target: room.name,
+                    timestamp: new Date().toISOString(),
                 };
 
                 ws.send(JSON.stringify(messageData));
@@ -175,6 +183,7 @@ export default {
                 room.newMessage = '';
             } else {
                 console.error("WebSocket is not open. Cannot send message.");
+                this.errorMessage = "Error: Cannot send message. Please try again later.";
             }
         },
 
@@ -188,10 +197,10 @@ export default {
             // Check if the user exists
             if (!user) {
                 console.error(`User with user_id ${userId} not found`);
+                this.errorMessage = `User with user_id ${userId} not found`; // Set error message
                 return;
             }
 
-            // Generate a consistent room name by sorting user IDs
             const roomName = [this.currentUser.user_id, userId].sort().join("-");
 
             console.log(`User ${this.currentUser.user_name} is joining room: ${roomName}`);
@@ -210,7 +219,6 @@ export default {
                 newMessage: ''
             };
 
-            // Set loading state to true
             this.loading = true;
 
             // Establish WebSocket connection for the room
@@ -218,9 +226,8 @@ export default {
 
             ws.onopen = () => {
                 console.log(`WebSocket connection established for room: ${roomName}`);
-                this.loading = false; // Set loading state to false
+                this.loading = false;
 
-                // Send the join-room action
                 const joinRoomMessage = {
                     action: "join-room",
                     message: roomName,
@@ -253,13 +260,14 @@ export default {
 
             ws.onerror = (error) => {
                 console.error(`WebSocket error for room: ${roomName}`, error);
-                this.loading = false; 
+                this.errorMessage = `Error connecting to room: ${roomName}`;
+                this.loading = false;
             };
 
             this.rooms.push(newRoom);
             this.sockets[roomName] = ws;
             this.currentChatUser = user;
-            this.currentRoom = roomName;  
+            this.currentRoom = roomName;
         },
 
         leaveRoom(room) {
@@ -270,7 +278,7 @@ export default {
             }
             this.rooms = this.rooms.filter(r => r.name !== room.name);
             this.currentChatUser = null;
-        }
+        },
     },
 };
 </script>
@@ -381,6 +389,14 @@ export default {
     border-bottom-left-radius: 0;
 }
 
+.message-time {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
 .chat-footer {
     display: flex;
     align-items: flex-end;
@@ -401,11 +417,28 @@ export default {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5rem;
     z-index: 1000;
+}
+
+.loading-content {
+    width: 80%;
+    max-width: 400px;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.message-sender {
+    font-size: 0.8rem;
+    color: #6c757d;
 }
 </style>

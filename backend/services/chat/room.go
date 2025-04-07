@@ -73,7 +73,6 @@ func (room *Room) unregisterClientInRoom(client *Client) {
 func (room *Room) broadcastMessageToClients(message []byte) {
 	fmt.Printf("Broadcasting message to room %s: %s\n", room.name, string(message))
 	for client := range room.clients {
-		// Parse the message to check the sender
 		var msg Message
 		if err := json.Unmarshal(message, &msg); err != nil {
 			fmt.Printf("Error unmarshalling message: %v\n", err)
@@ -82,7 +81,6 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 
 		// Skip sending the message back to the sender
 		if client.UserID == msg.Sender {
-			fmt.Printf("Skipping message for sender %s\n", client.UserID)
 			continue
 		}
 
