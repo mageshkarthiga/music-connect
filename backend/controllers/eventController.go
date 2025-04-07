@@ -68,4 +68,74 @@ func DeleteEvent(c echo.Context) error {
         return c.JSON(http.StatusInternalServerError, "Failed to delete event")
     }
     return c.JSON(http.StatusOK, "Event deleted successfully")
+
 }
+
+
+    //add events for a user
+    func AddEventForUser(c echo.Context) error {
+        userID := c.Param("userId")
+        if userID == "" {
+            return c.JSON(http.StatusBadRequest, "UserID is missing in the URL")
+        }
+    
+        // Check if the database connection is established
+        if config.DB == nil {
+            return c.JSON(http.StatusInternalServerError, "Database connection not established")
+        }
+    
+        // Fetch the user from the database to check if the user exists
+        var user models.User
+        if err := config.DB.First(&user, "user_id = ?", userID).Error; err != nil {
+            return c.JSON(http.StatusNotFound, "User not found")
+        }
+    
+        // Bind the request body to the event struct
+        var event models.Event
+        if err := c.Bind(&event); err != nil {
+            return c.JSON(http.StatusBadRequest, err.Error())
+        }
+    
+        // Associate the event with the user
+        if err := config.DB.Model(&user).Association("Events").Append(&event); err != nil {
+            return c.JSON(http.StatusInternalServerError, "Failed to add event for user")
+        }
+    
+        // Return the updated event as JSON
+        return c.JSON(http.StatusOK, event)
+
+    }
+
+    func GetEventsForUser(c echo.Context) error {
+        // Get the user ID from the URL parameters
+        userID := c.Param("userId")
+        if userID == "" {
+            return c.JSON(http.StatusBadRequest, "UserID is missing in the URL")
+        }
+    
+        // Check if the database connection is established
+        if config.DB == nil {
+            return c.JSON(http.StatusInternalServerError, "Database connection not established")
+        }
+    
+        // Fetch the user from the database to check if the user exists
+        var user models.User
+        if err := config.DB.First(&user, "user_id = ?", userID).Error; err != nil {
+            return c.JSON(http.StatusNotFound, "User not found")
+        }
+    
+        // Fetch all events for the user using the many-to-many relationship
+        var events []models.Event
+        if err := config.DB.Model(&user).Association("Events").Find(&events); err != nil {
+            return c.JSON(http.StatusInternalServerError, "Failed to fetch events")
+        }
+    
+        // If no events are found, return a message
+        if len(events) == 0 {
+            return c.JSON(http.StatusOK, "No events found for this user")
+        }
+    
+        // Return the events as JSON
+        return c.JSON(http.StatusOK, events)
+    }
+

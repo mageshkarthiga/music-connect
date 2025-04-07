@@ -36,6 +36,8 @@ func RegisterRoutes(e *echo.Echo) {
     e.POST("/events", controllers.CreateEvent)        // Create a new event
     e.PUT("/events/:id", controllers.UpdateEvent)     // Update an existing event by ID
     e.DELETE("/events/:id", controllers.DeleteEvent)  // Delete an event by ID
+    e.GET("/users/:userId/events", controllers.GetEventsForUser) // Fetch events for a specific user
+    e.POST("/users/:userId/events", controllers.AddEventForUser) // Add an event for a specific user
 
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
