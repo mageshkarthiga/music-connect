@@ -12,10 +12,13 @@ import (
 // GetPlaylists fetches all playlists
 func GetPlaylists(c echo.Context) error {
 	var playlists []models.Playlist
-	if err := config.DB.Find(&playlists).Error; err != nil {
+
+	// Preload the tracks for each playlist
+	if err := config.DB.Preload("Tracks").Find(&playlists).Error; err != nil {
 		log.Printf("Error fetching playlists: %v", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch playlists")
 	}
+
 	return c.JSON(http.StatusOK, playlists)
 }
 
@@ -121,12 +124,16 @@ func DeletePlaylist(c echo.Context) error {
 func GetPlaylistsForUser(c echo.Context) error {
 	userId := c.Param("userId")
 	var playlists []models.Playlist
-	if err := config.DB.Where("user_id = ?", userId).Find(&playlists).Error; err != nil {
+
+	// Preload the tracks for each playlist
+	if err := config.DB.Where("user_id = ?", userId).Preload("Tracks").Find(&playlists).Error; err != nil {
 		log.Printf("Error fetching playlists for user ID %s: %v", userId, err)
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch playlists for user")
 	}
+
 	return c.JSON(http.StatusOK, playlists)
 }
+
 
 // AddPlaylistForUser adds a playlist for a specific user
 func AddPlaylistForUser(c echo.Context) error {
