@@ -21,6 +21,7 @@ func RegisterRoutes(e *echo.Echo) {
     e.PUT("/users/:UserID", controllers.UpdateUser)       // Update an existing user by ID
     e.DELETE("/users/:UserID", controllers.DeleteUser)    // Delete a user by ID
     // e.POST("/auth/login", controllers.RegisterAuthRoutes)
+    e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
 
 
     // Track Routes

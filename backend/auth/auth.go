@@ -28,6 +28,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		}
 
 		tokenStr := parts[1]
+		
 
 		token, err := jwt.Parse(tokenStr, middleware.GetJWKS().Keyfunc)
 		if err != nil || !token.Valid {
@@ -57,26 +58,21 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		}
 
 		// Set cookie
-		cookie := &http.Cookie{
-			Name:     "auth_token",
-			Value:    tokenStr,
-			HttpOnly: true,
-			Secure:   false, // toggle true for prod
-			Path:     "/",
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   3600,
+		if err := SetAuthCookie(c, tokenStr); err != nil {
+			return c.JSON(http.StatusInternalServerError, "Error setting cookie")
 		}
-		c.SetCookie(cookie)
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"message": "Login successful",
 			"uid":     uid,
+			
 		})
 	})
 
 	// e.GET("/users/:id", middleware.AuthMiddleware(projectID)(controllers.GetUser))        // Fetch a user by ID
 	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))     // Update an existing user by ID
 	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))  // Delete a user by ID
+    e.GET("/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID)) // Fetch Firebase UID from token
 
 	// Track Routes (Protected)
 	e.POST("/tracks", middleware.AuthMiddleware(projectID)(controllers.CreateTrack))       // Create a new track

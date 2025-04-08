@@ -8,8 +8,9 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   getAdditionalUserInfo,
+  getIdToken
 } from "firebase/auth";
-
+import AuthService from "@/service/AuthService";
 
 import { useRouter } from "vue-router";
 
@@ -25,7 +26,18 @@ const login = async () => {
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value);
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    
     console.log("User logged in:", userCredential.user);
+
+    const user = userCredential.user;
+    const accessToken = await getIdToken(user);
+
+    // console.log("Access Token:", accessToken);
+
+    // Authenticate user with the access token
+    const response = await AuthService.authenticateUser(accessToken);
+    console.log("User authenticated:", response);
+
 
     router.push("/");
   } catch (error) {

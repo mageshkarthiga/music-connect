@@ -1,124 +1,65 @@
 <template>
-    <div class="home-page">
-      <!-- Grid Section: Events and Music -->
-      <div class="grid">
-        <div class="row">
-          <!-- Events Section -->
-          <div class="col-6">
-            <div class="row">
-              <!-- Event Cards -->
-              <div class="col-4 col-md-4">
-                <Card>
-                  <h3>Event 1: Concert</h3>
-                  <p>Date: 10th April 2025</p>
-                  <Button>RSVP</Button>
+  <div>
+    <button @click="fetchUser">Get User by Firebase UID</button>
+    <pre v-if="userData">{{ userData }}</pre>
+    <p v-if="errorMessage" style="color: red">{{ errorMessage }}</p>
+  </div>
+</template>
 
-                </Card>
-              </div>
-  
-              <div class="col-4 col-md-4">
-                <Card>
-                  <h3>Event 2: Festival</h3>
-                  <p>Date: 20th May 2025</p>
-                  <Button>RSVP</Button>
-                </Card>
-              </div>
-  
-              <div class="col-4 col-md-4">
-                <Card>
-                  <h3>Event 3: Festival</h3>
-                  <p>Date: 20th May 2025</p>
-                  <Button>RSVP</Button>
-                </Card>
-              </div>
-            </div>
-          </div>
-  
-          <!-- Music Section -->
-          <div class="col-6">
-            <div class="row">
-              <!-- Music Cards -->
-              <div class="col-4 col-md-4" v-for="track in tracks" :key="track.id">
-                <Card>
-                  <h3>{{ track.name }}</h3>
-                  <p>Artist: {{ track.artist }}</p>
-                  <Button @click="playTrack(track.uri)">Play</Button>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Fixed Spotify Player at Bottom -->
-      <!-- <SpotifyPlayer /> -->
-    </div>
-  </template>
-  
-  <script>
+<script lang="ts">
+import UserService from "@/service/UserService"; // Assuming you have a UserService file
+import AuthService from "@/service/AuthService"; // Assuming you have an AuthService file
 
-  
-  export default {
+export default {
+  data() {
+    return {
+      userData: null as any,
+      errorMessage: "",
+    };
+  },
+  methods: {
+    async fetchUser() {
+      try {
+        // Retrieve the Firebase access token from cookies
+        const accessToken = this.getCookie("auth_token"); // Assume the cookie is called "auth_token"
+        
+        if (!accessToken) {
+          this.errorMessage = "No access token found!";
+          return;
+        }
 
-    data() {
-      return {
-        tracks: [
-          {
-            id: 1,
-            name: "Song 1",
-            artist: "Artist A",
-            uri: "spotify:track:1",
-          },
-          {
-            id: 2,
-            name: "Song 2",
-            artist: "Artist B",
-            uri: "spotify:track:2",
-          },
-          {
-            id: 3,
-            name: "Song 3",
-            artist: "Artist C",
-            uri: "spotify:track:3",
-          },
-        ],
-      };
+        // Authenticate user and get Firebase UID from the backend response
+        const authResponse = await AuthService.authenticateUser(accessToken);
+
+        console.log("Auth response:", authResponse);  // Log the response for debugging
+      
+
+        // Extract Firebase UID from the parsed response
+        const firebaseUID = authResponse?.uid;
+        
+        if (!firebaseUID) {
+          this.errorMessage = "No Firebase UID found in the authentication response!";
+          return;
+        }
+
+        console.log("Firebase UID:", firebaseUID);
+
+        // Fetch user data using Firebase UID
+        const data = await UserService.getUserByFirebaseUID(firebaseUID, accessToken);
+        console.log("Fetched data:", data);  // Log the response data
+        this.userData = data;
+      } catch (error: any) {
+        this.errorMessage = error.message;
+      }
     },
-    methods: {
-      playTrack(uri) {
-        console.log("Playing track:", uri);
-        // Your logic to play the track, such as updating the iframe URL or interacting with the Spotify API.
-      },
-    },
-  };
-  </script>
-  
-  <style scoped>
-  /* Optional: Add some spacing and ensure alignment */
-  .home-page {
-    padding: 20px;
-  }
-  
-  .grid {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .col-6 {
-    width: 48%; /* Ensures each section takes up half the width */
-    margin-bottom: 20px;
-  }
-  
-  .col-4 {
-    width: 30%; /* Each event and music card will take up 30% of the space */
-    margin-bottom: 20px;
-  }
-  
-  /* Additional styling if needed for spacing or appearance */
-  </style>
-  
+    
+    // Utility method to get a cookie by name
+    getCookie(name: string): string | null {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+      return null;
+    }
+  },
+};
+</script>
