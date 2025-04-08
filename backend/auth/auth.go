@@ -75,9 +75,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
     e.GET("/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID)) // Fetch Firebase UID from token
 
 	// Track Routes (Protected)
-	e.POST("/tracks", middleware.AuthMiddleware(projectID)(controllers.CreateTrack))       // Create a new track
-	e.PUT("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateTrack))    // Update an existing track by ID
-	e.DELETE("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteTrack)) // Delete a track by ID
+	// e.POST("/tracks", middleware.AuthMiddleware(projectID)(controllers.CreateTrack))       // Create a new track
+	// e.PUT("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateTrack))    // Update an existing track by ID
+	// e.DELETE("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteTrack)) // Delete a track by ID
 
 	// Event Routes (Protected)
 	e.POST("/events", middleware.AuthMiddleware(projectID)(controllers.CreateEvent))       // Create a new event

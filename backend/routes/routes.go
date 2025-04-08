@@ -40,6 +40,15 @@ func RegisterRoutes(e *echo.Echo) {
     e.GET("/users/:userId/events", controllers.GetEventsForUser) // Fetch events for a specific user
     e.POST("/users/:userId/events", controllers.AddEventForUser) // Add an event for a specific user
 
+    //Playlist Routes
+    e.GET("/playlists", controllers.GetPlaylists)           // Fetch all playlists
+    e.GET("/playlists/:id", controllers.GetPlaylistByID)        // Fetch a playlist by ID (Updated function name)
+    e.POST("/playlists", controllers.CreatePlaylist)        // Create a new playlist
+    e.PUT("/playlists/:id", controllers.UpdatePlaylist)     // Update an existing playlist by ID
+    e.DELETE("/playlists/:id", controllers.DeletePlaylist)  // Delete a playlist by ID
+    e.GET("/users/:userId/playlists", controllers.GetPlaylistsForUser) // Fetch playlists for a specific user
+    e.POST("/users/:userId/playlists", controllers.AddPlaylistForUser) // Add a playlist for a specific user
+
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
 

@@ -6,9 +6,11 @@ import (
 	"backend/auth"
 	"backend/routes"
 	"backend/services/spotify"
+	"backend/models"
 	"log"
 	"os"
 	"fmt"
+
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -34,6 +36,14 @@ func main() {
 		log.Fatal("❌ Database connection is nil!")
 	} else {
 		log.Println("✅ Database connection initialized!")
+	}
+
+	//run migrations
+
+	if err := config.DB.AutoMigrate( &models.Event{}, &models.UserEvent{}, &models.Playlist{}, &models.Track{}, &models.PlaylistTrack{}, &models.TrackArtist{}); err != nil {
+		log.Fatal("❌ Failed to run migrations: ", err)
+	} else {
+		log.Println("✅ Migrations completed successfully!")
 	}
 
 	// Authenticate with Spotify

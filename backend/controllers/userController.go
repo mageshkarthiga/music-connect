@@ -16,11 +16,12 @@ import (
 
 // GetUsers fetches all users
 func GetUsers(c echo.Context) error {
-	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to fetch users")
-	}
-	return c.JSON(http.StatusOK, users)
+    var users []models.User
+    // Fetch all users from the database
+    if err := config.DB.Find(&users).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch users")
+    }
+    return c.JSON(http.StatusOK, users)
 }
 
 // GetUser fetches a user by ID
