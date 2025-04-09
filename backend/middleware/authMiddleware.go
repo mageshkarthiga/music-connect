@@ -216,8 +216,7 @@ func AuthMiddleware(projectID string) echo.MiddlewareFunc {
 			log.Printf("User found: %+v\n", user)
 
 			// Set user ID in context for downstream handlers
-			c.Set("uid", user.UserID)
-
+			c.Set("uid", user.UserID) // type is uint NOT string
 			return next(c)
 		}
 	}

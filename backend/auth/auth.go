@@ -28,7 +28,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		}
 
 		tokenStr := parts[1]
-		
+		fmt.Println("Token String: ", tokenStr)
 
 		token, err := jwt.Parse(tokenStr, middleware.GetJWKS().Keyfunc)
 		if err != nil || !token.Valid {
@@ -91,5 +91,5 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.GET("/me/playlists", middleware.AuthMiddleware(projectID) (controllers.GetPlaylistsForUser) )// Fetch playlists for a specific user
     e.POST("/me/playlists", middleware.AuthMiddleware(projectID) (controllers.AddPlaylistForUser) )// Add a playlist for a specific user
 
-
+    e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
 }
