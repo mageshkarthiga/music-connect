@@ -31,12 +31,12 @@ export default {
     return response.data;
   },
 
-  async getUser(id: number) {
+  async getUser(id: number): Promise<User> {
     const response = await axios.get<User>(`${USER_URL}/${id}`);
     return response.data;
   },
 
-  async getAllUsers() {
+  async getAllUsers(): Promise<User[]> {
     const response = await axios.get<User[]>(USER_URL);
     return response.data;
   },
