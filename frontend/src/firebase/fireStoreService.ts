@@ -35,9 +35,27 @@ export const updateDocument = async (
   data: Partial<DocumentData>
 ) => {
   const docRef = doc(db, collectionName, docId);
-  await setDoc(docRef, data, { merge: true });
-  return { id: docId, ...data };
+
+  // Safely ensure layoutState exists and is of a valid type (object)
+  const layoutState = data.layoutState || {};
+
+  // Optionally sanitize other fields if needed
+  Object.keys(data).forEach((key) => {
+    if (data[key] === undefined) {
+      data[key] = null; // Or handle undefined values as necessary
+    }
+  });
+
+  // Set document with merge option to avoid overwriting existing data
+  try {
+    await setDoc(docRef, { ...data, layoutState }, { merge: true });
+    return { id: docId, ...data }; // Return updated data with docId
+  } catch (error) {
+    console.error("Error updating document in Firestore:", error);
+    throw error;
+  }
 };
+
 
 // Delete
 export const deleteDocument = async (collectionName: string, docId: string) => {
