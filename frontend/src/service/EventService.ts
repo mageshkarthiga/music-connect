@@ -57,25 +57,25 @@ export default {
   async deleteEvent(id: number) {
     await axios.delete(`${EVENT_URL}/${id}`);
   },
-
-  async getEventsByUserId(userId: number) {
-    // Extract auth token from cookies
-    const authToken = Cookies.get("auth_token"); // Access the token from the cookies
-    
-    if (!authToken) {
-      throw new Error("Auth token not found.");
-    }
-
-    const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
-      headers: {
-        Authorization: `Bearer ${authToken}`, // Use the extracted token here
-      },
-      withCredentials: true, // Ensure cookies are sent automatically with the request
+  async getEventsForCurrentUser(): Promise<Event[]> {
+    const response = await axios.get<Event[]>(`${API_BASE_URL}/me/events`, {
+      withCredentials: true, // Ensures cookies (like Firebase auth token) are sent
     });
-  
+
     return response.data;
+  },
+
+
+//   async getEventsByUserId(userId: number): Promise<Event[]> {
+//     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
+//       withCredentials: true, // Send cookies automatically, like auth_token
+//     });
+
+
   
-}
+//     return response.data;
+  
+// }
 
   
   

@@ -122,12 +122,12 @@ func DeletePlaylist(c echo.Context) error {
 
 // GetPlaylistsForUser fetches playlists for a specific user
 func GetPlaylistsForUser(c echo.Context) error {
-	userId := c.Param("userId")
+	userID := c.Get("uid")
 	var playlists []models.Playlist
 
 	// Preload the tracks for each playlist
-	if err := config.DB.Where("user_id = ?", userId).Preload("Tracks").Find(&playlists).Error; err != nil {
-		log.Printf("Error fetching playlists for user ID %s: %v", userId, err)
+	if err := config.DB.Where("user_id = ?", userID).Preload("Tracks").Find(&playlists).Error; err != nil {
+		log.Printf("Error fetching playlists for user ID %s: %v", userID, err)
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch playlists for user")
 	}
 

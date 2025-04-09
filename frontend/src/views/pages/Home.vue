@@ -1,65 +1,118 @@
 <template>
   <div>
-    <button @click="fetchUser">Get User by Firebase UID</button>
-    <pre v-if="userData">{{ userData }}</pre>
-    <p v-if="errorMessage" style="color: red">{{ errorMessage }}</p>
+    <!-- Loading Spinner -->
+    <div
+      ref="loadingSpinner"
+      v-if="loading"
+      class="p-d-flex p-jc-center p-ai-center"
+    >
+      <span>Loading...</span>
+    </div>
+
+    <!-- Content Wrapper: Events and Playlists -->
+    <div
+      ref="contentWrapper"
+      v-if="!loading && (user.events.length || user.playlists.length)"
+    >
+      <!-- Display Events -->
+      <div class="p-4" v-if="user.events.length">
+        <h2 class="text-xl font-semibold mb-3">Events</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <EventComponent v-for="event in user.events" :key="event.event_id" :event="event" />
+        </div>
+      </div>
+
+      <!-- Display Playlists -->
+      <div class="p-4" v-if="user.playlists.length">
+        <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <PlaylistComponent v-for="playlist in user.playlists" :key="playlist.playlist_id" :playlist="playlist" />
+        </div>
+      </div>
+    </div>
+
+    <!-- No Events or Playlists Found -->
+    <div v-if="!loading && !user.events.length && !user.playlists.length" class="p-4">
+      <p>No events or playlists found.</p>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import UserService from "@/service/UserService"; // Assuming you have a UserService file
-import AuthService from "@/service/AuthService"; // Assuming you have an AuthService file
+<script>
+import axios from "axios";
+import { API_BASE_URL } from "@/service/apiConfig";
+import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
+import PlaylistComponent from "@/components/PlaylistComponent.vue"; 
 
 export default {
+  components: {
+    EventComponent, // Register EventComponent
+    PlaylistComponent, // Register PlaylistComponent
+  },
   data() {
     return {
-      userData: null as any,
-      errorMessage: "",
+      loading: false, // Flag to manage loading state
+      user: { events: [], playlists: [] }, // Store user data
+      errorMessage: "", // Store error messages
     };
   },
   methods: {
-    async fetchUser() {
+    // Fetch events by user ID with enhanced error handling
+    async getEventsByUserId() {
       try {
-        // Retrieve the Firebase access token from cookies
-        const accessToken = this.getCookie("auth_token"); // Assume the cookie is called "auth_token"
-        
-        if (!accessToken) {
-          this.errorMessage = "No access token found!";
-          return;
+        const response = await axios.get(`${API_BASE_URL}/me/events`, {
+          withCredentials: true,
+        });
+        if (Array.isArray(response.data)) {
+          this.user.events = response.data;
+        } else {
+          throw new Error("Invalid events data format");
         }
-
-        // Authenticate user and get Firebase UID from the backend response
-        const authResponse = await AuthService.authenticateUser(accessToken);
-
-        console.log("Auth response:", authResponse);  // Log the response for debugging
-      
-
-        // Extract Firebase UID from the parsed response
-        const firebaseUID = authResponse?.uid;
-        
-        if (!firebaseUID) {
-          this.errorMessage = "No Firebase UID found in the authentication response!";
-          return;
-        }
-
-        console.log("Firebase UID:", firebaseUID);
-
-        // Fetch user data using Firebase UID
-        const data = await UserService.getUserByFirebaseUID(firebaseUID, accessToken);
-        console.log("Fetched data:", data);  // Log the response data
-        this.userData = data;
-      } catch (error: any) {
-        this.errorMessage = error.message;
+      } catch (err) {
+        this.handleError(err, "events");
       }
     },
-    
-    // Utility method to get a cookie by name
-    getCookie(name: string): string | null {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
-      return null;
-    }
+
+    // Fetch playlists for user with enhanced error handling
+    async getPlaylistsForUser() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+          withCredentials: true,
+        });
+        if (Array.isArray(response.data)) {
+          this.user.playlists = response.data;
+        } else {
+          throw new Error("Invalid playlists data format");
+        }
+      } catch (err) {
+        this.handleError(err, "playlists");
+      }
+    },
+
+    // Error handling
+    handleError(error, dataType) {
+      console.error(`${dataType} fetch error:`, error);
+      this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
+    },
+
+    // Fetch both events and playlists
+    async fetchEvents() {
+      this.errorMessage = "";
+      this.loading = true;
+      try {
+        await Promise.all([
+          this.getEventsByUserId(),
+          this.getPlaylistsForUser(),
+        ]);
+      } catch (err) {
+        // Handle any fetch error
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+  mounted() {
+    this.fetchEvents();
   },
 };
 </script>

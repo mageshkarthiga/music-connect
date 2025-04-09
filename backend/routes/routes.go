@@ -46,8 +46,8 @@ func RegisterRoutes(e *echo.Echo) {
     e.POST("/playlists", controllers.CreatePlaylist)        // Create a new playlist
     e.PUT("/playlists/:id", controllers.UpdatePlaylist)     // Update an existing playlist by ID
     e.DELETE("/playlists/:id", controllers.DeletePlaylist)  // Delete a playlist by ID
-    e.GET("/users/:userId/playlists", controllers.GetPlaylistsForUser) // Fetch playlists for a specific user
-    e.POST("/users/:userId/playlists", controllers.AddPlaylistForUser) // Add a playlist for a specific user
+    // e.GET("/me/playlists", controllers.GetPlaylistsForUser) // Fetch playlists for a specific user
+    // e.POST("/me/playlists", controllers.AddPlaylistForUser) // Add a playlist for a specific user
 
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
