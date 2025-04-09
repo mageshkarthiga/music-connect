@@ -1,8 +1,7 @@
 <script setup>
 import TabView from 'primevue/tabview'
-import { CustomerService } from '@/service/CustomerService';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
-import { onBeforeMount, reactive, ref } from 'vue';
+import { FilterMatchMode } from '@primevue/core/api';
+import { onBeforeMount, ref } from 'vue';
 import UserService from '@/service/UserService';
 import EventService from '@/service/EventService';
 
@@ -63,7 +62,11 @@ function initFilters1() {
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
                                 <img :alt="data.profile_photo_url" :src="data.profile_photo_url" style="width: 32px" />
-                                <span>{{ data.user_name }}</span>
+                                <span>
+                                    <a :href="`/profile?user_id=${data.user_id}`">
+                                        {{ data.user_name }}
+                                    </a>
+                                </span>
                             </div>
                         </template>
                     </Column>
