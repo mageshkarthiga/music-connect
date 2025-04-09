@@ -94,6 +94,12 @@ const router = createRouter({
           component: () => import("@/views/pages/Crud.vue"),
         },
         {
+          path: "/pages/home",
+          name: "home",
+          component: () => import("@/views/pages/Home.vue"),
+
+        },
+        {
           path: "/documentation",
           name: "documentation",
           component: () => import("@/views/pages/Documentation.vue"),

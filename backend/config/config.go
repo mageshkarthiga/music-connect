@@ -28,7 +28,9 @@ func InitDB() error {
 
 	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=off", dbPassword)
 
-	DB, err := gorm.Open(postgres.New(postgres.Config{
+	// Use '=' to assign to the global DB variable
+	var err error
+	DB, err = gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
 		PreferSimpleProtocol: true, // also disables prep statements at protocol level
 	}), &gorm.Config{
@@ -36,30 +38,17 @@ func InitDB() error {
 		PrepareStmt: false,
 	})
 	if err != nil {
-		log.Fatal("Error connecting to database:", err, DB)
+		log.Fatal("Error connecting to database:", err)
+		return err
 	}
 
-	// Check if the 'users' table exists before running migrations
-	// if !tableExists(DB, "users")
+	log.Println("✅ Database connection initialized!")
 
-	// 	err = DB.AutoMigrate(&models.User{}, &models.Event{}, &models.Attraction{}, &models.Venue{}, &models.Artist{}, &models.Track{}, &models.Playlist{}, &models.Device{})
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error during migration: %v", err)
-	// 	}
-	// 	fmt.Println("Migration completed successfully! ✅")
-	// } else {
-	// 	fmt.Println("Tables already exist, skipping migration.")
-	//
+	// Optional: Perform migration if needed
+	// err = DB.AutoMigrate(&models.User{}, &models.Event{})
+	// if err != nil {
+	// 	log.Fatalf("❌ Migration failed: %v", err)
+	// }
 
 	return nil
-}
-
-// tableExists checks if a table exists in the database
-func tableExists(db *gorm.DB, tableName string) bool {
-	var count int64
-	err := db.Raw("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?", tableName).Scan(&count).Error
-	if err != nil {
-		return false
-	}
-	return count > 0
 }
