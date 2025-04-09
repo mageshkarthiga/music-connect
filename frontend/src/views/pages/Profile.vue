@@ -203,7 +203,9 @@ export default defineComponent({
 
       if (!isNaN(userId)) {
         try {
-          const fetchedUser = await UserService.getUser(userId);
+          const fetchedUser = await UserService.getUser(userId, {
+            withCredentials: true,
+          });
           user.value = fetchedUser || mockUser;
         } catch (error) {
           console.error("Error fetching user:", error);
@@ -219,7 +221,7 @@ export default defineComponent({
                 firebaseUser.uid
               );
               user.value = fetchedUser || mockUser;
-              // user.value = mockUser; //temp
+              user.value = mockUser; //temp
             } catch (error) {
               console.error("Error fetching user by Firebase UID:", error);
               user.value = mockUser;

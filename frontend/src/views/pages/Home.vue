@@ -39,6 +39,18 @@
       </div>
     </div>
 
+    <!-- Display Tracks -->
+    <div class="p-4" v-if="user.tracks.length">
+      <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+      <div class="flex space-x-4 overflow-x-auto pb-4">
+        <TrackCard
+          v-for="track in user.tracks"
+          :key="track.track_id"
+          :track="track"
+        />
+      </div>
+    </div>
+
     <!-- Embed SpotifyPlayer Component -->
 
     <h2 class="text-xl font-semibold mb-3">Artists</h2>
@@ -58,7 +70,8 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
-import PlaylistComponent from "@/components/PlaylistComponent.vue"; 
+import PlaylistComponent from "@/components/PlaylistComponent.vue";
+import TrackCard from "@/components/Track.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue"; // Import SpotifyPlayer component
 
 export default {
@@ -66,11 +79,12 @@ export default {
     EventComponent, // Register EventComponent
     PlaylistComponent, // Register PlaylistComponent
     SpotifyPlayer, // Register SpotifyPlayer
+    TrackCard,
   },
   data() {
     return {
       loading: false,
-      user: { events: [], playlists: [] },
+      user: { events: [], playlists: [], tracks: [] },
       errorMessage: "",
     };
   },
@@ -107,6 +121,22 @@ export default {
       }
     },
 
+    async getTracksForUser() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/me/tracks`, {
+          withCredentials: true,
+        });
+        console.log("Fetched tracks:", response.data);
+        if (Array.isArray(response.data)) {
+          this.user.tracks = response.data;
+        } else {
+          throw new Error("Invalid tracks data format");
+        }
+      } catch (err) {
+        this.handleError(err, "tracks");
+      }
+    },
+
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
       this.errorMessage =
@@ -121,6 +151,7 @@ export default {
         await Promise.all([
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
+          this.getTracksForUser(),
         ]);
         console.log("Final user object:", this.user);
       } catch (err) {

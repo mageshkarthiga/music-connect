@@ -4,16 +4,19 @@
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
           <div class="font-semibold text-xl mb-4">
-            {{ playlist.playlist_name }}
+            {{ track.track_title }}
           </div>
         </div>
       </template>
       <template v-slot:content>
         <img
-          :src="playlist.playlist_image_url"
-          alt="Playlist image"
+          :src="track.track_image_url || fallbackImage"
+          alt="Track image"
           class="w-full h-40 object-cover rounded-xl mb-3"
         />
+        <p class="text-sm text-gray-700 line-clamp-1">
+          {{ track.genre }}
+        </p>
       </template>
     </Card>
   </div>
@@ -22,7 +25,15 @@
 <script>
 export default {
   props: {
-    playlist: Object, // Playlist data passed as prop
+    track: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      fallbackImage: "https://via.placeholder.com/300x160?text=Track+Image",
+    };
   },
 };
 </script>
