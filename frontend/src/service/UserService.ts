@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
-import { auth } from '@/firebase/firebase';
+import { auth } from "@/firebase/firebase";
 
 const USER_URL = `${API_BASE_URL}`;
 
@@ -17,7 +17,7 @@ export interface User {
 export default {
   async createUser(user: User & { firebaseUID: string }) {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
       .insert([
         {
           user_name: user.userName,
@@ -29,15 +29,14 @@ export default {
         },
       ])
       .single(); // Use `.single()` to get a single response
-  
+
     if (error) {
       console.error("Error creating user:", error.message);
       throw error; // or return null/error
     }
-  
+
     return data; // Return the inserted user data
   },
-
 
   async getUser(id: number) {
     const response = await axios.get<User>(`${USER_URL}/${id}`);
@@ -59,13 +58,10 @@ export default {
   },
 
   async getUserByFirebaseUID(firebaseUID: string): Promise<User> {
-    const response = await axios.get(`${USER_URL}/firebase/${firebaseUID} ` , {
-      withCredentials: true, 
-    
+    const response = await axios.get(`${USER_URL}/firebase/${firebaseUID} `, {
+      withCredentials: true,
     });
     const data = response.data;
-
-    
 
     return {
       id: data.user_id,

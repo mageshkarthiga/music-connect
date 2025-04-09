@@ -1,6 +1,9 @@
 <template>
-  <div class="min-w-[250px] max-w-[300px] flex-shrink-0">
-    <Card>
+  <div
+    class="min-w-[250px] max-w-[300px] flex-shrink-0 cursor-pointer"
+    @click="openEventUrl"
+  >
+    <Card class="w-full h-full">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
           <div class="font-semibold text-xl mb-4">{{ event.event_name }}</div>
@@ -23,7 +26,14 @@
 <script>
 export default {
   props: {
-    event: Object, // Event data passed as prop
+    event: Object,
+  },
+  methods: {
+    openEventUrl() {
+      if (this.event?.event_url) {
+        window.open(this.event.event_url, "_blank");
+      }
+    },
   },
 };
 </script>
