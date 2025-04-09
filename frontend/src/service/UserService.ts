@@ -38,8 +38,11 @@ export default {
     return data; // Return the inserted user data
   },
 
-  async getUser(id: number) {
-    const response = await axios.get<User>(`${USER_URL}/${id}`);
+
+  async getUser() {
+    const response = await axios.get<User>(`${USER_URL}/me}`, {
+      withCredentials: true,
+    });
     return response.data;
   },
 

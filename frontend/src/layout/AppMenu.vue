@@ -178,7 +178,7 @@ const model = ref([
   <div class="sidebar">
     <!-- Library Header -->
     <div class="library-header">
-      <h2>Library</h2>
+      <h4>Your Library</h4>
       <Button @click="addPlaylist" class="add-playlist-btn">
         <i class="pi pi-plus"></i> 
       </Button>
@@ -189,12 +189,13 @@ const model = ref([
       <div
         v-for="playlist in user.playlists"
         :key="playlist.playlist_id"
-        class="playlist-item"
+        class="playlist-item"  
       >
         <img :src="playlist.image_url" alt="Playlist Image" class="playlist-image" />
         <div class="playlist-info">
           <span class="playlist-name">{{ playlist.name }}</span>
-          <span class="playlist-username">Playlist - {{ playlist.name }}</span>
+          <span class="username">Playlist - {{ currentUser?.user_name }}</span>
+
         </div>
       </div>
     </div>
@@ -214,16 +215,29 @@ export default {
   data() {
     return {
       user: { playlists: [] },
+      currentUser: null,
       errorMessage: "",
+      darkTheme: localStorage.getItem("theme") === "dark", // Check localStorage for theme preference
     };
   },
   methods: {
-    // Fetch playlists for the user with enhanced error handling
+    async getCurrentUser() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/me`, {
+          withCredentials: true,
+        });
+        this.currentUser = response.data;
+      } catch (err) {
+        this.handleError(err, "current user");
+      }
+    },
+
     async getPlaylistsForUser() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
+
         if (Array.isArray(response.data)) {
           this.user.playlists = response.data;
         } else {
@@ -234,19 +248,22 @@ export default {
       }
     },
 
-    // Error handling
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
       this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
     },
 
-    // Method to handle adding a new playlist
     addPlaylist() {
-      // Handle adding a playlist logic here, such as opening a modal or redirecting to a page
       alert("Add Playlist clicked!");
     },
+
+    toggleTheme() {
+      this.darkTheme = !this.darkTheme;
+      localStorage.setItem("theme", this.darkTheme ? "dark" : "light");
+    }
   },
   mounted() {
+    this.getCurrentUser();
     this.getPlaylistsForUser();
   },
 };
@@ -256,12 +273,25 @@ export default {
 <style lang="scss" scoped>
 .sidebar {
   padding: 1rem;
-  background-color: #121212;
-  color: white;
   width: 250px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark {
+  background-color: #121212;
+  color: white;
+}
+
+.light {
+  background-color: #f4f4f4;
+  color: black;
+}
+
+h4 {
+  color: inherit;
 }
 
 .library-header {
@@ -269,17 +299,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-}
-.add-playlist-btn {
-  background-color: #121212;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  font-size: 1.5rem;
 }
 
 .add-playlist-btn {
@@ -290,10 +309,20 @@ export default {
   border-radius: 50%;
   cursor: pointer;
   font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
 }
 
 .add-playlist-btn:hover {
   background-color: #1ed760;
+}
+
+.theme-toggle-btn {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
 }
 
 .playlist-list {
@@ -308,11 +337,26 @@ export default {
   gap: 1rem;
   padding: 0.5rem;
   border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.dark .playlist-item {
   background-color: #282828;
 }
 
+.light .playlist-item {
+  background-color: #ffffff;
+}
+
 .playlist-item:hover {
+  background-color: rgba(125, 125, 125, 0.1)
+}
+.dark .playlist-item:hover {
   background-color: #3a3a3a;
+}
+
+.light .playlist-item:hover {
+  background-color: #cacaca;
 }
 
 .playlist-image {

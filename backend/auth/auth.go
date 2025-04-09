@@ -69,7 +69,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		})
 	})
 
-	// e.GET("/users/:id", middleware.AuthMiddleware(projectID)(controllers.GetUser))        // Fetch a user by ID
+	e.GET("/users/:id", middleware.AuthMiddleware(projectID)(controllers.GetUser))        // Fetch a user by ID
+	e.GET("/me", middleware.AuthMiddleware(projectID)(controllers.GetUser))          // Fetch all users
+	e.GET("/users", middleware.AuthMiddleware(projectID)(controllers.GetUsers))        // Fetch all users
 	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))     // Update an existing user by ID
 	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))  // Delete a user by ID
     e.GET("/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID)) // Fetch Firebase UID from token
