@@ -70,8 +70,4 @@ func DeleteTrack(c echo.Context) error {
     return c.JSON(http.StatusOK, "Track deleted successfully")
 }
 
-//Get Favourite Tracks 
-func GetFavouriteTracks(c echo.Context) error{
-    
-}
 
