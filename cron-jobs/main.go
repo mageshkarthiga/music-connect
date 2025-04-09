@@ -9,13 +9,13 @@ import (
 const SUPABASE_URL = "https://kzxuobrnlppliqiwwgvu.supabase.co";
 
 func main() {
-	if err := godotenv.Load("../.env"); 
+	if err := godotenv.Load(".env"); 
 	err != nil {
 		log.Println("Warning: .env file not found, relying on environment variables")
 	}
 
 	c := cron.New()
-	c.AddFunc("0 0 * * 0", func() {
+	c.AddFunc("16 22 * * 3", func() {
 		log.Println("Running weekly job...")
 		go callSpotifyAPI()
 
