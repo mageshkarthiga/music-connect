@@ -31,6 +31,11 @@
       </div>
     </div>
 
+    <!-- Embed SpotifyPlayer Component -->
+
+    <h2 class="text-xl font-semibold mb-3">Artists</h2>
+    <SpotifyPlayer />
+
     <!-- No Events or Playlists Found -->
     <div v-if="!loading && !user.events.length && !user.playlists.length" class="p-4">
       <p>No events or playlists found.</p>
@@ -43,11 +48,13 @@ import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
 import PlaylistComponent from "@/components/PlaylistComponent.vue"; 
+import SpotifyPlayer from "@/components/SpotifyPlayer.vue"; // Import SpotifyPlayer component
 
 export default {
   components: {
     EventComponent, // Register EventComponent
     PlaylistComponent, // Register PlaylistComponent
+    SpotifyPlayer, // Register SpotifyPlayer
   },
   data() {
     return {

@@ -58,28 +58,24 @@ export default {
     await axios.delete(`${USER_URL}/${id}`);
   },
 
-    async getUserByFirebaseUID(firebaseUID: string, accessToken: string): Promise<User> {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/firebase/${firebaseUID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,  
-          },
-        });
-  
-        const data = response.data;
-  
-        return {
-          id: data.user_id,
-          userName: data.user_name,
-          emailAddress: data.email_address,
-          phoneNumber: data.phone_number,
-          location: data.location,
-          profilePhotoUrl: data.profile_photo_url,
-        };
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        throw error;  
-      }},
+  async getUserByFirebaseUID(firebaseUID: string): Promise<User> {
+    const response = await axios.get(`${USER_URL}/firebase/${firebaseUID} ` , {
+      withCredentials: true, 
+    
+    });
+    const data = response.data;
+
+    
+
+    return {
+      id: data.user_id,
+      userName: data.user_name,
+      emailAddress: data.email_address,
+      phoneNumber: data.phone_number,
+      location: data.location,
+      profilePhotoUrl: data.profile_photo_url,
+    };
+  },
 
   async fetchSecureData(idToken: string) {
     try {

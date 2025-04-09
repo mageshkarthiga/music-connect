@@ -79,7 +79,12 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	// e.PUT("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateTrack))    // Update an existing track by ID
 	// e.DELETE("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteTrack)) // Delete a track by ID
 
+	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))           // Fetch all tracks
+	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))        // Fetch a track by ID (Updated function name)
+	e.POST("me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))        // Create a new track
+
 	// Event Routes (Protected)
+         // Fetch all events
 	e.POST("/events", middleware.AuthMiddleware(projectID)(controllers.CreateEvent))       // Create a new event
 	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))    // Update an existing event by ID
 	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent)) // Delete an event by ID

@@ -69,3 +69,59 @@ func DeleteTrack(c echo.Context) error {
     }
     return c.JSON(http.StatusOK, "Track deleted successfully")
 }
+
+// GetTracksForUser fetches all tracks for a specific user based on their preferences
+func GetTracksForUser(c echo.Context) error {
+    userID := c.Get("uid").(uint)  // Assuming the user ID is stored in the context
+
+    // Find the track IDs that the user has selected in their MusicPreferences
+    var musicPreferences []models.MusicPreference
+    if err := config.DB.Where("user_id = ?", userID).Find(&musicPreferences).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch music preferences")
+    }
+
+    // Extract TrackIDs from MusicPreferences
+    var trackIDs []uint
+    for _, mp := range musicPreferences {
+        trackIDs = append(trackIDs, mp.TrackID)
+    }
+
+    // Fetch tracks that are associated with the user through MusicPreferences
+    var tracks []models.Track
+    if err := config.DB.Where("track_id IN ?", trackIDs).Find(&tracks).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks for user")
+    }
+
+    return c.JSON(http.StatusOK, tracks)
+}
+
+func AddTracksForUser(c echo.Context) error {
+    userID := c.Get("uid").(uint)  // Assuming the user ID is stored in the context
+
+    // Bind the request data to a slice of MusicPreference objects
+    var musicPreferences []models.MusicPreference
+    if err := c.Bind(&musicPreferences); err != nil {
+        return c.JSON(http.StatusBadRequest, "Invalid request data")
+    }
+
+    // Iterate over each MusicPreference and ensure the TrackID is valid
+    for _, musicPreference := range musicPreferences {
+        var track models.Track
+        if err := config.DB.First(&track, musicPreference.TrackID).Error; err != nil {
+            return c.JSON(http.StatusNotFound, "Track not found")
+        }
+
+        // Set the UserID for each MusicPreference
+        musicPreference.UserID = userID
+
+        // Insert the MusicPreference into the database
+        if err := config.DB.Create(&musicPreference).Error; err != nil {
+            return c.JSON(http.StatusInternalServerError, "Failed to add track for user")
+        }
+    }
+
+    return c.JSON(http.StatusCreated, musicPreferences)
+}
+
+
+

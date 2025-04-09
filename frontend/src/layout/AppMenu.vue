@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { ref } from "vue";
 
 import AppMenuItem from "./AppMenuItem.vue";
@@ -171,4 +171,169 @@ const model = ref([
   </ul>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped></style> -->
+
+<template>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Library Header -->
+    <div class="library-header">
+      <h2>Library</h2>
+      <Button @click="addPlaylist" class="add-playlist-btn">
+        <i class="pi pi-plus"></i> 
+      </Button>
+    </div>
+
+    <!-- Playlists List -->
+    <div v-if="user.playlists.length" class="playlist-list">
+      <div
+        v-for="playlist in user.playlists"
+        :key="playlist.playlist_id"
+        class="playlist-item"
+      >
+        <img :src="playlist.image_url" alt="Playlist Image" class="playlist-image" />
+        <div class="playlist-info">
+          <span class="playlist-name">{{ playlist.name }}</span>
+          <span class="playlist-username">Playlist - {{ playlist.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-else>
+      <p>No playlists available.</p>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+import { ref, onMounted } from "vue";
+import { API_BASE_URL } from "@/service/apiConfig";
+
+export default {
+  data() {
+    return {
+      user: { playlists: [] },
+      errorMessage: "",
+    };
+  },
+  methods: {
+    // Fetch playlists for the user with enhanced error handling
+    async getPlaylistsForUser() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+          withCredentials: true,
+        });
+        if (Array.isArray(response.data)) {
+          this.user.playlists = response.data;
+        } else {
+          throw new Error("Invalid playlists data format");
+        }
+      } catch (err) {
+        this.handleError(err, "playlists");
+      }
+    },
+
+    // Error handling
+    handleError(error, dataType) {
+      console.error(`${dataType} fetch error:`, error);
+      this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
+    },
+
+    // Method to handle adding a new playlist
+    addPlaylist() {
+      // Handle adding a playlist logic here, such as opening a modal or redirecting to a page
+      alert("Add Playlist clicked!");
+    },
+  },
+  mounted() {
+    this.getPlaylistsForUser();
+  },
+};
+</script>
+
+
+<style lang="scss" scoped>
+.sidebar {
+  padding: 1rem;
+  background-color: #121212;
+  color: white;
+  width: 250px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.add-playlist-btn {
+  background-color: #121212;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.add-playlist-btn {
+  background-color: #1db954;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.add-playlist-btn:hover {
+  background-color: #1ed760;
+}
+
+.playlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background-color: #282828;
+}
+
+.playlist-item:hover {
+  background-color: #3a3a3a;
+}
+
+.playlist-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.playlist-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.playlist-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.playlist-username {
+  font-size: 0.875rem;
+  color: #b3b3b3;
+}
+</style>
