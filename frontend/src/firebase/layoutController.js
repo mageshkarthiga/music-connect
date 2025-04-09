@@ -8,6 +8,7 @@ import {
   updateColors,
   applyPreset,
 } from "@/layout/composables/stateConfig";
+import { toRaw } from "vue";
 
 const COLLECTION_NAME = "layoutConfigs";
 
@@ -59,14 +60,22 @@ export function watchLayoutChanges(userId) {
   watch(
     () => layoutState,
     async (newVal) => {
+      const rawLayoutState = toRaw(newVal); // Get the raw object
+  
+      console.log('Raw layoutState:', rawLayoutState);
+  
       try {
-        await updateDocument(COLLECTION_NAME, userId, {
-          layoutState: { ...newVal },
-        });
+        if (rawLayoutState) {
+          await updateDocument(COLLECTION_NAME, userId, {
+            layoutState: { ...rawLayoutState },
+          });
+        }
       } catch (error) {
         console.error("Failed to update layoutState in Firestore:", error);
       }
     },
     { deep: true }
   );
+  
+  
 }
