@@ -21,16 +21,25 @@
                     <template #header>
                         <div class="chat-header">
                             <h3>💬 Chat With: {{ room.otherUserName || "Loading..." }}</h3>
-                            <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" />
+                            <!-- <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" /> -->
                         </div>
                     </template>
 
                     <template #content>
+                        <div v-if="loading" class="card-spinner-container">
+                            <i class="pi pi-spin pi-spinner card-spinner"></i>
+                        </div>
                         <div class="chat-body" ref="chatBody">
-                            <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
-                                :class="{ 'sent': message.isSent, 'received': !message.isSent }">
-                                <div class="message-bubble">
-                                    {{ message.message }}
+                            <div v-if="room.messages.length === 0" class="no-messages">
+                                It's quiet here… start the conversation and share the vibes 🎧✨
+                            </div>
+                            <!-- Show messages if they exist -->
+                            <div v-else>
+                                <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
+                                    :class="{ 'sent': message.isSent, 'received': !message.isSent }">
+                                    <div class="message-bubble">
+                                        {{ message.message }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -55,7 +64,6 @@
 </template>
 
 <script>
-import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 export default {
@@ -79,7 +87,9 @@ export default {
     computed: {
         filteredUsers() {
             return this.users.filter(user =>
-                user.user_id !== this.currentUser.user_id && user.firebase_uid?.trim() !== "" && user.user_name?.trim() !== ""
+                user.firebase_uid !== this.currentUser.user_id &&
+                user.firebase_uid?.trim() !== "" &&
+                user.user_name?.trim() !== ""
             );
         }
     },
@@ -150,14 +160,14 @@ export default {
         },
 
         handleNewMessage(event) {
-            console.log("Raw WebSocket message:", event.data); // Log raw WebSocket message
+            console.log("Raw WebSocket message:", event.data);
             let data = event.data;
             data = data.split(/\r?\n/);
 
             for (let i = 0; i < data.length; i++) {
                 try {
                     let msg = JSON.parse(data[i]);
-                    console.log("Parsed message:", msg); // Log parsed message
+                    console.log("Parsed message:", msg);
 
                     // Validate the message structure
                     if (!msg.message || !msg.target) {
@@ -167,16 +177,30 @@ export default {
 
                     const room = this.findRoom(msg.target);
                     if (room && room.name === msg.target) {
-                        console.log("Room found:", room.name); // Log the room being updated
-                        this.$set(room, 'messages', [
-                            ...room.messages,
-                            {
+                        // Check if we already have this message (by message_id)
+                        const isDuplicate = room.messages.some(existingMsg =>
+                            msg.message_id && existingMsg.message_id === msg.message_id
+                        );
+
+                        if (!isDuplicate) {
+                            console.log("Adding new message to room:", room.name);
+                            room.messages.push({
                                 message: msg.message.trim(),
                                 sender: msg.sender || "Unknown",
-                                isSent: msg.sender === this.currentUser.user_name,
-                            }
-                        ]);
-                        console.log(`Updated messages for room ${room.name}:`, room.messages); // Log updated messages
+                                isSent: msg.sender === this.currentUser.user_id,
+                                message_id: msg.message_id,
+                            });
+
+                            // Scroll to the bottom of the chat
+                            this.$nextTick(() => {
+                                const chatBody = this.$refs.chatBody;
+                                if (chatBody) {
+                                    chatBody.scrollTop = chatBody.scrollHeight;
+                                }
+                            });
+                        } else {
+                            console.log("Skipping duplicate message:", msg.message_id);
+                        }
                     } else {
                         console.warn("Room not found for target:", msg.target);
                     }
@@ -198,18 +222,20 @@ export default {
                 ws.send(JSON.stringify(messageData));
                 console.log("Message sent:", messageData);
 
+                // Add the new message to the room and replace the array for reactivity
                 room.messages.push({
                     message: room.newMessage,
                     sender: this.currentUser.user_name,
-                    isSent: true
+                    isSent: true,
                 });
 
-                room.newMessage = '';
+                room.newMessage = '';  // Clear input
             } else {
                 console.error("WebSocket is not open. Cannot send message.");
                 this.errorMessage = "Error: Cannot send message. Please try again later.";
             }
         },
+
 
         findRoom(roomName) {
             return this.rooms.find((room) => room.name === roomName);
@@ -304,15 +330,15 @@ export default {
             this.currentRoom = roomName;
         },
 
-        leaveRoom(room) {
-            const socket = this.sockets[room.name];
-            if (socket) {
-                socket.close();
-                delete this.sockets[room.name];
-            }
-            this.rooms = this.rooms.filter(r => r.name !== room.name);
-            this.currentChatUser = null;
-        }
+        // leaveRoom(room) {
+        //     const socket = this.sockets[room.name];
+        //     if (socket) {
+        //         socket.close();
+        //         delete this.sockets[room.name];
+        //     }
+        //     this.rooms = this.rooms.filter(r => r.name !== room.name);
+        //     this.currentChatUser = null;
+        // }
     },
 };
 </script>
@@ -393,6 +419,7 @@ export default {
 
 .message-wrapper {
     display: flex;
+    margin-bottom: 0.5rem;
 }
 
 .message-wrapper.sent {
@@ -404,23 +431,33 @@ export default {
 }
 
 .message-bubble {
-    padding: 0.6rem 1rem;
-    border-radius: 1.25rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    /* Slightly rounded rectangle */
     max-width: 70%;
     word-break: break-word;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    font-size: 0.95rem;
+    line-height: 1.4;
 }
 
 .message-wrapper.sent .message-bubble {
     background-color: #d1e7dd;
+    /* Soft green */
     color: #0f5132;
-    border-bottom-right-radius: 0;
+    border: 1px solid #badbcc;
 }
 
 .message-wrapper.received .message-bubble {
-    background-color: #f8d7da;
-    color: #842029;
-    border-bottom-left-radius: 0;
+    background-color: #ffffff;
+    color: #343a40;
+    border: 1px solid #dee2e6;
+}
+
+.message-sender {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
 }
 
 .message-time {
@@ -444,26 +481,16 @@ export default {
     flex: 1;
 }
 
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+.card-spinner-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    height: 100%;
 }
 
-.loading-content {
-    width: 80%;
-    max-width: 400px;
-    background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+.card-spinner {
+    font-size: 2rem;
+    color: #6c757d;
 }
 
 .error-message {
@@ -474,5 +501,13 @@ export default {
 .message-sender {
     font-size: 0.8rem;
     color: #6c757d;
+}
+
+.no-messages {
+    text-align: center;
+    font-size: 1rem;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 1rem;
 }
 </style>

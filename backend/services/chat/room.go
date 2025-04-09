@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"google.golang.org/api/iterator"
+
 	"cloud.google.com/go/firestore"
+	"google.golang.org/api/iterator"
 )
 
 type Room struct {
@@ -26,17 +27,17 @@ func NewRoom(name string) *Room {
 	}
 }
 
-const welcomeMessage = "%s joined the room"
+// const welcomeMessage = "%s joined the room"
 
-func (room *Room) notifyClientJoined(client *Client) {
-	message := &Message{
-		Action:  SendMessageAction,
-		Target:  room.name,
-		Message: fmt.Sprintf(welcomeMessage, client.UserID),
-	}
+// func (room *Room) notifyClientJoined(client *Client) {
+// 	message := &Message{
+// 		Action:  SendMessageAction,
+// 		Target:  room.name,
+// 		Message: fmt.Sprintf(welcomeMessage, client.UserID),
+// 	}
 
-	room.broadcastMessageToClients(message.encode())
-}
+// 	room.broadcastMessageToClients(message.encode())
+// }
 
 // RunRoom to run the room and accept various requests
 func (room *Room) RunRoom() {
@@ -57,7 +58,7 @@ func (room *Room) RunRoom() {
 }
 
 func (room *Room) registerClientInRoom(client *Client) {
-	room.notifyClientJoined(client)
+	// room.notifyClientJoined(client)
 	room.clients[client] = true
 	fmt.Printf("Client %s joined room %s\n", client.UserID, room.name)
 	fmt.Printf("Current clients in room %s: ", room.name)
@@ -75,32 +76,41 @@ func (room *Room) unregisterClientInRoom(client *Client) {
 
 func (room *Room) broadcastMessageToClients(message []byte) {
 	fmt.Printf("Broadcasting message to room %s: %s\n", room.name, string(message))
-	for client := range room.clients {
-		var msg Message
-		if err := json.Unmarshal(message, &msg); err != nil {
-			fmt.Printf("Error unmarshalling message: %v\n", err)
-			continue
+	var msg Message
+	if err := json.Unmarshal(message, &msg); err != nil {
+		fmt.Printf("Error unmarshalling message: %v\n", err)
+		return
+	}
+
+	// Generate a message ID if one doesn't exist
+	if msg.MessageID == "" {
+		msg.GenerateMessageID()
+		// Re-encode with the message ID
+		message = msg.encode()
+	}
+
+	// Save to Firestore only once
+	go func(msg Message) {
+		_, _, err := FirestoreClient.Collection("rooms").
+			Doc(room.name).
+			Collection("messages").
+			Add(context.Background(), map[string]interface{}{
+				"sender":     msg.Sender,
+				"message":    msg.Message,
+				"target":     msg.Target,
+				"action":     msg.Action,
+				"message_id": msg.MessageID,
+				"timestamp":  firestore.ServerTimestamp,
+			})
+		if err != nil {
+			fmt.Printf("Failed to save message to Firestore: %v\n", err)
+		} else {
+			fmt.Printf("Message saved to Firestore for room %s\n", room.name)
 		}
+	}(msg)
 
-		// Save to Firestore
-		go func(msg Message) {
-			_, _, err := FirestoreClient.Collection("rooms").
-				Doc(room.name).
-				Collection("messages").
-				Add(context.Background(), map[string]interface{}{
-					"sender":  msg.Sender,
-					"message": msg.Message,
-					"target":  msg.Target,
-					"action":  msg.Action,
-					"timestamp":      firestore.ServerTimestamp, // Use Firestore's server timestamp
-				})
-			if err != nil {
-				fmt.Printf("Failed to save message to Firestore: %v\n", err)
-			} else {
-				fmt.Printf("Message saved to Firestore for room %s\n", room.name)
-			}
-		}(msg)
-
+	// Broadcast to all clients
+	for client := range room.clients {
 		// Skip sending the message back to the sender
 		if client.UserID == msg.Sender {
 			continue
@@ -117,33 +127,33 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 }
 
 func GetMessagesForRoom(roomName string) ([]Message, error) {
-    ctx := context.Background()
-    messages := []Message{}
+	ctx := context.Background()
+	messages := []Message{}
 
-    // Query the messages subcollection for the room
-    iter := FirestoreClient.Collection("rooms").
-        Doc(roomName).
-        Collection("messages").
-        OrderBy("timestamp", firestore.Asc).
-        Documents(ctx)
+	// Query the messages subcollection for the room
+	iter := FirestoreClient.Collection("rooms").
+		Doc(roomName).
+		Collection("messages").
+		OrderBy("timestamp", firestore.Asc).
+		Documents(ctx)
 
-    for {
-        doc, err := iter.Next()
-        if err != nil {
-            if err == iterator.Done {
-                break
-            }
-            return nil, fmt.Errorf("failed to retrieve messages: %v", err)
-        }
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if err == iterator.Done {
+				break
+			}
+			return nil, fmt.Errorf("failed to retrieve messages: %v", err)
+		}
 
-        var msg Message
-        if err := doc.DataTo(&msg); err != nil {
-            return nil, fmt.Errorf("failed to parse message: %v", err)
-        }
-        messages = append(messages, msg)
-    }
+		var msg Message
+		if err := doc.DataTo(&msg); err != nil {
+			return nil, fmt.Errorf("failed to parse message: %v", err)
+		}
+		messages = append(messages, msg)
+	}
 
-    return messages, nil
+	return messages, nil
 }
 
 func (room *Room) GetName() string {
