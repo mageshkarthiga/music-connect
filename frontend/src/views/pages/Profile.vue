@@ -219,7 +219,7 @@ export default defineComponent({
                 firebaseUser.uid
               );
               user.value = fetchedUser || mockUser;
-              user.value = mockUser; //temp
+              // user.value = mockUser; //temp
             } catch (error) {
               console.error("Error fetching user by Firebase UID:", error);
               user.value = mockUser;
