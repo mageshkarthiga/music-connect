@@ -20,7 +20,7 @@
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <h3>💬 Chat With: {{ room.name }}</h3>
+                            <h3>💬 Chat With: {{ room.otherUserName || "Loading..." }}</h3>
                             <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" />
                         </div>
                     </template>
@@ -84,8 +84,9 @@ export default {
         }
     },
     mounted() {
-        this.getUserDetails();
+        this.getCurrentUser();
         this.fetchUsers();
+        // this.getOtherUsers("b1mftTyzUegEma9tde90FKtiITl1")
     },
     methods: {
         async fetchUsers() {
@@ -98,7 +99,7 @@ export default {
                 this.errorMessage = "Failed to fetch users. Please try again later.";
             }
         },
-        async getUserDetails() {
+        async getCurrentUser() {
             try {
                 const response = await axios.get("http://localhost:8080/me", {
                     withCredentials: true,
@@ -109,6 +110,18 @@ export default {
                 this.currentUser.user_name = response.data.user_name || "Anonymous";
             } catch (error) {
                 console.error("Error getting user:", error);
+            }
+        },
+        async getOtherUsers(userID) {
+            try {
+                const response = await axios.get(`http://localhost:8080/firebase/${userID}`, {
+                    withCredentials: true,
+                });
+                console.log(response)
+                return response.data.user_name
+            } catch (error) {
+                console.error("Error getting user:", error);
+                return "Unknown User";
             }
         },
         connectToWebsocket() {
@@ -209,26 +222,32 @@ export default {
             // Check if room already exists
             const existingRoom = this.rooms.find(r => r.name === roomName);
             if (existingRoom) {
-                this.currentRoom = roomName;  // Set the current room when it's found
-                this.currentChatUser = user; // Set the current chat user
+                this.currentRoom = roomName;
+                this.currentChatUser = user;
                 return;
             }
 
             const newRoom = {
                 name: roomName,
                 messages: [],
-                newMessage: ''
+                newMessage: '',
+                otherUserName: "Loading...", // Placeholder for the other user's name
             };
 
             this.loading = true;
 
             try {
+                // Fetch the other user's name
+                const otherUserID = roomName.split("-").filter(id => id !== this.currentUser.user_id)[0];
+                const response = await this.getOtherUsers(otherUserID);
+                newRoom.otherUserName = response;
+
                 // Fetch chat history via REST API
-                const response = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`);
-                newRoom.messages = response.data.map(msg => ({
+                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`);
+                newRoom.messages = messagesResponse.data.map(msg => ({
                     message: msg.message,
                     sender: msg.sender,
-                    isSent: msg.sender === this.currentUser.user_name,
+                    isSent: msg.sender === this.currentUser.user_id,
                 }));
                 console.log(`Fetched messages for room ${roomName}:`, newRoom.messages);
             } catch (error) {
@@ -246,7 +265,7 @@ export default {
                 const joinRoomMessage = {
                     action: "join-room",
                     message: roomName,
-                    target: roomName
+                    target: roomName,
                 };
                 ws.send(JSON.stringify(joinRoomMessage));
                 console.log("Join room message sent:", joinRoomMessage);
@@ -257,7 +276,7 @@ export default {
                 newRoom.messages.push({
                     message: data.message,
                     sender: data.sender,
-                    isSent: data.sender === this.currentUser.user_name
+                    isSent: data.sender === this.currentUser.user_id,
                 });
 
                 this.$nextTick(() => {
