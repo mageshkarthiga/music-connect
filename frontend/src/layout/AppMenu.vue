@@ -191,7 +191,8 @@ const model = ref([
         :key="playlist.playlist_id"
         class="playlist-item"  
       >
-        <img :src="playlist.image_url" alt="Playlist Image" class="playlist-image" />
+      <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
+   
         <div class="playlist-info">
           <span class="playlist-name">{{ playlist.name }}</span>
           <span class="username">Playlist - {{ currentUser?.user_name }}</span>
@@ -240,6 +241,7 @@ export default {
 
         if (Array.isArray(response.data)) {
           this.user.playlists = response.data;
+          console.log("Fetched playlists:", this.user.playlists);
         } else {
           throw new Error("Invalid playlists data format");
         }
