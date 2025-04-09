@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center gap-4 bg-zinc-900 rounded-lg p-3 min-w-[280px] max-w-md hover:bg-zinc-800 transition cursor-pointer"
+    class="dark flex items-center gap-4 bg-surface-500 rounded-lg p-3 min-w-[280px] max-w-md hover:bg-surface-400 dark:hover:bg-surface-600 transition cursor-pointer"
     @click="openTrack"
   >
     <img
