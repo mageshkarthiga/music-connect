@@ -12,6 +12,7 @@ const isLoading = ref(null);
 
 onBeforeMount(() => {
     UserService.getAllUsers().then((data) => {
+        console.log('data', data);
         allUsers.value = data;
         isLoading.value = false;
     });
