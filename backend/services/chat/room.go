@@ -1,8 +1,11 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+
+	"cloud.google.com/go/firestore"
 )
 
 type Room struct {
@@ -78,6 +81,23 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 			fmt.Printf("Error unmarshalling message: %v\n", err)
 			continue
 		}
+
+		// Save to Firestore
+		go func(msg Message) {
+			_, _, err := FirestoreClient.Collection("rooms").
+				Doc(room.name).
+				Collection("messages").
+				Add(context.Background(), map[string]interface{}{
+					"sender":  msg.Sender,
+					"message": msg.Message,
+					"target":  msg.Target,
+					"action":  msg.Action,
+					"ts":      firestore.ServerTimestamp,
+				})
+			if err != nil {
+				fmt.Printf("Failed to save message: %v", err)
+			}
+		}(msg)
 
 		// Skip sending the message back to the sender
 		if client.UserID == msg.Sender {
