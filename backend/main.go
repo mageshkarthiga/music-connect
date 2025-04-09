@@ -5,6 +5,7 @@ import (
 	"backend/routes"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"backend/services/chat" 
 	"backend/services/spotify" 
 	"log"
 )
@@ -17,6 +18,11 @@ func main() {
 	} else {
 		log.Println("Database connection initialized successfully! ✅")
 	}
+
+	// Initialize Firebase
+	chat.InitFirebase()
+
+	// Initialize Spotify services
 	services.SpotifyAuth()
 	token, err := services.GetSpotifyTokenRaw()
 	if err != nil {

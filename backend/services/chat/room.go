@@ -92,10 +92,12 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 					"message": msg.Message,
 					"target":  msg.Target,
 					"action":  msg.Action,
-					"ts":      firestore.ServerTimestamp,
+					"timestamp":      firestore.ServerTimestamp, // Use Firestore's server timestamp
 				})
 			if err != nil {
-				fmt.Printf("Failed to save message: %v", err)
+				fmt.Printf("Failed to save message to Firestore: %v\n", err)
+			} else {
+				fmt.Printf("Message saved to Firestore for room %s\n", room.name)
 			}
 		}(msg)
 

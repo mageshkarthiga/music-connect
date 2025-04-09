@@ -1,12 +1,12 @@
 package chat
 
 import (
-	"context"
-	"log"
+    "context"
+    "log"
 
-	"firebase.google.com/go/v4"
-	"cloud.google.com/go/firestore"
-	"google.golang.org/api/option"
+    firebase "firebase.google.com/go"
+    "cloud.google.com/go/firestore"
+    "google.golang.org/api/option"
 )
 
 var FirestoreClient *firestore.Client
