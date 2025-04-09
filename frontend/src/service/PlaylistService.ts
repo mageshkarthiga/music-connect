@@ -131,4 +131,18 @@ export default {
       );
     }
   },
+  //get playlist image 
+
+    async getPlaylistImage(playlistId: number): Promise<string> {
+        try {
+        const response = await axios.get(
+            `${API_BASE_URL}/playlists/${playlistId}/image`
+        );
+        return response.data.image_url; // Assuming the API returns an object with image_url
+        } catch (error) {
+        throw new Error(
+            `Error fetching playlist image for ID ${playlistId}: ${error.message}`
+        );
+        }
+    },
 };
