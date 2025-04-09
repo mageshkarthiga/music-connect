@@ -17,8 +17,12 @@
       <!-- Display Events -->
       <div class="p-4" v-if="user.events.length">
         <h2 class="text-xl font-semibold mb-3">Events</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-          <EventComponent v-for="event in user.events" :key="event.event_id" :event="event" />
+        <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
+          <EventComponent
+            v-for="event in user.events"
+            :key="event.event_id"
+            :event="event"
+          />
         </div>
       </div>
 
@@ -26,7 +30,11 @@
       <div class="p-4" v-if="user.playlists.length">
         <h2 class="text-xl font-semibold mb-3">Playlists</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
-          <PlaylistComponent v-for="playlist in user.playlists" :key="playlist.playlist_id" :playlist="playlist" />
+          <PlaylistComponent
+            v-for="playlist in user.playlists"
+            :key="playlist.playlist_id"
+            :playlist="playlist"
+          />
         </div>
       </div>
     </div>
@@ -37,7 +45,10 @@
     <SpotifyPlayer />
 
     <!-- No Events or Playlists Found -->
-    <div v-if="!loading && !user.events.length && !user.playlists.length" class="p-4">
+    <div
+      v-if="!loading && !user.events.length && !user.playlists.length"
+      class="p-4"
+    >
       <p>No events or playlists found.</p>
     </div>
   </div>
@@ -58,18 +69,18 @@ export default {
   },
   data() {
     return {
-      loading: false, // Flag to manage loading state
-      user: { events: [], playlists: [] }, // Store user data
-      errorMessage: "", // Store error messages
+      loading: false,
+      user: { events: [], playlists: [] },
+      errorMessage: "",
     };
   },
   methods: {
-    // Fetch events by user ID with enhanced error handling
     async getEventsByUserId() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
+        console.log("Fetched events:", response.data);
         if (Array.isArray(response.data)) {
           this.user.events = response.data;
         } else {
@@ -80,12 +91,12 @@ export default {
       }
     },
 
-    // Fetch playlists for user with enhanced error handling
     async getPlaylistsForUser() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
+        console.log("Fetched playlists:", response.data);
         if (Array.isArray(response.data)) {
           this.user.playlists = response.data;
         } else {
@@ -96,23 +107,24 @@ export default {
       }
     },
 
-    // Error handling
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
-      this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
+      this.errorMessage =
+        error.response?.data?.message || `Failed to fetch ${dataType}.`;
     },
 
-    // Fetch both events and playlists
     async fetchEvents() {
       this.errorMessage = "";
       this.loading = true;
+      console.log("Fetching events and playlists...");
       try {
         await Promise.all([
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
         ]);
+        console.log("Final user object:", this.user);
       } catch (err) {
-        // Handle any fetch error
+        // No need to handle here, errors handled in individual methods
       } finally {
         this.loading = false;
       }

@@ -1,30 +1,29 @@
 <template>
-    <div class="min-w-[250px] max-w-[300px] flex-shrink-0">
-      <Card>
-        <template v-slot:title>
-          <div class="flex items-center justify-between mb-0">
-            <div class="font-semibold text-xl mb-4">{{ event.event_name }}</div>
-          </div>
-        </template>
-        <template v-slot:content>
-          <img
-            :src="event.event_image_url"
-            alt="Event image"
-            class="w-full h-40 object-cover rounded-xl mb-3"
-          />
-          <p class="text-sm text-gray-800 line-clamp-3 mt-1 mb-4">
-            {{ event.event_description }}
-          </p>
-        </template>
-      </Card>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      event: Object, // Event data passed as prop
-    },
-  };
-  </script>
-  
+  <div class="min-w-[250px] max-w-[300px] flex-shrink-0">
+    <Card>
+      <template v-slot:title>
+        <div class="flex items-center justify-between mb-0">
+          <div class="font-semibold text-xl mb-4">{{ event.event_name }}</div>
+        </div>
+      </template>
+      <template v-slot:content>
+        <img
+          :src="event.event_image_url"
+          alt="Event image"
+          class="w-full h-40 object-cover rounded-xl mb-3"
+        />
+        <p class="text-sm text-gray-800 line-clamp-3 mt-1 mb-4">
+          {{ event.event_description }}
+        </p>
+      </template>
+    </Card>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    event: Object, // Event data passed as prop
+  },
+};
+</script>
