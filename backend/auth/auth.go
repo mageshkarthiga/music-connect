@@ -73,6 +73,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))     // Update an existing user by ID
 	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))  // Delete a user by ID
     e.GET("/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID)) // Fetch Firebase UID from token
+	e.GET("/me", middleware.AuthMiddleware(projectID) (controllers.GetUser))
 
 	// Track Routes (Protected)
 	// e.POST("/tracks", middleware.AuthMiddleware(projectID)(controllers.CreateTrack))       // Create a new track

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"google.golang.org/api/iterator"
 	"cloud.google.com/go/firestore"
 )
 
@@ -114,6 +114,36 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 			fmt.Printf("Failed to send message to client %s (channel blocked)\n", client.UserID)
 		}
 	}
+}
+
+func GetMessagesForRoom(roomName string) ([]Message, error) {
+    ctx := context.Background()
+    messages := []Message{}
+
+    // Query the messages subcollection for the room
+    iter := FirestoreClient.Collection("rooms").
+        Doc(roomName).
+        Collection("messages").
+        OrderBy("timestamp", firestore.Asc).
+        Documents(ctx)
+
+    for {
+        doc, err := iter.Next()
+        if err != nil {
+            if err == iterator.Done {
+                break
+            }
+            return nil, fmt.Errorf("failed to retrieve messages: %v", err)
+        }
+
+        var msg Message
+        if err := doc.DataTo(&msg); err != nil {
+            return nil, fmt.Errorf("failed to parse message: %v", err)
+        }
+        messages = append(messages, msg)
+    }
+
+    return messages, nil
 }
 
 func (room *Room) GetName() string {

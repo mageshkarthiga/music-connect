@@ -4,7 +4,7 @@
         <div class="user-list">
             <h3>Users</h3>
             <ul>
-                <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user.user_id)"
+                <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
                     <img :src="user.profile_photo_url" alt="Profile" class="profile-photo" />
                     {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
@@ -30,7 +30,7 @@
                             <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
                                 :class="{ 'sent': message.isSent, 'received': !message.isSent }">
                                 <div class="message-bubble">
-                                    {{ message.message }} {{ message.timestamp }}
+                                    {{ message.message }}
                                 </div>
                             </div>
                         </div>
@@ -55,31 +55,18 @@
 </template>
 
 <script>
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+
 export default {
     name: "ChatWindow",
     data() {
         return {
             currentUser: {
-                user_id: 1,
-                user_name: 'karthiga',
-                profile_photo_url: 'https://ui-avatars.com/api/?name=Karthiga'
+                user_id: null,
+                user_name: null,
             },
             users: [
-                {
-                    user_id: 2,
-                    user_name: 'alex',
-                    profile_photo_url: 'https://ui-avatars.com/api/?name=Alex'
-                },
-                {
-                    user_id: 3,
-                    user_name: 'jordan',
-                    profile_photo_url: 'https://ui-avatars.com/api/?name=Jordan'
-                },
-                {
-                    user_id: 4,
-                    user_name: 'charles',
-                    profile_photo_url: 'https://ui-avatars.com/api/?name=Charles'
-                }
             ],
             rooms: [],
             roomInput: "",
@@ -91,13 +78,39 @@ export default {
     },
     computed: {
         filteredUsers() {
-            return this.users.filter(user => user.user_id !== this.currentUser.user_id);
+            return this.users.filter(user =>
+                user.user_id !== this.currentUser.user_id && user.firebase_uid?.trim() !== "" && user.user_name?.trim() !== ""
+            );
         }
     },
     mounted() {
-        window.chatWindow = this // Expose the chat window instance globally for testing
+        this.getUserDetails();
+        this.fetchUsers();
     },
     methods: {
+        async fetchUsers() {
+            try {
+                const response = await axios.get("http://localhost:8080/users");
+                this.users = response.data;
+                console.log("Fetched users:", this.users);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                this.errorMessage = "Failed to fetch users. Please try again later.";
+            }
+        },
+        async getUserDetails() {
+            try {
+                const response = await axios.get("http://localhost:8080/me", {
+                    withCredentials: true,
+                });
+                console.log(response.data)
+
+                this.currentUser.user_id = response.data.firebase_uid;
+                this.currentUser.user_name = response.data.user_name || "Anonymous";
+            } catch (error) {
+                console.error("Error getting user:", error);
+            }
+        },
         connectToWebsocket() {
             this.ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${this.currentRoom}`);
 
@@ -134,7 +147,7 @@ export default {
                     console.log("Parsed message:", msg); // Log parsed message
 
                     // Validate the message structure
-                    if (!msg.message || !msg.target || !msg.timestamp) {
+                    if (!msg.message || !msg.target) {
                         console.warn("Invalid message received:", msg);
                         continue;
                     }
@@ -148,7 +161,6 @@ export default {
                                 message: msg.message.trim(),
                                 sender: msg.sender || "Unknown",
                                 isSent: msg.sender === this.currentUser.user_name,
-                                timestamp: msg.timestamp
                             }
                         ]);
                         console.log(`Updated messages for room ${room.name}:`, room.messages); // Log updated messages
@@ -168,7 +180,6 @@ export default {
                     action: "send-message",
                     message: room.newMessage,
                     target: room.name,
-                    timestamp: new Date().toISOString(),
                 };
 
                 ws.send(JSON.stringify(messageData));
@@ -191,25 +202,15 @@ export default {
             return this.rooms.find((room) => room.name === roomName);
         },
 
-        joinRoom(userId) {
-            const user = this.users.find(u => u.user_id === userId);
-
-            // Check if the user exists
-            if (!user) {
-                console.error(`User with user_id ${userId} not found`);
-                this.errorMessage = `User with user_id ${userId} not found`; // Set error message
-                return;
-            }
-
-            const roomName = [this.currentUser.user_id, userId].sort().join("-");
-
+        async joinRoom(user) {
+            const roomName = [this.currentUser.user_id, user.firebase_uid].sort().join("-");
             console.log(`User ${this.currentUser.user_name} is joining room: ${roomName}`);
 
             // Check if room already exists
             const existingRoom = this.rooms.find(r => r.name === roomName);
             if (existingRoom) {
                 this.currentRoom = roomName;  // Set the current room when it's found
-                this.currentChatUser = user;
+                this.currentChatUser = user; // Set the current chat user
                 return;
             }
 
@@ -220,6 +221,20 @@ export default {
             };
 
             this.loading = true;
+
+            try {
+                // Fetch chat history via REST API
+                const response = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`);
+                newRoom.messages = response.data.map(msg => ({
+                    message: msg.message,
+                    sender: msg.sender,
+                    isSent: msg.sender === this.currentUser.user_name,
+                }));
+                console.log(`Fetched messages for room ${roomName}:`, newRoom.messages);
+            } catch (error) {
+                console.error(`Error fetching messages for room ${roomName}:`, error);
+                this.errorMessage = "Failed to load chat history. Please try again later.";
+            }
 
             // Establish WebSocket connection for the room
             const ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
@@ -266,7 +281,7 @@ export default {
 
             this.rooms.push(newRoom);
             this.sockets[roomName] = ws;
-            this.currentChatUser = user;
+            this.currentChatUser = user; // Set the current chat user
             this.currentRoom = roomName;
         },
 
@@ -278,7 +293,7 @@ export default {
             }
             this.rooms = this.rooms.filter(r => r.name !== room.name);
             this.currentChatUser = null;
-        },
+        }
     },
 };
 </script>

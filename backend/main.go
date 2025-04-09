@@ -1,23 +1,19 @@
 package main
 
 import (
+	"backend/auth"
 	"backend/config"
 	"backend/middleware" // Make sure this is the correct path
-	"backend/auth"
+	"backend/models"
 	"backend/routes"
 	"backend/services/spotify"
-	"backend/models"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
 
-
+	"backend/services/chat"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/echo/v4/middleware"
-	"backend/services/chat" 
-	"backend/services/spotify" 
-	"log"
 )
 
 func main() {
@@ -44,14 +40,19 @@ func main() {
 
 	//run migrations
 
-	if err := config.DB.AutoMigrate( &models.Event{}, &models.UserEvent{}, &models.Playlist{}, &models.Track{}, &models.PlaylistTrack{}, &models.TrackArtist{}); err != nil {
+	if err := config.DB.AutoMigrate(&models.Event{}, &models.UserEvent{}, &models.Playlist{}, &models.Track{}, &models.PlaylistTrack{}, &models.TrackArtist{}); err != nil {
 		log.Fatal("❌ Failed to run migrations: ", err)
 	} else {
 		log.Println("✅ Migrations completed successfully!")
 	}
 
+	// Initialize WebSocket server
+    wsServer := chat.NewWsServer()
+    go wsServer.Run() // Start the WebSocket server in a separate goroutine
+
 	// Initialize Firebase
 	chat.InitFirebase()
+	
 
 	// Initialize Spotify services
 	services.SpotifyAuth()
@@ -75,7 +76,7 @@ func main() {
 	log.Println("✅ CORS middleware applied")
 
 	// Register routes
-	routes.RegisterRoutes(e)
+	routes.RegisterRoutes(e,wsServer)
 	log.Println("✅ Routes registered")
 
 	// Health check
