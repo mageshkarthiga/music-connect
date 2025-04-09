@@ -41,8 +41,8 @@
 
     <!-- Display Tracks -->
     <div class="p-4" v-if="user.tracks.length">
-      <h2 class="text-xl font-semibold mb-3">Tracks</h2>
-      <div class="flex space-x-4 overflow-x-auto pb-4">
+      <h2 class="text-xl font-semibold mb-3 text-white">Tracks</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <TrackCard
           v-for="track in user.tracks"
           :key="track.track_id"
