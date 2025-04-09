@@ -9,59 +9,63 @@
       <span>Loading...</span>
     </div>
 
-    <!-- Content Wrapper: Events and Playlists -->
-    <div
-      ref="contentWrapper"
-      v-if="!loading && (user.events.length || user.playlists.length)"
-    >
-      <!-- Display Events -->
-      <div class="p-4" v-if="user.events.length">
-        <h2 class="text-xl font-semibold mb-3">Events</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
-          <EventComponent
-            v-for="event in user.events"
-            :key="event.event_id"
-            :event="event"
-          />
-        </div>
-      </div>
-
-      <!-- Display Playlists -->
-      <div class="p-4" v-if="user.playlists.length">
-        <h2 class="text-xl font-semibold mb-3">Playlists</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-          <PlaylistComponent
-            v-for="playlist in user.playlists"
-            :key="playlist.playlist_id"
-            :playlist="playlist"
-          />
-        </div>
-      </div>
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="p-4 text-red-500">
+      {{ errorMessage }}
     </div>
 
-    <!-- Display Tracks -->
-    <div class="p-4" v-if="user.tracks.length">
-      <h2 class="text-xl font-semibold mb-3 text-white">Tracks</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <TrackCard
-          v-for="track in user.tracks"
-          :key="track.track_id"
-          :track="track"
-        />
-      </div>
-    </div>
+    <!-- Content -->
+    <div v-if="!loading">
+      <template v-if="hasContent">
+        <!-- Events -->
+        <div class="p-4" v-if="user.events.length">
+          <h2 class="text-xl font-semibold mb-3">Events</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
+            <EventCard
+              v-for="event in user.events"
+              :key="event.event_id"
+              :event="event"
+            />
+          </div>
+        </div>
 
-    <!-- Embed SpotifyPlayer Component -->
+        <!-- Playlists -->
+        <div class="p-4" v-if="user.playlists.length">
+          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <PlaylistCard
+              v-for="playlist in user.playlists"
+              :key="playlist.playlist_id"
+              :playlist="playlist"
+            />
+          </div>
+        </div>
 
-    <h2 class="text-xl font-semibold mb-3">Artists</h2>
-    <SpotifyPlayer />
+        <!-- Tracks -->
+        <div class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <TrackCard
+              v-for="track in user.tracks"
+              :key="track.track_id"
+              :track="track"
+            />
+          </div>
+        </div>
 
-    <!-- No Events or Playlists Found -->
-    <div
-      v-if="!loading && !user.events.length && !user.playlists.length"
-      class="p-4"
-    >
-      <p>No events or playlists found.</p>
+        <!-- Artists -->
+        <div class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Artists</h2>
+          <SpotifyPlayer />
+        </div>
+      </template>
+
+      <!-- No Content -->
+      <template v-else>
+        <div class="p-4">
+          <p>No events, playlists, or tracks found.</p>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -69,17 +73,17 @@
 <script>
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
-import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
-import PlaylistComponent from "@/components/PlaylistComponent.vue";
-import TrackCard from "@/components/Track.vue";
-import SpotifyPlayer from "@/components/SpotifyPlayer.vue"; // Import SpotifyPlayer component
+import EventCard from "@/components/EventCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
+import TrackCard from "@/components/TrackCard.vue";
+import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 
 export default {
   components: {
-    EventComponent, // Register EventComponent
-    PlaylistComponent, // Register PlaylistComponent
-    SpotifyPlayer, // Register SpotifyPlayer
+    EventCard,
+    PlaylistCard,
     TrackCard,
+    SpotifyPlayer,
   },
   data() {
     return {
@@ -88,74 +92,60 @@ export default {
       errorMessage: "",
     };
   },
+  computed: {
+    hasContent() {
+      return (
+        this.user.events.length ||
+        this.user.playlists.length ||
+        this.user.tracks.length
+      );
+    },
+  },
   methods: {
     async getEventsByUserId() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
-        console.log("Fetched events:", response.data);
-        if (Array.isArray(response.data)) {
-          this.user.events = response.data;
-        } else {
-          throw new Error("Invalid events data format");
-        }
+        this.user.events = response.data;
       } catch (err) {
         this.handleError(err, "events");
       }
     },
-
     async getPlaylistsForUser() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
-        console.log("Fetched playlists:", response.data);
-        if (Array.isArray(response.data)) {
-          this.user.playlists = response.data;
-        } else {
-          throw new Error("Invalid playlists data format");
-        }
+        this.user.playlists = response.data;
       } catch (err) {
         this.handleError(err, "playlists");
       }
     },
-
     async getTracksForUser() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/tracks`, {
           withCredentials: true,
         });
-        console.log("Fetched tracks:", response.data);
-        if (Array.isArray(response.data)) {
-          this.user.tracks = response.data;
-        } else {
-          throw new Error("Invalid tracks data format");
-        }
+        this.user.tracks = response.data;
       } catch (err) {
         this.handleError(err, "tracks");
       }
     },
-
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
       this.errorMessage =
         error.response?.data?.message || `Failed to fetch ${dataType}.`;
     },
-
     async fetchEvents() {
       this.errorMessage = "";
       this.loading = true;
-      console.log("Fetching events and playlists...");
       try {
         await Promise.all([
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
           this.getTracksForUser(),
         ]);
-        console.log("Final user object:", this.user);
-      } catch (err) {
-        // No need to handle here, errors handled in individual methods
       } finally {
         this.loading = false;
       }

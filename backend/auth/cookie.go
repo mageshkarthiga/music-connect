@@ -14,7 +14,7 @@ func SetAuthCookie(c echo.Context, tokenStr string) error {
 		Secure:   false, 
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode, 
-		MaxAge:   360000000,
+		MaxAge:   36000000,
 	}
 
 	// Set the cookie in the response
