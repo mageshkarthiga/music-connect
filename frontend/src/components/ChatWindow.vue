@@ -354,11 +354,15 @@ export default {
 
 .user-list {
     flex: 1;
-    max-width: 200px;
+    max-width: 300px;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 1rem;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
+    max-height: 600px; 
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;  
 }
 
 .user-list ul {
@@ -378,11 +382,23 @@ export default {
 }
 
 .user-list li:hover {
-    background-color: #e9ecef;
+    background-color: #e0e0e0;
 }
+
 
 .user-list li.active {
     background-color: #d1e7dd;
+}
+
+.user-list h3 {
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #ddd;
+    background-color: #ffffff;
+    position: static; 
+    top: auto;
+    z-index: auto;
 }
 
 .profile-photo {
@@ -433,7 +449,6 @@ export default {
 .message-bubble {
     padding: 0.75rem 1.25rem;
     border-radius: 8px;
-    /* Slightly rounded rectangle */
     max-width: 70%;
     word-break: break-word;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -443,7 +458,6 @@ export default {
 
 .message-wrapper.sent .message-bubble {
     background-color: #d1e7dd;
-    /* Soft green */
     color: #0f5132;
     border: 1px solid #badbcc;
 }
