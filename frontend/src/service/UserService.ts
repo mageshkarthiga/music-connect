@@ -2,6 +2,7 @@ import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
 import { auth } from "@/firebase/firebase";
+import { getUserTracksById } from "./TrackService";
 
 const USER_URL = `${API_BASE_URL}`;
 
@@ -38,9 +39,8 @@ export default {
     return data; // Return the inserted user data
   },
 
-
   async getUser() {
-    const response = await axios.get<User>(`${USER_URL}/me}`, {
+    const response = await axios.get<User>(`${USER_URL}/me`, {
       withCredentials: true,
     });
     return response.data;
@@ -88,5 +88,20 @@ export default {
       console.error("Error fetching secure data", error);
       throw error;
     }
+  },
+
+  async getUserByUserId(userId: number): Promise<User> {
+    const { data } = await axios.get(`${USER_URL}/${userId}`, {
+      withCredentials: true,
+    });
+
+    return {
+      id: data.user_id,
+      userName: data.user_name,
+      emailAddress: data.email_address,
+      phoneNumber: data.phone_number,
+      location: data.location,
+      profilePhotoUrl: data.profile_photo_url,
+    };
   },
 };

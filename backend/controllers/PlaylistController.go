@@ -34,7 +34,6 @@ func GetPlaylistByID(c echo.Context) error {
 }
 
 // CreatePlaylist creates a new playlist with the user's existing tracks
-// CreatePlaylist creates a new playlist with the user's existing tracks
 func CreatePlaylist(c echo.Context) error {
 	var playlistRequest struct {
 		UserID   uint   `json:"user_id"`
@@ -165,3 +164,18 @@ func AddPlaylistForUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, playlist)
 }
 
+// GetPlaylistByUserID returns a specific user‑owned playlist with its tracks.
+func GetPlaylistByUserID(c echo.Context) error {
+	uid := c.Param("id")
+
+	var playlists []models.Playlist
+	if err := config.DB.
+		Where("user_id = ?", uid).
+		Preload("Tracks").
+		Find(&playlists).Error; err != nil {
+		log.Printf("Error fetching playlists for user %s: %v", uid, err)
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch playlists")
+	}
+
+	return c.JSON(http.StatusOK, playlists)
+}

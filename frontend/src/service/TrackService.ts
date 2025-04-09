@@ -96,3 +96,15 @@ export const getUserTracks = async (): Promise<Track[]> => {
     throw error;
   }
 };
+// Function to fetch tracks for the authenticated user of another user
+export const getUserTracksById = async (userId: number): Promise<Track[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/tracks`, {
+      withCredentials: true,
+    });
+    return response.data as Track[];
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    throw error;
+  }
+};
