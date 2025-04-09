@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/oauth2"
+
 )
 
 // Global Spotify Auth Config
@@ -17,12 +19,12 @@ var authConfig *clientcredentials.Config
 
 // SpotifyAuth initializes the Spotify authentication configuration
 func SpotifyAuth() {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		fmt.Println("Error loading .env file:", err)
-		return
+	if os.Getenv("ENV") != "prod" {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Println("Error loading .env file:", err)
+		}
 	}
-
 	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
 	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
@@ -41,18 +43,23 @@ func SpotifyAuth() {
 	fmt.Println("✅ Spotify authentication initialized successfully!")
 }
 
-
-// GetSpotifyToken is the handler function for the /spotify/token route
+// GetSpotifyToken is the Echo handler for /spotify/token
 func GetSpotifyToken(c echo.Context) error {
-    SpotifyAuth() // Ensure SpotifyAuth is called to initialize authConfig
-	if authConfig == nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Spotify authentication is not initialized"})
-	}
-
-	token, err := authConfig.Token(context.Background())
+	token, err := GetSpotifyTokenRaw()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get token"})
 	}
 	return c.JSON(http.StatusOK, token)
 }
 
+// GetSpotifyTokenRaw returns the token directly (for use in main.go etc.)
+func GetSpotifyTokenRaw() (*oauth2.Token, error) {
+
+	if authConfig == nil {
+		SpotifyAuth()
+	}
+	if authConfig == nil {
+		return nil, fmt.Errorf("Spotify auth config not initialized")
+	}
+	return authConfig.Token(context.Background())
+}

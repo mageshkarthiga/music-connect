@@ -7,6 +7,7 @@
 <script>
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 
+
 export default {
     components: {
         SpotifyPlayer,

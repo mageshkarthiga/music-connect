@@ -105,6 +105,12 @@ const router = createRouter({
           component: () => import("@/views/pages/Crud.vue"),
         },
         {
+          path: "/pages/home",
+          name: "home",
+          component: () => import("@/views/pages/Home.vue"),
+
+        },
+        {
           path: "/documentation",
           name: "documentation",
           component: () => import("@/views/pages/Documentation.vue"),
@@ -141,6 +147,11 @@ const router = createRouter({
       path: "/auth/error",
       name: "error",
       component: () => import("@/views/pages/auth/Error.vue"),
+    },
+    {
+      path: "/pages/spotify",
+      name: "spotify",
+      component: () => import("@/views/pages/Music.vue"),
     },
     {
       path: "/createaccount",

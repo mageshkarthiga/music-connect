@@ -6,9 +6,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"os"
 	"log"
-
+	"os"
 )
 
 // Global DB variable to hold the connection
@@ -16,9 +15,11 @@ var DB *gorm.DB
 
 // InitDB initializes the database connection
 func InitDB() error {
-	err := godotenv.Load()
-	if err != nil {
-		return fmt.Errorf("Error loading .env file")
+	if os.Getenv("ENV") != "prod" {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Println("Error loading .env file:", err)
+		}
 	}
 
 	dbPassword := os.Getenv("DB_PASSWORD")
@@ -28,41 +29,27 @@ func InitDB() error {
 
 	dsn := fmt.Sprintf("postgresql://postgres.kzxuobrnlppliqiwwgvu:%s@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?statement_cache_mode=off", dbPassword)
 
-
+	// Use '=' to assign to the global DB variable
+	var err error
 	DB, err = gorm.Open(postgres.New(postgres.Config{
-		DSN: dsn,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true, // also disables prep statements at protocol level
-	   }), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+	}), &gorm.Config{
+		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: false,
-	   })
-	   if err != nil {
+	})
+	if err != nil {
 		log.Fatal("Error connecting to database:", err)
-	   }
+		return err
+	}
 
+	log.Println("✅ Database connection initialized!")
 
-	// Check if the 'users' table exists before running migrations
-	// if !tableExists(DB, "users") 
-
-
-	// 	err = DB.AutoMigrate(&models.User{}, &models.Event{}, &models.Attraction{}, &models.Venue{}, &models.Artist{}, &models.Track{}, &models.Playlist{}, &models.Device{})
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error during migration: %v", err)
-	// 	}
-	// 	fmt.Println("Migration completed successfully! ✅")
-	// } else {
-	// 	fmt.Println("Tables already exist, skipping migration.")
-	// 
+	// Optional: Perform migration if needed
+	// err = DB.AutoMigrate(&models.User{}, &models.Event{})
+	// if err != nil {
+	// 	log.Fatalf("❌ Migration failed: %v", err)
+	// }
 
 	return nil
-}
-
-// tableExists checks if a table exists in the database
-func tableExists(db *gorm.DB, tableName string) bool {
-	var count int64
-	err := db.Raw("SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?", tableName).Scan(&count).Error
-	if err != nil {
-		return false
-	}
-	return count > 0
 }

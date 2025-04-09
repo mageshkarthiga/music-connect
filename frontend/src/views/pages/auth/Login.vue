@@ -8,7 +8,10 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   getAdditionalUserInfo,
+  getIdToken
 } from "firebase/auth";
+import AuthService from "@/service/AuthService";
+
 import { useRouter } from "vue-router";
 
 const email = ref("");
@@ -17,10 +20,25 @@ const authError = ref("");
 const mode = ref("login");
 const router = useRouter();
 
+
 const login = async () => {
   authError.value = "";
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value);
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    
+    console.log("User logged in:", userCredential.user);
+
+    const user = userCredential.user;
+    const accessToken = await getIdToken(user);
+
+    // console.log("Access Token:", accessToken);
+
+    // Authenticate user with the access token
+    const response = await AuthService.authenticateUser(accessToken);
+    console.log("User authenticated:", response);
+
+
     router.push("/");
   } catch (error) {
     console.error("Login error:", error);
@@ -58,6 +76,10 @@ const signUp = async () => {
   authError.value = "";
   try {
     await createUserWithEmailAndPassword(auth, email.value, password.value);
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    console.log("User signed up:", userCredential.user);
+
+
     router.push("/createaccount");
   } catch (error) {
     console.error("Sign Up error:", error);
@@ -117,6 +139,8 @@ const signInWithGoogle = async () => {
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     const additionalUserInfo = getAdditionalUserInfo(userCredential);
+    console.log("Google Sign-In successful:", userCredential.user);
+
     if (additionalUserInfo?.isNewUser) {
       router.push("/createaccount");
     } else {
