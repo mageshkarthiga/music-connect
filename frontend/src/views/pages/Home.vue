@@ -18,7 +18,7 @@
     <div v-if="!loading">
       <template v-if="hasContent">
         <!-- Events -->
-        <div class="p-4" v-if="user.events.length">
+        <div class="p-4" v-if="Array.isArray(user.events) && user.events.length">
           <h2 class="text-xl font-semibold mb-3">Events</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
             <EventCard
@@ -30,7 +30,7 @@
         </div>
 
         <!-- Playlists -->
-        <div class="p-4" v-if="user.playlists.length">
+        <div class="p-4" v-if="Array.isArray(user.playlists) && user.playlists.length">
           <h2 class="text-xl font-semibold mb-3">Playlists</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
             <PlaylistCard
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Tracks -->
-        <div class="p-4" v-if="user.tracks.length">
+        <div class="p-4" v-if="Array.isArray(user.tracks) && user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <TrackCard
@@ -57,6 +57,11 @@
         <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
           <SpotifyPlayer />
+        </div>
+
+        <div class="p-4">
+          <div class="font-semibold text-xl mb-4">Recommended music</div>
+          <RecommendedTracks />
         </div>
       </template>
 
@@ -77,6 +82,7 @@ import EventCard from "@/components/EventCard.vue";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
+import RecommendedTracks from "@/components/RecommendedTracks.vue";
 
 export default {
   components: {
@@ -84,6 +90,7 @@ export default {
     PlaylistCard,
     TrackCard,
     SpotifyPlayer,
+    RecommendedTracks
   },
   data() {
     return {
