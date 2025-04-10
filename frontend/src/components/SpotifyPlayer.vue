@@ -40,7 +40,7 @@ export default {
             tracks: [], // All tracks fetched from the backend
             paginatedTracks: [], // Tracks to display on the current page
             totalTracks: 0, // Total number of tracks
-            rowsPerPage: 10, // Number of tracks per page
+            rowsPerPage: 12, // Number of tracks per page
             first: 0, // Index of the first track on the current page
         };
     },
