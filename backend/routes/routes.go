@@ -4,13 +4,13 @@ import (
 	"backend/controllers"
 	"backend/services/spotify"
 	"github.com/labstack/echo/v4"
-    
+    "backend/services/chat"
 )
 
 // RegisterRoutes sets up API endpoints for users, tracks, events and third party services.
-func RegisterRoutes(e *echo.Echo) {
+func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
-    
+    // projectID := "music-connect-608f6" // Replace with your actual project ID
 
     // User Routes
     e.GET("/users", controllers.GetUsers)             // Fetch all users
@@ -52,5 +52,13 @@ func RegisterRoutes(e *echo.Echo) {
 
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
-
+    // WebSocket Route
+    e.GET("/ws", func(c echo.Context) error {
+        chat.ServeWs(wsServer, c.Response().Writer, c.Request())
+        return nil
+    })
+    // Message Retrieval Route
+    e.GET("/rooms/:roomName/messages", controllers.GetMessagesForRoom)
+    
 }
+
