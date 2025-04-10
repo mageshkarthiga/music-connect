@@ -49,7 +49,9 @@
               v-for="track in user.tracks"
               :key="track.track_id"
               :track="track"
+              :state="'redirect'"  
             />
+
           </div>
         </div>
 
