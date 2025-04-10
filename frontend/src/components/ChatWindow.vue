@@ -154,31 +154,6 @@ export default {
                 return "Unknown User";
             }
         },
-        connectToWebsocket() {
-            this.ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${this.currentRoom}`);
-
-            this.ws.onopen = () => {
-                console.log("WebSocket connection established");
-            };
-
-            this.ws.onclose = () => {
-                console.log("WebSocket connection closed");
-                setTimeout(() => {
-                    this.connectToWebsocket();
-                }, 5000);
-            };
-
-            this.ws.onerror = (error) => {
-                console.error("WebSocket error:", error);
-                this.errorMessage = "WebSocket connection error. Please try again later.";
-            };
-
-            this.ws.addEventListener("message", (event) => {
-                console.log("Message received:", event.data);
-                this.handleNewMessage(event);
-            });
-        },
-
         handleNewMessage(event) {
             console.log("Raw WebSocket message:", event.data);
             let data = event.data;
@@ -318,19 +293,7 @@ export default {
             };
 
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                newRoom.messages.push({
-                    message: data.message,
-                    sender: data.sender,
-                    isSent: data.sender === this.currentUser.user_id,
-                });
-
-                this.$nextTick(() => {
-                    const body = this.$refs.chatBody;
-                    if (body && body.scrollTop !== undefined) {
-                        body.scrollTop = body.scrollHeight;
-                    }
-                });
+                this.handleNewMessage(event);
             };
 
             ws.onclose = () => {
