@@ -1,7 +1,7 @@
 <template>
   <div
     class="dark flex items-center gap-4 bg-surface-500 rounded-lg p-3 min-w-[280px] max-w-md hover:bg-surface-400 dark:hover:bg-surface-600 transition cursor-pointer"
-    @click="openTrack"
+    @click="selectTrack"
   >
     <img
       :src="track.track_image_url || fallbackImage"
@@ -21,14 +21,13 @@ export default {
   },
   data() {
     return {
-      fallbackImage: "https://picsum.photos/300/200",
+      fallbackImage: "https://picsum.photos/300/200", // Fallback image if no track image is provided
     };
   },
   methods: {
-    openTrack() {
-      if (this.track?.track_uri) {
-        window.open(this.track.track_uri, "_blank");
-      }
+    selectTrack() {
+      // Emit an event with the track's URI when the card is clicked
+      this.$emit("trackSelected", this.track.track_uri);
     },
   },
 };

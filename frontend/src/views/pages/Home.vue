@@ -49,6 +49,7 @@
               v-for="track in user.tracks"
               :key="track.track_id"
               :track="track"
+              @trackSelected="setSelectedTrackURI"
             />
           </div>
         </div>
@@ -56,7 +57,6 @@
         <!-- Artists -->
         <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
-          <SpotifyPlayer />
         </div>
       </template>
 
@@ -67,6 +67,9 @@
         </div>
       </template>
     </div>
+
+    <!-- Spotify Player -->
+    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
   </div>
 </template>
 
@@ -90,6 +93,7 @@ export default {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       errorMessage: "",
+      selectedTrackURI: "spotify:track:45J4avUb9Ni0bnETYaYFVJ",
     };
   },
   computed: {
@@ -149,6 +153,9 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    setSelectedTrackURI(trackURI) {
+      this.selectedTrackURI = trackURI;
     },
   },
   mounted() {
