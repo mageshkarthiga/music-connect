@@ -4,17 +4,17 @@ import (
 	"backend/controllers"
 	"backend/services/spotify"
 	"github.com/labstack/echo/v4"
-    "backend/middleware"
+    
 )
 
 // RegisterRoutes sets up API endpoints for users, tracks, events and third party services.
 func RegisterRoutes(e *echo.Echo) {
 
-    projectID := "music-connect-608f6" // Replace with your actual project ID
+    
 
     // User Routes
     e.GET("/users", controllers.GetUsers)             // Fetch all users
-    e.GET("/users/:UserID", middleware.AuthMiddleware(projectID)(controllers.GetUser))
+    
     // e.GET("/users/:UserID", controllers.GetUser)          // Fetch a user by ID
     e.GET("/users/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch a user by Firebase UID
     e.POST("/users", controllers.CreateUser)          // Create a new user
@@ -34,12 +34,10 @@ func RegisterRoutes(e *echo.Echo) {
 
 
     // Event Routes
-    e.GET("/events", controllers.GetEvents)           // Fetch all events
-    e.GET("/events/:id", controllers.GetEventByID)        // Fetch an event by ID (Updated function name)
+    e.GET("/events", controllers.GetEvents)           // Fetch all events    
     e.POST("/events", controllers.CreateEvent)        // Create a new event
     e.PUT("/events/:id", controllers.UpdateEvent)     // Update an existing event by ID
-    e.DELETE("/events/:id", controllers.DeleteEvent)  // Delete an event by ID
-    e.GET("/users/:userId/events", controllers.GetEventsForUser) // Fetch events for a specific user
+    e.DELETE("/events/:id", controllers.DeleteEvent)  // Delete an event by ID    
     e.POST("/users/:userId/events", controllers.AddEventForUser) // Add an event for a specific user
 
     //Playlist Routes

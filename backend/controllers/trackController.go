@@ -123,5 +123,28 @@ func AddTracksForUser(c echo.Context) error {
     return c.JSON(http.StatusCreated, musicPreferences)
 }
 
+// returns tracks for the given user ID.
+func GetUserTracksByID(c echo.Context) error {
+    uid := c.Param("id")
+
+    var prefs []models.MusicPreference
+    if err := config.DB.Select("track_id").Where("user_id = ?", uid).Find(&prefs).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "DB error")
+    }
+    if len(prefs) == 0 {
+        return c.JSON(http.StatusOK, []models.Track{})
+    }
+
+    ids := make([]uint, len(prefs))
+    for i, p := range prefs {
+        ids[i] = p.TrackID
+    }
+
+    var tracks []models.Track
+    if err := config.DB.Where("track_id IN ?", ids).Find(&tracks).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "DB error")
+    }
+    return c.JSON(http.StatusOK, tracks)
+}
 
 

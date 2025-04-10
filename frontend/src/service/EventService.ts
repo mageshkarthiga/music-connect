@@ -64,29 +64,30 @@ export default {
 
     return response.data;
   },
+  async getEventsByUserId(userId: number): Promise<Event> {
+    const response = await axios.get<Event>(
+      `${API_BASE_URL}/users/${userId}/events`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  },
 
+  //   async getEventsByUserId(userId: number): Promise<Event[]> {
+  //     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
+  //       withCredentials: true, // Send cookies automatically, like auth_token
+  //     });
 
-//   async getEventsByUserId(userId: number): Promise<Event[]> {
-//     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
-//       withCredentials: true, // Send cookies automatically, like auth_token
-//     });
+  //     return response.data;
 
+  // }
 
-  
-//     return response.data;
-  
-// }
-
-  
-  
-
-//   async getUserByEventId(eventId: number, token: string) {
-//     const response = await axios.get<Event>(`${EVENT_URL}/users/${eventId}`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return response.data;
-  
-  
+  //   async getUserByEventId(eventId: number, token: string) {
+  //     const response = await axios.get<Event>(`${EVENT_URL}/users/${eventId}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     return response.data;
 };
