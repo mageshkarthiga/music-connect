@@ -38,14 +38,13 @@ export default {
     return data; // Return the inserted user data
   },
 
-
-  async getUser(id: number) {
+  async getUser(id: number): Promise<User> {
     const response = await axios.get<User>(`${USER_URL}/${id}`);
     return response.data;
   },
 
-  async getAllUsers() {
-    const response = await axios.get<User[]>(USER_URL);
+  async getAllUsers(): Promise<User[]> {
+    const response = await axios.get<User[]>(`${USER_URL}/users`);
     return response.data;
   },
 
