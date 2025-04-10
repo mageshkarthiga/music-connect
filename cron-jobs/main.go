@@ -13,6 +13,7 @@ func main() {
 	err != nil {
 		log.Println("Warning: .env file not found, relying on environment variables")
 	}
+
 	c := cron.New()
 	c.AddFunc("0 0 * * 0", func() {
 		log.Println("Running weekly job...")
