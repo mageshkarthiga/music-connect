@@ -1,19 +1,28 @@
 package chat
 
 import (
-    "context"
-    "log"
+	"context"
+	"log"
+	"os"
 
-    firebase "firebase.google.com/go/v4"
-    "cloud.google.com/go/firestore"
-    "google.golang.org/api/option"
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go/v4"
+	"google.golang.org/api/option"
 )
 
 var FirestoreClient *firestore.Client
 
 func InitFirebase() {
 	ctx := context.Background()
-	opt := option.WithCredentialsFile("firebaseServiceAccountKey.json")
+
+	// Get the credentials file path from an environment variable
+	credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if credentialsFile == "" {
+		log.Fatalf("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set")
+	}
+
+	opt := option.WithCredentialsFile(credentialsFile)
+
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
