@@ -142,7 +142,7 @@ const router = createRouter({
       component: () => import("@/views/pages/auth/Error.vue"),
     },
     {
-      path: "/pages/chat",
+      path: "/pages/chat/:user_id?",
       name: "chat",
       component: () => import("@/views/pages/Chat.vue"),
     },

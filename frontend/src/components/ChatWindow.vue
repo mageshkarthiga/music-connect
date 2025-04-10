@@ -6,7 +6,7 @@
             <ul>
                 <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
-                    <img :src="user.profile_photo_url" alt="Profile" class="profile-photo" />
+                    <Avatar :image="user.profile_photo_url || 'assets/profile.svg'" shape="circle" size="large" />
                     {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
                 </li>
             </ul>
@@ -20,7 +20,8 @@
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() + room.otherUserName.slice(1) || "Loading..." }}</h3>
+                            <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() +
+                                room.otherUserName.slice(1) || "Loading..." }}</h3>
                             <!-- <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" /> -->
                         </div>
                     </template>
@@ -68,6 +69,12 @@ import axios from "axios";
 
 export default {
     name: "ChatWindow",
+    props: {
+        selectedUserId: {
+            type: String,
+            required: false,
+        },
+    },
     data() {
         return {
             currentUser: {
@@ -94,9 +101,20 @@ export default {
         }
     },
     mounted() {
+        console.log("Selected User ID:", this.selectedUserId); // Debugging log
         this.getCurrentUser();
-        this.fetchUsers();
-        // this.getOtherUsers("b1mftTyzUegEma9tde90FKtiITl1")
+        this.fetchUsers().then(() => {
+            if (this.selectedUserId) {
+                const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
+                if (user) {
+                    this.joinRoom(user);
+                } else {
+                    console.warn(`User with ID ${this.selectedUserId} not found.`);
+                }
+            } else {
+                console.log("No user selected. Displaying user list.");
+            }
+        });
     },
     methods: {
         async fetchUsers() {
@@ -359,10 +377,10 @@ export default {
     border-radius: 8px;
     padding: 1rem;
     background-color: #ffffff;
-    max-height: 600px; 
-    overflow-y: auto; 
+    max-height: 600px;
+    overflow-y: auto;
     display: flex;
-    flex-direction: column;  
+    flex-direction: column;
 }
 
 .user-list ul {
@@ -396,15 +414,9 @@ export default {
     font-size: 1.2rem;
     border-bottom: 1px solid #ddd;
     background-color: #ffffff;
-    position: static; 
+    position: static;
     top: auto;
     z-index: auto;
-}
-
-.profile-photo {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
 }
 
 .chat-window {
