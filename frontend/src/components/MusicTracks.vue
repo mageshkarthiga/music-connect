@@ -2,18 +2,25 @@
     <div class="music-tracks">
         <Divider />
         <Paginator :rows="rowsPerPage" :totalRecords="totalTracks" :first="first" @page="onPageChange" />
-        <Divider/>
+        <Divider />
         <div class="tracks">
-            <Card v-for="track in paginatedTracks" :key="track.id"
-                style="width: 20rem; overflow: hidden; margin-bottom: 20px;">
+            <Card
+                v-for="track in paginatedTracks"
+                :key="track.track_id"
+                style="width: 20rem; overflow: hidden; margin-bottom: 20px;"
+            >
                 <template #header>
-                    <img :src="track.track_image_url" :alt="track.name" />
+                    <img :src="track.track_image_url" :alt="track.track_title" />
                 </template>
                 <template #title>{{ track.track_title }}</template>
                 <template #footer>
                     <div class="flex gap-4 mt-1">
-                        <Button icon="pi pi-play" severity="success" rounded
-                            @click="$emit('track-selected', track.track_uri)" />
+                        <Button
+                            icon="pi pi-play"
+                            severity="success"
+                            rounded
+                            @click="$emit('track-selected', track.track_uri)"
+                        />
                     </div>
                 </template>
             </Card>
@@ -27,6 +34,20 @@ import SpotifyPlayer from "./SpotifyPlayer.vue";
 
 export default {
     name: "MusicTracks",
+    props: {
+        playlist_id: {
+            type: String,
+            required: true,
+        },
+        playlist_name: {
+            type: String,
+            required: true,
+        },
+        tracks: {
+            type: Array,
+            required: true,
+        },
+    },
     components: {
         SpotifyPlayer,
     },
@@ -34,7 +55,7 @@ export default {
         return {
             iframeSrc: "",
             accessToken: "",
-            tracks: [], 
+            localTracks: [], // Local copy of tracks
             paginatedTracks: [],
             totalTracks: 0,
             rowsPerPage: 12,
@@ -48,17 +69,28 @@ export default {
         await this.loadTracks();
         this.updatePaginatedTracks();
     },
+    watch: {
+        tracks: {
+            immediate: true,
+            handler(newTracks) {
+                this.localTracks = [...newTracks]; // Copy tracks to localTracks
+                this.totalTracks = this.localTracks.length;
+                this.updatePaginatedTracks();
+            },
+        },
+    },
     methods: {
         selectTrack(uri) {
             this.selectedTrackUri = uri; 
         },
         async loadTracks() {
             try {
-                const response = await axios.get("http://localhost:8080/me/tracks",{
+                const response = await axios.get("http://localhost:8080/me/tracks", {
                     withCredentials: true,
                 });
-                this.tracks = response.data;
-                this.totalTracks = this.tracks.length; 
+                this.localTracks = response.data; // Update localTracks instead of tracks
+                this.totalTracks = this.localTracks.length; // Update totalTracks
+                this.updatePaginatedTracks();
             } catch (error) {
                 console.error("Error loading tracks:", error);
             }
@@ -66,7 +98,7 @@ export default {
         updatePaginatedTracks() {
             const start = this.first;
             const end = this.first + this.rowsPerPage;
-            this.paginatedTracks = this.tracks.slice(start, end);
+            this.paginatedTracks = this.localTracks.slice(start, end);
         },
         onPageChange(event) {
             this.first = event.first;

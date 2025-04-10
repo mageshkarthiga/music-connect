@@ -18,7 +18,6 @@
   </div>
 </template>
 
-
 <script>
 export default {
   props: {
@@ -38,23 +37,18 @@ export default {
   },
   methods: {
     handleClick() {
-      if (this.state === 'redirect') {
-        // If state is "redirect", open the track's URI
-        if (this.track?.track_uri) {
-          window.open(this.track.track_uri, "_blank");
-        }
-      } else if (this.state === 'select') {
-        // If state is "select", toggle the track selection
+      if (this.state === "redirect") {
+        // Emit the track URI to the parent component
+        this.$emit("track-selected", this.track.track_uri);
+      } else if (this.state === "select") {
         this.toggleTrackSelection();
       }
     },
     toggleTrackSelection() {
       const index = this.selectedTracks.indexOf(this.track.track_id);
       if (index > -1) {
-        // Remove from selected
         this.selectedTracks.splice(index, 1);
       } else {
-        // Add to selected
         this.selectedTracks.push(this.track.track_id);
       }
     },
