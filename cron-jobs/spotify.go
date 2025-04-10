@@ -20,6 +20,11 @@ type SpotifyTokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
+type AlbumWithImage struct {
+	ID    string
+	Image string
+}
+
 type Artist struct {
 	ArtistID         int    `json:"artist_id"`
 	ArtistName       string `json:"artist_name"`
@@ -32,6 +37,7 @@ type Track struct {
 	ArtistID	   int    `json:"artist_id"`
 	TrackURI	   string `json:"track_uri"`
 	TrackSpotifyID string `json:"track_spotify_id"`
+	TrackImageUrl  string `json:"track_image_url"`
 }
 
 func getSpotifyToken() (string, error) {
@@ -149,7 +155,7 @@ func getAllTrackSpotifyIdsInDB() ([]string, error) {
 	return trackSpotifyIdList, nil
 }
 
-func getArtistAlbums(token string, artistSpotifyId string) ([]string, error) {
+func getArtistAlbums(token string, artistSpotifyId string) ([]AlbumWithImage, error) {
 	url := fmt.Sprintf(SPOTIFY_BASE_URL + "/artists/%s/albums?include_groups=album,single&limit=5", artistSpotifyId) // to update limit later
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -173,18 +179,29 @@ func getArtistAlbums(token string, artistSpotifyId string) ([]string, error) {
 	var albums struct {
 		Items []struct {
 			ID string `json:"id"`
+			Images []struct {
+				URL    string `json:"url"`
+			} `json:"images"`
 		} `json:"items"`
 	}
 	if err := json.Unmarshal(body, &albums); err != nil {
 		return nil, err
 	}
 
-	var albumIDs []string
+	var albumDetails []AlbumWithImage
 	for _, item := range albums.Items {
-		albumIDs = append(albumIDs, item.ID)
+		imageURL := ""
+		if len(item.Images) > 0 {
+			imageURL = item.Images[0].URL
+		}
+
+		albumDetails = append(albumDetails, AlbumWithImage{
+			ID:    item.ID,
+			Image: imageURL,
+		})
 	}
 
-	return albumIDs, nil
+	return albumDetails, nil
 }
 
 func getAlbumTracks(token, albumID string, artistID int) ([]Track, error) {
@@ -229,7 +246,7 @@ func getAlbumTracks(token, albumID string, artistID int) ([]Track, error) {
 	return tracks, nil
 }
 
-func insertTrackIntoSupabase(t Track) (int, error) {
+func insertTrackIntoSupabase(t Track, image string) (int, error) {
 	apiKey := os.Getenv("publicApiKey")
 	url := SUPABASE_URL + "/rest/v1/tracks"
 
@@ -238,6 +255,7 @@ func insertTrackIntoSupabase(t Track) (int, error) {
 		"track_title":      t.TrackTitle,
 		"artist_id":        t.ArtistID,
 		"track_uri":        t.TrackURI,
+		"track_image_url":  image,
 	}
 
 	payload, _ := json.Marshal(data)
@@ -299,15 +317,15 @@ func callSpotifyAPI() {
 	token, _ := getSpotifyToken()
 
 	for index, artistSpotifyId := range artistSpotifyIds {
-		albumIDs, err := getArtistAlbums(token, artistSpotifyId)
+		albumsDetails, err := getArtistAlbums(token, artistSpotifyId)
 		if err != nil {
 			log.Fatalln("Failed to fetch albums:", err)
 		}
 
-		for _, albumID := range albumIDs {
-			tracks, err := getAlbumTracks(token, albumID, artistIds[index])
+		for _, album := range albumsDetails {
+			tracks, err := getAlbumTracks(token, album.ID, artistIds[index])
 			if err != nil {
-				log.Printf("Skipping album %s due to error: %v\n", albumID, err)
+				log.Printf("Skipping album %s due to error: %v\n", album, err)
 				continue
 			}
 
@@ -316,7 +334,7 @@ func callSpotifyAPI() {
 					continue
 				}				
 
-				trackId, err := insertTrackIntoSupabase(track)
+				trackId, err := insertTrackIntoSupabase(track, album.Image)
 				if err != nil {
 					log.Fatalln("Insert track error: ", err)
 					continue
