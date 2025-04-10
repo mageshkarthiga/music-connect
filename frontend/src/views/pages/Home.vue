@@ -17,6 +17,20 @@
     <!-- Content -->
     <div v-if="!loading">
       <template v-if="hasContent">
+
+                      <!-- Tracks -->
+                      <div class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <TrackCard
+              v-for="track in user.tracks"
+              :key="track.track_id"
+              :track="track"
+              :state="'redirect'"  
+            />
+
+          </div>
+        </div>
         <!-- Events -->
         <div class="p-4" v-if="Array.isArray(user.events) && user.events.length">
           <h2 class="text-xl font-semibold mb-3">Events</h2>
@@ -29,6 +43,7 @@
           </div>
         </div>
 
+
         <!-- Playlists -->
         <div class="p-4" v-if="Array.isArray(user.playlists) && user.playlists.length">
           <h2 class="text-xl font-semibold mb-3">Playlists</h2>
@@ -39,6 +54,7 @@
               :playlist="playlist"
             />
           </div>
+
         </div>
 
         <!-- Tracks -->
@@ -53,6 +69,7 @@
           </div>
         </div>
 
+
         <!-- Artists -->
         <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
@@ -65,6 +82,9 @@
         </div>
       </template>
 
+
+        </div>
+
       <!-- No Content -->
       <template v-else>
         <div class="p-4">
@@ -72,7 +92,7 @@
         </div>
       </template>
     </div>
-  </div>
+
 </template>
 
 <script>

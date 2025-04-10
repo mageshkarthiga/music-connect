@@ -1,3 +1,4 @@
+
 <!-- <script setup>
 import { ref } from "vue";
 
@@ -306,6 +307,7 @@ const model = ref([
 
 <style lang="scss" scoped></style> -->
 
+
 <template>
   <!-- Sidebar -->
   <div class="sidebar">
@@ -337,16 +339,18 @@ const model = ref([
     </div>
 
     <!-- Playlist Dialog -->
-    <AddPlaylistDialog 
-      v-if="showPlaylistDialog" 
-      @close="closeAddPlaylistDialog" 
+    <AddPlaylistDialog
+      v-if="showPlaylistDialog"
+      @close="closeAddPlaylistDialog"
       @playlist-added="addNewPlaylist"
     />
+
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import { ref, onMounted } from "vue";
 import { API_BASE_URL } from "@/service/apiConfig";
 import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
 
@@ -405,9 +409,14 @@ export default {
     },
 
     addNewPlaylist(newPlaylist) {
-      this.user.playlists.push(newPlaylist);
-      this.closeAddPlaylistDialog();
-    },
+  // Push the new playlist directly to the playlists array (Vue handles reactivity)
+  this.user.playlists.push(newPlaylist);
+  // Use $nextTick to ensure the DOM is updated right after data change
+  this.$nextTick(() => {
+    this.closeAddPlaylistDialog();
+  });
+},
+
 
     toggleTheme() {
       this.darkTheme = !this.darkTheme;
@@ -420,8 +429,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style lang="scss" scoped>
 .sidebar {

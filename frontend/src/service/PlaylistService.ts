@@ -2,16 +2,30 @@ import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 
 // Define types for playlists and tracks (assuming you have the corresponding models)
-export interface Track {
-  id: number;
-  name: string;
+export interface Playlist {
+  playlist_id: number;
+  playlist_name: string;
+  playlist_image_url: string;
+  user_id: number;
+  tracks: Track[]; // Assuming a playlist has multiple tracks
 }
 
-export interface Playlist {
-  id: number;
-  name: string;
-  user_id: number;
-  playlist_image_url: string;
+export interface Track {
+  track_id: number;
+  track_title: string;
+  artist_id: number;
+  genre: string;
+  track_uri: string;
+  track_image_url: string;
+  artists: Artist[];
+  playlists: Playlist[];
+  track_spotify_id: string;
+}
+
+export interface Artist {
+  artist_id: number;
+  artist_name: string;
+  artist_image_url: string;
   tracks: Track[];
 }
 
@@ -39,7 +53,7 @@ export default {
     }
   },
 
-  // Create a new playlist
+  // Create a new playlist for a specific user
   async createPlaylist(
     userId: number,
     name: string,
@@ -92,13 +106,12 @@ export default {
     }
   },
 
-  // Fetch playlists for current user
+  // Fetch playlists for the current user
   async getPlaylistsForUser(): Promise<Playlist[]> {
     try {
       const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
         withCredentials: true,
       });
-      console.log("Fetched playlists:", response.data);
       if (Array.isArray(response.data)) {
         return response.data;
       } else {
@@ -109,30 +122,52 @@ export default {
     }
   },
 
+  
   // Add a playlist for a specific user
+
   async addPlaylistForUser(
-    userId: number,
-    name: string,
-    trackIds: number[]
+    // playlistId: number,  // Playlist ID
+    name: string,    // Playlist name
+    playlistImageUrl: string, // Track Image URL
+    userId: number,     // Single User ID (a number)
+    trackIds: number[],  // Array of Track IDs
+
   ): Promise<Playlist> {
     const playlistData = {
-      name,
-      track_ids: trackIds,
+      playlist_name: name,  // This is the playlist name
+      track_ids: playlistImageUrl,  // Array of track IDs
+      user_id: userId,      // Single user ID
+      playlist_image_url: trackIds  // Track Image URL
     };
+  
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/playlists/user/${userId}`,
-        playlistData
+        `${API_BASE_URL}/me/playlists`,
+        playlistData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-xsrf-token': getCookie('XSRF-TOKEN'),
+          },
+          withCredentials: true,  // Ensure cookies are sent
+        }
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Error response from backend:", error.response);
+      } else {
+        console.error("Network or unknown error:", error.message);
+      }
       throw new Error(
-        `Error creating playlist for user ${userId}: ${error.message}`
+        `Error creating playlist for user: ${error.message}`
       );
     }
-  },
-
-  //get playlist image
+  },  
+  
+  
+  
+  // Get playlist image URL
   async getPlaylistImage(playlistId: number): Promise<string> {
     try {
       const response = await axios.get(
@@ -146,7 +181,7 @@ export default {
     }
   },
 
-  //Fetch playlists for a specific user
+  // Fetch playlists for a specific user by their userId
   async getPlaylistsByUserId(userId: number): Promise<Playlist[]> {
     try {
       const response = await axios.get(
@@ -161,3 +196,11 @@ export default {
     }
   },
 };
+
+// Helper function for getting cookie (this can be moved to a separate utility file)
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return undefined;
+}
