@@ -60,6 +60,7 @@
         </div>
 
         <div class="p-4">
+          <div class="font-semibold text-xl mb-4">Recommended music</div>
           <RecommendedTracks />
         </div>
       </template>

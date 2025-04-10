@@ -14,7 +14,6 @@ onMounted(() => {
 
 <template>
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Recommended music</div>
         <DataTable :value="tracks" :rows="5" :paginator="true" responsiveLayout="scroll">
             <Column field="title" header="Title" style="width: 50%">
                 <template #body="{ data }">
