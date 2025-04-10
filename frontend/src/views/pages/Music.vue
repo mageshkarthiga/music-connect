@@ -1,7 +1,7 @@
 <template>
     <AppTopbar />
     <div className="card mt-10">
-        <h2 class="music-title">Spotify Music Discovery 🎶🎧</h2>
+        <h2 class="music-title">Your Tracks 🎶🎧</h2>
         <MusicTracks @track-selected="onTrackSelected" />
         <!-- SpotifyPlayer Component -->
         <SpotifyPlayer v-if="selectedTrackUri" :spotifyUri="selectedTrackUri" />

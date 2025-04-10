@@ -1,4 +1,5 @@
 <template>
+    <AppTopbar />
     <ChatWindow :selectedUserId="userId" />
 </template>
 
@@ -6,10 +7,12 @@
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ChatWindow from '@/components/ChatWindow.vue';
+import AppTopbar from '@/layout/AppTopbar.vue';
 
 export default {
     components: {
         ChatWindow,
+        AppTopbar
     },
     setup() {
         const route = useRoute();

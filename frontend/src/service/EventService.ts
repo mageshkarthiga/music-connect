@@ -45,7 +45,9 @@ export default {
   },
 
   async getAllEvents() {
-    const response = await axios.get<Event[]>(EVENT_URL);
+    const response = await axios.get<Event[]>(EVENT_URL, {
+      withCredentials: true,
+    });
     return response.data;
   },
 

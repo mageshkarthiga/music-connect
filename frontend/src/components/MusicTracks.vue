@@ -54,7 +54,9 @@ export default {
         },
         async loadTracks() {
             try {
-                const response = await axios.get("http://localhost:8080/tracks");
+                const response = await axios.get("http://localhost:8080/me/tracks",{
+                    withCredentials: true,
+                });
                 this.tracks = response.data;
                 this.totalTracks = this.tracks.length; 
             } catch (error) {
