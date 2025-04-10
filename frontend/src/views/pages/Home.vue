@@ -9,31 +9,63 @@
       <span>Loading...</span>
     </div>
 
-    <!-- Content Wrapper: Events and Playlists -->
-    <div
-      ref="contentWrapper"
-      v-if="!loading && (user.events.length || user.playlists.length)"
-    >
-      <!-- Display Events -->
-      <div class="p-4" v-if="user.events.length">
-        <h2 class="text-xl font-semibold mb-3">Events</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-          <EventComponent v-for="event in user.events" :key="event.event_id" :event="event" />
-        </div>
-      </div>
-
-      <!-- Display Playlists -->
-      <div class="p-4" v-if="user.playlists.length">
-        <h2 class="text-xl font-semibold mb-3">Playlists</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-          <PlaylistComponent v-for="playlist in user.playlists" :key="playlist.playlist_id" :playlist="playlist" />
-        </div>
-      </div>
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="p-4 text-red-500">
+      {{ errorMessage }}
     </div>
 
-    <!-- No Events or Playlists Found -->
-    <div v-if="!loading && !user.events.length && !user.playlists.length" class="p-4">
-      <p>No events or playlists found.</p>
+    <!-- Content -->
+    <div v-if="!loading">
+      <template v-if="hasContent">
+        <!-- Events -->
+        <div class="p-4" v-if="user.events.length">
+          <h2 class="text-xl font-semibold mb-3">Events</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
+            <EventCard
+              v-for="event in user.events"
+              :key="event.event_id"
+              :event="event"
+            />
+          </div>
+        </div>
+
+        <!-- Playlists -->
+        <div class="p-4" v-if="user.playlists.length">
+          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <PlaylistCard
+              v-for="playlist in user.playlists"
+              :key="playlist.playlist_id"
+              :playlist="playlist"
+            />
+          </div>
+        </div>
+
+        <!-- Tracks -->
+        <div class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <TrackCard
+              v-for="track in user.tracks"
+              :key="track.track_id"
+              :track="track"
+            />
+          </div>
+        </div>
+
+        <!-- Artists -->
+        <div class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Artists</h2>
+          <SpotifyPlayer />
+        </div>
+      </template>
+
+      <!-- No Content -->
+      <template v-else>
+        <div class="p-4">
+          <p>No events, playlists, or tracks found.</p>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -41,61 +73,70 @@
 <script>
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
-import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
-import PlaylistComponent from "@/components/PlaylistComponent.vue"; 
+import EventCard from "@/components/EventCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
+import TrackCard from "@/components/TrackCard.vue";
+import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 
 export default {
   components: {
-    EventComponent, // Register EventComponent
-    PlaylistComponent, // Register PlaylistComponent
+    EventCard,
+    PlaylistCard,
+    TrackCard,
+    SpotifyPlayer,
   },
   data() {
     return {
-      loading: false, // Flag to manage loading state
-      user: { events: [], playlists: [] }, // Store user data
-      errorMessage: "", // Store error messages
+      loading: false,
+      user: { events: [], playlists: [], tracks: [] },
+      errorMessage: "",
     };
   },
+  computed: {
+    hasContent() {
+      return (
+        this.user.events.length ||
+        this.user.playlists.length ||
+        this.user.tracks.length
+      );
+    },
+  },
   methods: {
-    // Fetch events by user ID with enhanced error handling
     async getEventsByUserId() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
-        if (Array.isArray(response.data)) {
-          this.user.events = response.data;
-        } else {
-          throw new Error("Invalid events data format");
-        }
+        this.user.events = response.data;
       } catch (err) {
         this.handleError(err, "events");
       }
     },
-
-    // Fetch playlists for user with enhanced error handling
     async getPlaylistsForUser() {
       try {
         const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
-        if (Array.isArray(response.data)) {
-          this.user.playlists = response.data;
-        } else {
-          throw new Error("Invalid playlists data format");
-        }
+        this.user.playlists = response.data;
       } catch (err) {
         this.handleError(err, "playlists");
       }
     },
-
-    // Error handling
+    async getTracksForUser() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/me/tracks`, {
+          withCredentials: true,
+        });
+        this.user.tracks = response.data;
+      } catch (err) {
+        this.handleError(err, "tracks");
+      }
+    },
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
-      this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
+      this.errorMessage =
+        error.response?.data?.message || `Failed to fetch ${dataType}.`;
     },
-
-    // Fetch both events and playlists
     async fetchEvents() {
       this.errorMessage = "";
       this.loading = true;
@@ -103,9 +144,8 @@ export default {
         await Promise.all([
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
+          this.getTracksForUser(),
         ]);
-      } catch (err) {
-        // Handle any fetch error
       } finally {
         this.loading = false;
       }
