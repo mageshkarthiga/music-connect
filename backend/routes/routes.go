@@ -42,11 +42,11 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
     //Playlist Routes
     e.GET("/playlists", controllers.GetPlaylists)           // Fetch all playlists
-    e.GET("/playlists/:id", controllers.GetPlaylistByID)        // Fetch a playlist by ID (Updated function name)
+    e.GET("/playlists/:id", controllers.GetPlaylistByID)        // Fetch playlist by ID 
     e.POST("/playlists", controllers.CreatePlaylist)        // Create a new playlist
     e.PUT("/playlists/:id", controllers.UpdatePlaylist)     // Update an existing playlist by ID
     e.DELETE("/playlists/:id", controllers.DeletePlaylist)  // Delete a playlist by ID
-    e.GET("/playlists/:id/tracks", controllers.GetTracksByPlaylistID) // Fetch tracks in a playlist
+    e.GET("/playlists/:id/tracks", controllers.GetTracksByPlaylistID) // Fetch tracks in a playlist by ID
     
     // e.GET("/me/playlists", controllers.GetPlaylistsForUser) // Fetch playlists for a specific user
     // e.POST("/me/playlists", controllers.AddPlaylistForUser) // Add a playlist for a specific user

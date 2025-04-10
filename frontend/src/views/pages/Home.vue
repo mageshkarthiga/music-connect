@@ -33,11 +33,11 @@
         <div class="p-4" v-if="user.playlists.length">
           <h2 class="text-xl font-semibold mb-3">Playlists</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
-            <PlaylistCard
-              v-for="playlist in user.playlists"
-              :key="playlist.playlist_id"
-              :playlist="playlist"
-            />
+              <PlaylistCard
+                v-for="playlist in user.playlists"
+                :key="playlist.playlist_id"
+                :playlist="playlist"
+              />
           </div>
         </div>
 

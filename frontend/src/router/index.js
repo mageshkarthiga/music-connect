@@ -100,6 +100,13 @@ const router = createRouter({
 
         },
         {
+          path: "/pages/playlist/:playlist_id/:playlist_name?",
+          name: "playlist",
+          component: () => import("@/views/pages/Playlist.vue"),
+          props:true,
+
+        },
+        {
           path: "/documentation",
           name: "documentation",
           component: () => import("@/views/pages/Documentation.vue"),
@@ -117,7 +124,7 @@ const router = createRouter({
         {
           path: "/pages/music",
           name: "music",
-          component: () => import("@/views/pages/Music.vue"),
+          component: () => import("@/views/pages/Playlist.vue"),
         },
       ],
     },
