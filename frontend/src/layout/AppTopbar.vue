@@ -79,10 +79,6 @@ function logout() {
             <i class="pi pi pi-search"></i>
             <span>Search</span>
           </button>
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-inbox"></i>
-            <span>Messages</span>
-          </button>
           <button type="button" class="layout-topbar-action" @click="goToChat"> 
             <i class="pi pi-comments"></i>
             <span>Chat</span>
