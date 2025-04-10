@@ -75,7 +75,7 @@ func DeleteEvent(c echo.Context) error {
 
     //add events for a user
     func AddEventForUser(c echo.Context) error {
-        userID := c.Param("userId")
+        userID := c.Param("id")
         if userID == "" {
             return c.JSON(http.StatusBadRequest, "UserID is missing in the URL")
         }
@@ -172,4 +172,21 @@ func DeleteEvent(c echo.Context) error {
         // Return the events as JSON
         return c.JSON(http.StatusOK, events)
     }
+
+    // GetEventsByUserID returns every event tied to the given user ID.
+func GetEventsByUserID(c echo.Context) error {
+	uid := c.Param("id")
+
+	var events []models.Event
+	if err := config.DB.
+		Joins("JOIN user_events ue ON ue.event_id = events.event_id").
+		Where("ue.user_id = ?", uid).
+		Find(&events).Error; err != nil {
+		log.Printf("Error fetching events for user %s: %v", uid, err)
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch events")
+	}
+
+	return c.JSON(http.StatusOK, events)
+}
+
     

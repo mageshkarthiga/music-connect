@@ -45,6 +45,7 @@ onAuthStateChanged(auth, async (user) => {
 
   email = user.email;
   fb_id = user.uid;
+  localStorage.setItem("uid", fb_id);
 
   if (!email) {
     console.error("Email not found in query params.");
@@ -110,7 +111,7 @@ const handleSubmit = async () => {
       console.log("Photo URL:", photoURL);
     }
 
-    await userService.createUser({
+    const response = await userService.createUser({
       userName: username.value,
       phoneNumber: phoneNumber.value,
       location: selectedLocation.value,
@@ -126,6 +127,7 @@ const handleSubmit = async () => {
       profilePhotoUrl: photoURL,
       firebaseUID: fb_id,
     });
+    localStorage.setItem("uid", response.userID);
   } catch (error) {
     ("CREATE USER FAILED");
   }
