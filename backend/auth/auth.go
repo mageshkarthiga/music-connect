@@ -68,29 +68,39 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 			
 		})
 	})
+// ---- user ----
+e.GET("/users/:id",          middleware.AuthMiddleware(projectID)(controllers.GetUserByUserID))
+e.GET("/users",              middleware.AuthMiddleware(projectID)(controllers.GetUsers))
+e.GET("/me",                 middleware.AuthMiddleware(projectID)(controllers.GetMe))
+e.PUT("/users/:id",          middleware.AuthMiddleware(projectID)(controllers.UpdateUser))
+e.DELETE("/users/:id",       middleware.AuthMiddleware(projectID)(controllers.DeleteUser))
+e.GET("/users/firebase/:uid",middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID))
 
-	// e.GET("/users/:id", middleware.AuthMiddleware(projectID)(controllers.GetUser))        // Fetch a user by ID
-	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))     // Update an existing user by ID
-	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))  // Delete a user by ID
-    e.GET("/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID)) // Fetch Firebase UID from token
-	e.GET("/me", middleware.AuthMiddleware(projectID) (controllers.GetUser))
+// ---- tracks ----
+e.GET("/tracks",             middleware.AuthMiddleware(projectID)(controllers.GetTracks))
+e.GET("/me/tracks",          middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
+e.POST("/me/tracks",         middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
+e.GET("/users/:id/tracks",   middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
 
-	// Track Routes (Protected)
-	// e.POST("/tracks", middleware.AuthMiddleware(projectID)(controllers.CreateTrack))       // Create a new track
-	// e.PUT("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateTrack))    // Update an existing track by ID
-	// e.DELETE("/tracks/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteTrack)) // Delete a track by ID
+// ---- playlists ----
+e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
+e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
+e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
 
-	// Event Routes (Protected)
-	e.POST("/events", middleware.AuthMiddleware(projectID)(controllers.CreateEvent))       // Create a new event
-	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))    // Update an existing event by ID
-	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent)) // Delete an event by ID
-	// e.GET("/users/:userId/events", middleware.AuthMiddleware(projectID) (controllers.GetEventsForUser)) // Fetch events for a specific user
-    // e.POST("/users/:userId/events", middleware.AuthMiddleware(projectID) (controllers.AddEventForUser)) // Add an event for a specific user
-	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
-
-
-	e.GET("/me/playlists", middleware.AuthMiddleware(projectID) (controllers.GetPlaylistsForUser) )// Fetch playlists for a specific user
-    e.POST("/me/playlists", middleware.AuthMiddleware(projectID) (controllers.AddPlaylistForUser) )// Add a playlist for a specific user
-
-
+// ---- events ----
+e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))
+e.POST("/events",            middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
+e.PUT("/events/:id",         middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
+e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
+e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
+e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 }
+
+
+
+
+
+
+
+
