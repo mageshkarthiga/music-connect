@@ -40,7 +40,7 @@ export default {
 
 
   async getUser() {
-    const response = await axios.get<User>(`${USER_URL}/me}`, {
+    const response = await axios.get<User>(`${USER_URL}/me`, {
       withCredentials: true,
     });
     return response.data;

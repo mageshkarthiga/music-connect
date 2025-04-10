@@ -179,7 +179,7 @@ const model = ref([
     <!-- Library Header -->
     <div class="library-header">
       <h4>Your Library</h4>
-      <Button @click="addPlaylist" class="add-playlist-btn">
+      <Button @click="openAddPlaylistDialog" class="add-playlist-btn">
         <i class="pi pi-plus"></i> 
       </Button>
     </div>
@@ -191,12 +191,10 @@ const model = ref([
         :key="playlist.playlist_id"
         class="playlist-item"  
       >
-      <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
-   
+        <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
         <div class="playlist-info">
-          <span class="playlist-name">{{ playlist.name }}</span>
-          <span class="username">Playlist - {{ currentUser?.user_name }}</span>
-
+          <span class="playlist-name">{{ playlist.playlist_name }}</span>
+          <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>
         </div>
       </div>
     </div>
@@ -204,21 +202,32 @@ const model = ref([
     <div v-else>
       <p>No playlists available.</p>
     </div>
+
+    <!-- Playlist Dialog -->
+    <AddPlaylistDialog 
+      v-if="showPlaylistDialog" 
+      @close="closeAddPlaylistDialog" 
+      @playlist-added="addNewPlaylist"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { ref, onMounted } from "vue";
 import { API_BASE_URL } from "@/service/apiConfig";
+import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
 
 export default {
+  components: {
+    AddPlaylistDialog,
+  },
   data() {
     return {
       user: { playlists: [] },
       currentUser: null,
       errorMessage: "",
-      darkTheme: localStorage.getItem("theme") === "dark", // Check localStorage for theme preference
+      darkTheme: localStorage.getItem("theme") === "dark",
+      showPlaylistDialog: false,
     };
   },
   methods: {
@@ -241,7 +250,6 @@ export default {
 
         if (Array.isArray(response.data)) {
           this.user.playlists = response.data;
-          console.log("Fetched playlists:", this.user.playlists);
         } else {
           throw new Error("Invalid playlists data format");
         }
@@ -255,14 +263,23 @@ export default {
       this.errorMessage = error.response?.data?.message || `Failed to fetch ${dataType}.`;
     },
 
-    addPlaylist() {
-      alert("Add Playlist clicked!");
+    openAddPlaylistDialog() {
+      this.showPlaylistDialog = true;
+    },
+
+    closeAddPlaylistDialog() {
+      this.showPlaylistDialog = false;
+    },
+
+    addNewPlaylist(newPlaylist) {
+      this.user.playlists.push(newPlaylist);
+      this.closeAddPlaylistDialog();
     },
 
     toggleTheme() {
       this.darkTheme = !this.darkTheme;
       localStorage.setItem("theme", this.darkTheme ? "dark" : "light");
-    }
+    },
   },
   mounted() {
     this.getCurrentUser();
@@ -270,6 +287,7 @@ export default {
   },
 };
 </script>
+
 
 
 <style lang="scss" scoped>
@@ -380,6 +398,13 @@ h4 {
 
 .playlist-username {
   font-size: 0.875rem;
-  color: #b3b3b3;
+  color: rgba(125, 125, 125, 0.9)
+}
+
+.dark .playlist-name {
+  color: rgba(255, 255, 255, 0.7)
+}
+.light .playlist-username {
+  color: rgb(0, 0, 0, 0.7)
 }
 </style>
