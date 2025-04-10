@@ -3,6 +3,7 @@ package controllers
 import (
 	"backend/config"
 	"backend/models"
+	"backend/services/recommender"
 	"fmt"
 	"net/http"
 
@@ -90,6 +91,21 @@ func DeleteTrack(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Failed to delete track")
 	}
 	return c.JSON(http.StatusOK, "Track deleted successfully")
+}
+
+func GetTrackRecommendation(c echo.Context) error {
+    uid, ok := c.Get("uid").(uint)
+    if !ok {
+		return c.JSON(http.StatusUnauthorized, "Missing or invalid user ID in context")
+	}
+
+    uidStr := fmt.Sprintf("%d", uid)
+    listOfSongs, err  := recommender.GetTrackRecommendation(uidStr)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch track recommendations")
+    }
+
+    return c.JSON(http.StatusOK, listOfSongs)
 }
 
 // GetTracksForUser fetches all tracks for a specific user based on their preferences

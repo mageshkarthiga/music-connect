@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"log"
-	"fmt"
 )
 
 // GetPlaylists fetches all playlists
@@ -134,35 +133,28 @@ func GetPlaylistsForUser(c echo.Context) error {
 }
 
 
-// AddPlaylistForUser adds a playlist for a specific user
+// AddPlaylistForUser adds a playlist for the current authenticated user
 func AddPlaylistForUser(c echo.Context) error {
-	// Get userId from the URL parameter (it should be a string)
-	userId := c.Param("userId")
-	// Convert userId to uint
-	var userIDUint uint
-	_, err := fmt.Sscanf(userId, "%d", &userIDUint)
-	if err != nil {
-		log.Printf("Error converting userId to uint: %v", err)
-		return c.JSON(http.StatusBadRequest, "Invalid user ID format")
-	}
+    // Get the current user from the context (assuming the user is authenticated)
+    var playlist models.Playlist
+    if err := c.Bind(&playlist); err != nil {
+        log.Printf("Error binding playlist data: %v", err)
+        return c.JSON(http.StatusBadRequest, "Invalid input data")
+    }
 
-	var playlist models.Playlist
-	if err := c.Bind(&playlist); err != nil {
-		log.Printf("Error binding playlist data for user %s: %v", userId, err)
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+    // Log the received playlist data for debugging
+    log.Printf("Received playlist data: %+v", playlist)
 
-	// Assign userIDUint (now uint) to the playlist's UserID field
-	playlist.UserID = userIDUint
+    // Save the playlist to the database
+    if err := config.DB.Create(&playlist).Error; err != nil {
+        log.Printf("Error creating playlist: %v", err)
+        return c.JSON(http.StatusInternalServerError, "Failed to create playlist")
+    }
 
-	// Save the playlist
-	if err := config.DB.Create(&playlist).Error; err != nil {
-		log.Printf("Error creating playlist for user %s: %v", userId, err)
-		return c.JSON(http.StatusInternalServerError, "Failed to create playlist for user")
-	}
-
-	return c.JSON(http.StatusCreated, playlist)
+    return c.JSON(http.StatusCreated, playlist)
 }
+
+
 
 // GetPlaylistByUserID returns a specific user‑owned playlist with its tracks.
 func GetPlaylistByUserID(c echo.Context) error {

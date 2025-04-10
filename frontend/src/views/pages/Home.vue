@@ -1,11 +1,7 @@
 <template>
   <div>
     <!-- Loading Spinner -->
-    <div
-      ref="loadingSpinner"
-      v-if="loading"
-      class="p-d-flex p-jc-center p-ai-center"
-    >
+    <div ref="loadingSpinner" v-if="loading" class="p-d-flex p-jc-center p-ai-center">
       <span>Loading...</span>
     </div>
 
@@ -17,40 +13,35 @@
     <!-- Content -->
     <div v-if="!loading">
       <template v-if="hasContent">
-        <!-- Events -->
-        <div class="p-4" v-if="user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-            />
-          </div>
-        </div>
-
-        <!-- Playlists -->
-        <div class="p-4" v-if="user.playlists.length">
-          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-              <PlaylistCard
-                v-for="playlist in user.playlists"
-                :key="playlist.playlist_id"
-                :playlist="playlist"
-              />
-          </div>
-        </div>
 
         <!-- Tracks -->
         <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Handle track-selected event -->
             <TrackCard
               v-for="track in user.tracks"
               :key="track.track_id"
               :track="track"
-              @trackSelected="setSelectedTrackURI"
+              :state="'redirect'"
+              @track-selected="setSelectedTrackURI"
             />
+          </div>
+        </div>
+
+        <!-- Events -->
+        <div class="p-4" v-if="Array.isArray(user.events) && user.events.length">
+          <h2 class="text-xl font-semibold mb-3">Events</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
+            <EventCard v-for="event in user.events" :key="event.event_id" :event="event" />
+          </div>
+        </div>
+
+        <!-- Playlists -->
+        <div class="p-4" v-if="Array.isArray(user.playlists) && user.playlists.length">
+          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <PlaylistCard v-for="playlist in user.playlists" :key="playlist.playlist_id" :playlist="playlist" />
           </div>
         </div>
 
@@ -58,19 +49,24 @@
         <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
         </div>
-      </template>
 
-      <!-- No Content -->
-      <template v-else>
         <div class="p-4">
-          <p>No events, playlists, or tracks found.</p>
+          <div class="font-semibold text-xl mb-4">Recommended music</div>
+          <RecommendedTracks />
         </div>
       </template>
     </div>
 
-    <!-- Spotify Player -->
-    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
+    <!-- No Content -->
+    <template v-else>
+      <div class="p-4">
+        <p>No events, playlists, or tracks found.</p>
+      </div>
+    </template>
   </div>
+
+  <!-- Spotify Player -->
+  <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
 </template>
 
 <script>
@@ -80,6 +76,7 @@ import EventCard from "@/components/EventCard.vue";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
+import RecommendedTracks from "@/components/RecommendedTracks.vue";
 
 export default {
   components: {
@@ -87,13 +84,14 @@ export default {
     PlaylistCard,
     TrackCard,
     SpotifyPlayer,
+    RecommendedTracks,
   },
   data() {
     return {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       errorMessage: "",
-      selectedTrackURI: "spotify:track:45J4avUb9Ni0bnETYaYFVJ",
+      selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
     };
   },
   computed: {
@@ -155,7 +153,7 @@ export default {
       }
     },
     setSelectedTrackURI(trackURI) {
-      this.selectedTrackURI = trackURI;
+      this.selectedTrackURI = trackURI; // Update the selected track URI
     },
   },
   mounted() {
