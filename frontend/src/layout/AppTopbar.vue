@@ -17,6 +17,9 @@ function goToProfile() {
 function goToSearchBar() {
   router.push("/pages/search");
 }
+function goToChat() {
+  router.push("/pages/chat"); 
+}
 function logout() {
   signOut(auth)
     .then(() => {
@@ -82,23 +85,6 @@ function logout() {
             :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"
           ></i>
         </button>
-        <div class="relative">
-          <button
-            v-styleclass="{
-              selector: '@next',
-              enterFromClass: 'hidden',
-              enterActiveClass: 'animate-scalein',
-              leaveToClass: 'hidden',
-              leaveActiveClass: 'animate-fadeout',
-              hideOnOutsideClick: true,
-            }"
-            type="button"
-            class="layout-topbar-action layout-topbar-action-highlight"
-          >
-            <i class="pi pi-palette"></i>
-          </button>
-          <AppConfigurator />
-        </div>
       </div>
 
       <button
@@ -124,6 +110,10 @@ function logout() {
           <button type="button" class="layout-topbar-action">
             <i class="pi pi-inbox"></i>
             <span>Messages</span>
+          </button>
+          <button type="button" class="layout-topbar-action" @click="goToChat"> 
+            <i class="pi pi-comments"></i>
+            <span>Chat</span>
           </button>
           <button
             type="button"

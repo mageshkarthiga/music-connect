@@ -28,7 +28,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		}
 
 		tokenStr := parts[1]
-		
+		fmt.Println("Token String: ", tokenStr)
 
 		token, err := jwt.Parse(tokenStr, middleware.GetJWKS().Keyfunc)
 		if err != nil || !token.Valid {
@@ -95,12 +95,7 @@ e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.De
 e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
 e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
 e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
+
+// ---- recommendations ----
+e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
 }
-
-
-
-
-
-
-
-
