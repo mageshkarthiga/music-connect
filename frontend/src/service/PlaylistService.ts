@@ -126,14 +126,18 @@ export default {
   // Add a playlist for a specific user
 
   async addPlaylistForUser(
+    // playlistId: number,  // Playlist ID
     name: string,    // Playlist name
+    playlistImageUrl: string, // Track Image URL
+    userId: number,     // Single User ID (a number)
     trackIds: number[],  // Array of Track IDs
-    userId: number     // Single User ID (a number)
+
   ): Promise<Playlist> {
     const playlistData = {
-      playlist_name: trackIds,  // This is the playlist name
-      track_ids: userId,  // Array of track IDs
-      user_id:  name,      // Single user ID
+      playlist_name: name,  // This is the playlist name
+      track_ids: playlistImageUrl,  // Array of track IDs
+      user_id: userId,      // Single user ID
+      playlist_image_url: trackIds  // Track Image URL
     };
   
     try {
@@ -159,7 +163,7 @@ export default {
         `Error creating playlist for user: ${error.message}`
       );
     }
-  },
+  },  
   
   
   
