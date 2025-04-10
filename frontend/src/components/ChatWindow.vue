@@ -383,6 +383,7 @@ export default {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    margin-top:50px;
 }
 
 .user-list ul {
@@ -426,6 +427,7 @@ export default {
 }
 
 .chat-card {
+    margin-top:50px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
