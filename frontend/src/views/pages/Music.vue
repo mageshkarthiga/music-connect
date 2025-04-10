@@ -2,19 +2,31 @@
     <AppTopbar />
     <div className="card mt-10">
         <h2 class="music-title">Spotify Music Discovery 🎶🎧</h2>
-        <SpotifyPlayer />
+        <MusicTracks @track-selected="onTrackSelected" />
+        <!-- SpotifyPlayer Component -->
+        <SpotifyPlayer v-if="selectedTrackUri" :spotifyUri="selectedTrackUri" />
     </div>
 </template>
 
 <script>
+import MusicTracks from '@/components/MusicTracks.vue';
 import SpotifyPlayer from '@/components/SpotifyPlayer.vue';
-import AppTopbar from "@/layout/AppTopbar.vue"; // Adjust the path if necessary
 
 
 export default {
     components: {
         SpotifyPlayer,
-        AppTopbar,
+        MusicTracks,
+    },
+    data() {
+        return {
+            selectedTrackUri: "spotify:track:5r7egnfTIQjaKSGREhIky9", 
+        };
+    },
+    methods: {
+        onTrackSelected(uri) {
+            this.selectedTrackUri = uri; 
+        },
     },
 };
 </script>
@@ -25,8 +37,7 @@ export default {
     font-weight: bold;
     margin-bottom: 1rem;
     text-align: center;
-    position:sticky;
-    top:0;
+    position: sticky;
+    top: 0;
 }
-
 </style>

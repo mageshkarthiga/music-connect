@@ -114,6 +114,16 @@ const router = createRouter({
           name: "search",
           component: () => import("@/views/pages/Search.vue"),
         },
+        {
+          path: "/pages/chat/:user_id?",
+          name: "chat",
+          component: () => import("@/views/pages/Chat.vue"),
+        },
+        {
+          path: "/pages/music",
+          name: "music",
+          component: () => import("@/views/pages/Music.vue"),
+        },
       ],
     },
     {
@@ -140,16 +150,6 @@ const router = createRouter({
       path: "/auth/error",
       name: "error",
       component: () => import("@/views/pages/auth/Error.vue"),
-    },
-    {
-      path: "/pages/chat/:user_id?",
-      name: "chat",
-      component: () => import("@/views/pages/Chat.vue"),
-    },
-    {
-      path: "/pages/music",
-      name: "music",
-      component: () => import("@/views/pages/Music.vue"),
     },
     {
       path: "/createaccount",
