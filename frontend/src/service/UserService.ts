@@ -47,7 +47,9 @@ export default {
   },
 
   async getAllUsers(): Promise<User[]> {
-    const response = await axios.get<User[]>(`${USER_URL}/users`);
+    const response = await axios.get<User[]>(`${USER_URL}/users`, {
+      withCredentials: true,
+    });
     return response.data;
   },
 
