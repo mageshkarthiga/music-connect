@@ -1,22 +1,19 @@
 <template>
-    
     <div class="spotify-player">
+        <Divider />
+        <Paginator :rows="rowsPerPage" :totalRecords="totalTracks" :first="first" @page="onPageChange" />
+        <Divider/>
         <div class="tracks">
-            <Card v-for="track in tracks" style="width: 25rem; overflow: hidden; margin-bottom: 20px;"
-                :key="track.id" :data-spotify-id="track.uri">
+            <Card v-for="track in paginatedTracks" :key="track.id"
+                style="width: 25rem; overflow: hidden; margin-bottom: 20px;">
                 <template #header>
-                    <img :src="track.image" :alt="track.name" />
+                    <img :src="track.track_image_url" :alt="track.name" />
                 </template>
-                <template #title>{{ track.name }}</template>
-                <template #subtitle>{{ track.album }}</template>
-                <template #content>
-                    <p class="track-description">
-                        {{ truncateDescription(track.description) }}
-                    </p>
-                </template>
+                <template #title>{{ track.track_title }}</template>
                 <template #footer>
                     <div class="flex gap-4 mt-1">
-                        <Button icon="pi pi-caret-right" severity="success" rounded @click="loadSpotifyContent(track.uri)"/>
+                        <Button icon="pi pi-caret-right" severity="success" rounded
+                            @click="loadSpotifyContent(track.track_uri)" />
                     </div>
                 </template>
             </Card>
@@ -29,14 +26,10 @@
                 loading="lazy"></iframe>
         </div>
     </div>
-
 </template>
 
 <script>
-// import { useSpotifyStore } from "@/stores/spotifyStore";
 import axios from "axios";
-
-
 
 export default {
     name: "SpotifyPlayer",
@@ -44,8 +37,11 @@ export default {
         return {
             iframeSrc: "",
             accessToken: "",
-            tracks: [
-            ],
+            tracks: [], // All tracks fetched from the backend
+            paginatedTracks: [], // Tracks to display on the current page
+            totalTracks: 0, // Total number of tracks
+            rowsPerPage: 10, // Number of tracks per page
+            first: 0, // Index of the first track on the current page
         };
     },
     async mounted() {
@@ -53,52 +49,32 @@ export default {
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent("spotify:track:5r7egnfTIQjaKSGREhIky9");
 
-        this.tracks = this.loadtracks();
-        if (tracks) {
-            this.tracks = tracks;
-        } else {
-            console.error("Failed to load tracks");
-        }
+        await this.loadTracks();
+        this.updatePaginatedTracks();
     },
     methods: {
         loadSpotifyContent(uri) {
-            // const spotifyStore = useSpotifyStore();
-
             this.iframeSrc = `https://open.spotify.com/embed/${uri.split(":")[1]}/${uri.split(":")[2]}?autoplay=1`;
-
-            // spotifyStore.setCurrentUri(uri);
         },
-        loadtracks() {
-            const apiUrl = "https://api.spotify.com/v1/tracks"
-            axios.get(apiUrl, {
-                headers: {
-                    Authorization: `Bearer ${this.accessToken}`,
-                },
-                params: {
-                    ids: "5biPEkF6O8snl96CWzsdK3,6GygzQ98i5iORNo45s5KwF,5r7egnfTIQjaKSGREhIky9,0fK7ie6XwGxQTIkpFoWkd1,0b0Dz0Gi86SVdBxYeiQcCP",
-                },
-            })
-                .then((response) => {
-                    this.tracks = response.data.tracks.map((track) => ({
-                        id: track.id,
-                        name: track.name,
-                        album: track.album.name,
-                        uri: track.uri,
-                        image: track.album.images[0]?.url || "", 
-                        description: `${track.artists.map((artist) => artist.name).join(", ")}`,
-                    }));
-                    console.log("tracks loaded:", this.tracks);
-                })
-                .catch((error) => {
-                    console.error("Error fetching tracks:", error);
-                });
-        },
-        truncateDescription(description) {
-            const maxLength = 300; // Set the maximum length for the description
-            if (description.length > maxLength) {
-                return description.substring(0, maxLength) + "...";
+        async loadTracks() {
+            try {
+                const response = await axios.get("http://localhost:8080/tracks");
+                this.tracks = response.data;
+                this.totalTracks = this.tracks.length; // Set total number of tracks
+            } catch (error) {
+                console.error("Error loading tracks:", error);
             }
-            return description;
+        },
+        updatePaginatedTracks() {
+            // Calculate the tracks to display on the current page
+            const start = this.first;
+            const end = this.first + this.rowsPerPage;
+            this.paginatedTracks = this.tracks.slice(start, end);
+        },
+        onPageChange(event) {
+            // Update the `first` index when the page changes
+            this.first = event.first;
+            this.updatePaginatedTracks();
         },
     },
 };
@@ -115,7 +91,8 @@ export default {
 
 .tracks {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); /* Reduced min width */
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    /* Reduced min width */
     gap: 15px;
     margin-bottom: 1rem;
     width: 100%;
@@ -137,13 +114,13 @@ export default {
 }
 
 .iframe-container {
-    position: fixed; 
+    position: fixed;
     bottom: 0;
-    left: 0; 
-    width: 100%; 
+    left: 0;
+    width: 100%;
     height: 80px;
     z-index: 1000;
-    border-radius: 0; 
+    border-radius: 0;
 }
 
 .iframe-container iframe {

@@ -20,7 +20,7 @@
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <h3>💬 Chat With: {{ room.otherUserName || "Loading..." }}</h3>
+                            <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() + room.otherUserName.slice(1) || "Loading..." }}</h3>
                             <!-- <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" /> -->
                         </div>
                     </template>
