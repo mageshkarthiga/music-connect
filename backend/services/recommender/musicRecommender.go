@@ -34,6 +34,11 @@ type Track struct {
 	ArtistID   int `json:"artist_id"`
 }
 
+type RecommendationResponse struct {
+	Track
+	ArtistName string `json:"artist_name"`
+}
+
 func getUserPlaylistIds(userId string, apiKey string) ([]int, error) {
 	url := fmt.Sprintf("%s/rest/v1/playlists?user_id=eq.%s&select=playlist_id", SUPABASE_URL, userId)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -141,11 +146,11 @@ func getAllPlaylistsExceptUserPlaylists(userId string, apiKey string) ([]Playlis
 	return playlists, nil
 }
 
-func getTrackDetails(trackID int, apiKey string) (Track, error) {
+func getTrackDetails(trackID int, apiKey string) (RecommendationResponse, error) {
 	url := fmt.Sprintf("%s/rest/v1/tracks?track_id=eq.%d", SUPABASE_URL, trackID)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return Track{}, err
+		return RecommendationResponse{}, err
 	}
 
 	req.Header.Set("apikey", apiKey)
@@ -155,21 +160,64 @@ func getTrackDetails(trackID int, apiKey string) (Track, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return Track{}, err
+		return RecommendationResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	var tracks []Track
 	if err := json.NewDecoder(resp.Body).Decode(&tracks); err != nil {
-		return Track{}, err
+		return RecommendationResponse{}, err
 	}
 
 	if len(tracks) == 0 {
-		return Track{}, fmt.Errorf("no track found with ID %d", trackID)
+		return RecommendationResponse{}, fmt.Errorf("no track found with ID %d", trackID)
 	}
 
 	fmt.Printf("Track Details: %+v\n", tracks[0]) // HERE
-	return tracks[0], nil
+
+	artistName := getArtistName(tracks[0].ArtistID, apiKey)
+	if artistName == "" {
+		return RecommendationResponse{}, fmt.Errorf("no artist found with ID %d", tracks[0].ArtistID)
+	}
+
+	trackDetails := RecommendationResponse{
+		Track:      tracks[0],
+		ArtistName: artistName,
+	}
+	return trackDetails, nil
+}
+
+func getArtistName(artistId int, apiKey string) string {
+	url := fmt.Sprintf("%s/rest/v1/artists?artist_id=eq.%d", SUPABASE_URL, artistId)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return ""
+	}
+
+	req.Header.Set("apikey", apiKey)
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	var artists []struct {
+		ArtistName string `json:"artist_name"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&artists); err != nil {
+		return ""
+	}
+
+	if len(artists) == 0 {
+		return ""
+	}
+
+	return artists[0].ArtistName
 }
 
 func computeJaccardScore(a, b TrackSet) float64 {
@@ -192,28 +240,34 @@ func computeJaccardScore(a, b TrackSet) float64 {
 	return float64(intersection) / float64(len(union))
 }
 
-
-func GetTrackRecommendation(userId string) ([]Track, error) {
+func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 	apiKey := os.Getenv("publicApiKey")
 
+	// get user's playlists ids
 	userPlaylistIds, err := getUserPlaylistIds(userId, apiKey)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("CHECKPOINT 1: User Playlist IDs:", userPlaylistIds) // HERE
 
-	userTrackSet, err := getTracksInPlaylists(userPlaylistIds, apiKey)
-	if err != nil {
-		return nil, err
+	// if user has playlists, get all the tracks in the playlist and append to a set
+	var userTrackSet TrackSet
+	if len(userPlaylistIds) != 0 {
+		userTrackSet, err := getTracksInPlaylists(userPlaylistIds, apiKey)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("CHECKPOINT 2: User Track Set:", userTrackSet) // HERE
 	}
-	fmt.Println("CHECKPOINT 2: User Track Set:", userTrackSet) // HERE
 
+	// get all other playlists that exist in db
 	otherPlaylists, err := getAllPlaylistsExceptUserPlaylists(userId, apiKey)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Printf("CHECKPOINT 3: Other Playlists: %+v\n", otherPlaylists) // HERE
 
+	// get all the tracks in the other playlists and compute jaccard score of playlist similarity to all the songs the user has
 	var similarities []PlaylistSimilarity
 	for _, playlist := range otherPlaylists {
 		trackSet, err := getTracksInPlaylists([]int{playlist.PlaylistID}, apiKey)
@@ -228,29 +282,28 @@ func GetTrackRecommendation(userId string) ([]Track, error) {
 			Tracks:     trackSet,
 		})
 	}
-
 	fmt.Printf("CHECKPOINT 4: Similarities: %+v\n", similarities) // HERE
+
+	// sort the similarities by score in descending order (highest score first)
+	// then get the top 10 tracks which the user does not have in their playlist
 	sort.Slice(similarities, func(i, j int) bool {
 		return similarities[i].Score > similarities[j].Score
 	})
 
-	if len(similarities) == 0 {
-		return []Track{}, nil
-	}
-
-	top := similarities[0]
 	var recommendations []int
-	for trackID := range top.Tracks {
-		if !userTrackSet[trackID] {
-			recommendations = append(recommendations, trackID)
-		}
-		if len(recommendations) == 10 {
-			break
+	for _, playlists := range similarities {
+		for trackID := range playlists.Tracks {
+			if !userTrackSet[trackID] {
+				recommendations = append(recommendations, trackID)
+			}
+			if len(recommendations) == 10 {
+				break
+			}
 		}
 	}
 	fmt.Println("CHECKPOINT 5: Recommendations:", recommendations)
 
-	var tracks []Track
+	var tracks []RecommendationResponse
 	for _, trackID := range recommendations {
 		track, err := getTrackDetails(trackID, apiKey)
 		if err != nil {
