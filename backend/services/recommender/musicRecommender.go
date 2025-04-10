@@ -173,8 +173,6 @@ func getTrackDetails(trackID int, apiKey string) (RecommendationResponse, error)
 		return RecommendationResponse{}, fmt.Errorf("no track found with ID %d", trackID)
 	}
 
-	fmt.Printf("Track Details: %+v\n", tracks[0]) // HERE
-
 	artistName := getArtistName(tracks[0].ArtistID, apiKey)
 	if artistName == "" {
 		return RecommendationResponse{}, fmt.Errorf("no artist found with ID %d", tracks[0].ArtistID)
@@ -248,16 +246,14 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("CHECKPOINT 1: User Playlist IDs:", userPlaylistIds) // HERE
 
 	// if user has playlists, get all the tracks in the playlist and append to a set
 	var userTrackSet TrackSet
 	if len(userPlaylistIds) != 0 {
-		userTrackSet, err := getTracksInPlaylists(userPlaylistIds, apiKey)
+		userTrackSet, err = getTracksInPlaylists(userPlaylistIds, apiKey)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("CHECKPOINT 2: User Track Set:", userTrackSet) // HERE
 	}
 
 	// get all other playlists that exist in db
@@ -265,7 +261,6 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("CHECKPOINT 3: Other Playlists: %+v\n", otherPlaylists) // HERE
 
 	// get all the tracks in the other playlists and compute jaccard score of playlist similarity to all the songs the user has
 	var similarities []PlaylistSimilarity
@@ -282,7 +277,6 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 			Tracks:     trackSet,
 		})
 	}
-	fmt.Printf("CHECKPOINT 4: Similarities: %+v\n", similarities) // HERE
 
 	// sort the similarities by score in descending order (highest score first)
 	// then get the top 10 tracks which the user does not have in their playlist
@@ -301,7 +295,6 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 			}
 		}
 	}
-	fmt.Println("CHECKPOINT 5: Recommendations:", recommendations)
 
 	var tracks []RecommendationResponse
 	for _, trackID := range recommendations {
@@ -312,5 +305,6 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 		tracks = append(tracks, track)
 	}
 
+	fmt.Println("CHECKPOINT MUSIC RECOMMENDER: ", tracks)
 	return tracks, nil
 }

@@ -29,6 +29,10 @@
           <PlaylistComponent v-for="playlist in user.playlists" :key="playlist.playlist_id" :playlist="playlist" />
         </div>
       </div>
+
+      <div class="p-4" v-if="user.playlists.length">
+          <RecommendedTracks />
+      </div>
     </div>
 
     <!-- No Events or Playlists Found -->
@@ -43,11 +47,13 @@ import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 import EventComponent from "@/components/EventComponent.vue"; // Import EventComponent
 import PlaylistComponent from "@/components/PlaylistComponent.vue"; 
+import RecommendedTracks from "@/components/RecommendedTracks.vue";
 
 export default {
   components: {
     EventComponent, // Register EventComponent
     PlaylistComponent, // Register PlaylistComponent
+    RecommendedTracks, 
   },
   data() {
     return {
