@@ -14,6 +14,9 @@ const router = useRouter();
 function goToProfile() {
   router.push("/profile");
 }
+function goToSearchBar() {
+  router.push("/pages/search");
+}
 function logout() {
   signOut(auth)
     .then(() => {
@@ -114,9 +117,9 @@ function logout() {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-calendar"></i>
-            <span>Calendar</span>
+          <button type="button" class="layout-topbar-action" @click="goToSearchBar">
+            <i class="pi pi pi-search"></i>
+            <span>Search</span>
           </button>
           <button type="button" class="layout-topbar-action">
             <i class="pi pi-inbox"></i>
