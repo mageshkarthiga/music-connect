@@ -97,7 +97,6 @@ const router = createRouter({
           path: "/pages/home",
           name: "home",
           component: () => import("@/views/pages/Home.vue"),
-
         },
         {
           path: "/documentation",
@@ -118,6 +117,11 @@ const router = createRouter({
           path: "/pages/music",
           name: "music",
           component: () => import("@/views/pages/Music.vue"),
+        },
+        {
+          path: "/pages/map",
+          name: "map",
+          component: () => import("@/views/uikit/Map.vue"),
         },
       ],
     },
