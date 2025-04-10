@@ -5,21 +5,20 @@ package controllers
 import (
 	"backend/config"
 	"backend/models"
+	// "fmt"
 	"github.com/labstack/echo/v4"
-	"net/http"
 	"log"
+	"net/http"
 )
-
-
 
 // GetUsers fetches all users
 func GetUsers(c echo.Context) error {
-    var users []models.User
-    // Fetch all users from the database
-    if err := config.DB.Find(&users).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to fetch users")
-    }
-    return c.JSON(http.StatusOK, users)
+	var users []models.User
+	// Fetch all users from the database
+	if err := config.DB.Find(&users).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch users")
+	}
+	return c.JSON(http.StatusOK, users)
 }
 
 // GetUser fetches current user 
@@ -32,7 +31,7 @@ func GetMe(c echo.Context) error {
         return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch user"})
     }
 
-    return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 

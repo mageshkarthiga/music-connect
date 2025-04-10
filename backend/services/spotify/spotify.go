@@ -3,14 +3,13 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2/clientcredentials"
 	"golang.org/x/oauth2"
+	"net/http"
+	"os"
 
 )
 
