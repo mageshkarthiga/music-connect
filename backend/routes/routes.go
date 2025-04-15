@@ -63,4 +63,7 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	// Message Retrieval Route
 	e.GET("/rooms/:roomName/messages", controllers.GetMessagesForRoom)
 
+	// User Chat History Route
+	e.GET("/users/:userID/chat-history", controllers.GetUsersWithChatHistory) // Fetch users with chat history
+
 }

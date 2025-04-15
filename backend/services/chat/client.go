@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"time"
-
+	"cloud.google.com/go/firestore"
+	"strings"
+	"context"
 	"github.com/gorilla/websocket"
 )
 
@@ -79,7 +81,7 @@ func (client *Client) readPump() {
 			}
 			break
 		}
-		client.handleNewMessage(jsonMessage) 
+		client.handleNewMessage(jsonMessage)
 	}
 }
 
@@ -154,6 +156,18 @@ func (client *Client) handleJoinRoom(message Message) {
 	if room == nil {
 		fmt.Printf("Creating new room: %s\n", roomName)
 		room = client.wsServer.createRoom(roomName)
+
+		// Save room to Firestore with participants
+		participants := parseParticipantsFromRoomName(roomName) // new helper
+		_, err := FirestoreClient.Collection("rooms").Doc(roomName).Set(context.Background(), map[string]interface{}{
+			"participants": participants,
+			"created_at":   firestore.ServerTimestamp,
+		}, firestore.MergeAll)
+		if err != nil {
+			log.Printf("Failed to store room in Firestore: %v\n", err)
+		} else {
+			log.Printf("Room %s saved to Firestore\n", roomName)
+		}
 	} else {
 		fmt.Printf("Room %s already exists\n", roomName)
 	}
@@ -162,6 +176,17 @@ func (client *Client) handleJoinRoom(message Message) {
 
 	room.register <- client
 }
+
+func parseParticipantsFromRoomName(name string) []string {
+	// roomName is like "userA-userB"
+	parts := strings.Split(name, "-")
+	if len(parts) != 2 {
+		log.Printf("Unexpected room format: %s", name)
+		return []string{}
+	}
+	return parts
+}
+
 
 func (client *Client) handleLeaveRoom(message Message) {
 	room := client.wsServer.findRoom(message.Message)
