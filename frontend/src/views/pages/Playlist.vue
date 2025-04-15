@@ -39,7 +39,6 @@ export default {
         await this.fetchPlaylistTracks();
     },
     watch: {
-        
         playlist_id: "fetchPlaylistTracks",
         playlist_name: "fetchPlaylistTracks",
     },
