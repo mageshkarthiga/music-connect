@@ -1,4 +1,3 @@
-
 <!-- <script setup>
 import { ref } from "vue";
 
@@ -315,18 +314,14 @@ const model = ref([
     <div class="library-header">
       <h4>Your Library</h4>
       <Button @click="openAddPlaylistDialog" class="add-playlist-btn">
-        <i class="pi pi-plus"></i> 
+        <i class="pi pi-plus"></i>
       </Button>
     </div>
 
     <!-- Playlists List -->
     <div v-if="user.playlists.length" class="playlist-list">
-      <div
-        v-for="playlist in user.playlists"
-        :key="playlist.playlist_id"
-        class="playlist-item"  
-        @click="navigateToPlaylist(playlist.playlist_id,playlist.playlist_name)"
-      >
+      <div v-for="playlist in user.playlists" :key="playlist.playlist_id" class="playlist-item"
+        @click="navigateToPlaylist(playlist.playlist_id, playlist.playlist_name)">
         <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
         <div class="playlist-info">
           <span class="playlist-name">{{ playlist.playlist_name }}</span>
@@ -340,18 +335,13 @@ const model = ref([
     </div>
 
     <!-- Playlist Dialog -->
-    <AddPlaylistDialog
-      v-if="showPlaylistDialog"
-      @close="closeAddPlaylistDialog"
-      @playlist-added="addNewPlaylist"
-    />
+    <AddPlaylistDialog v-if="showPlaylistDialog" @close="closeAddPlaylistDialog" @playlist-added="addNewPlaylist" />
 
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { ref, onMounted } from "vue";
 import { API_BASE_URL } from "@/service/apiConfig";
 import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
 
@@ -410,13 +400,11 @@ export default {
     },
 
     addNewPlaylist(newPlaylist) {
-  // Push the new playlist directly to the playlists array (Vue handles reactivity)
-  this.user.playlists.push(newPlaylist);
-  // Use $nextTick to ensure the DOM is updated right after data change
-  this.$nextTick(() => {
-    this.closeAddPlaylistDialog();
-  });
-},
+      this.user.playlists.push(newPlaylist);
+      this.$nextTick(() => {
+        this.closeAddPlaylistDialog();
+      });
+    },
 
 
     toggleTheme() {
@@ -522,6 +510,7 @@ h4 {
 .playlist-item:hover {
   background-color: rgba(125, 125, 125, 0.1)
 }
+
 .dark .playlist-item:hover {
   background-color: #3a3a3a;
 }
@@ -555,6 +544,7 @@ h4 {
 .dark .playlist-name {
   color: rgba(255, 255, 255, 0.7)
 }
+
 .light .playlist-username {
   color: rgb(0, 0, 0, 0.7)
 }
