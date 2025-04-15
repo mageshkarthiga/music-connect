@@ -2,12 +2,9 @@
     <div class="chat-container">
         <!-- User List -->
         <div class="user-list">
-            <h3 class="user-list-header">
-                <span>Users</span>
-                <Button icon="pi pi-plus" rounded @click="redirectToUserTable()" />
-            </h3>
+            <h3>Users</h3>
             <ul>
-                <li v-for="user in users" :key="user.user_id" @click="joinRoom(user)"
+                <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
                     <Avatar :image="user.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
                     {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
@@ -25,6 +22,7 @@
                         <div class="chat-header">
                             <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() +
                                 room.otherUserName.slice(1) || "Loading..." }}</h3>
+                            <!-- <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" /> -->
                         </div>
                     </template>
 
@@ -67,7 +65,6 @@
 </template>
 
 <script>
-import UserService from "@/service/UserService";
 import axios from "axios";
 
 export default {
@@ -84,7 +81,8 @@ export default {
                 user_id: null,
                 user_name: null,
             },
-            users: [],
+            users: [
+            ],
             rooms: [],
             roomInput: "",
             ws: null,
@@ -93,106 +91,67 @@ export default {
             loading: false,
         };
     },
-    watch: {
-        selectedUserId: {
-            immediate: true,
-            async handler(newUserId) {
-                if (newUserId) {
-                    const user = this.users.find((user) => user.firebase_uid === newUserId);
-
-                    if (user) {
-                        await this.joinRoom(user);
-                    } else {
-                        try {
-                            const response = await axios.get(`http://localhost:8080/firebase/${newUserId}`, {
-                                withCredentials: true,
-                            });
-                            const fetchedUser = response.data;
-
-                            this.users.push(fetchedUser);
-
-                            await this.joinRoom(fetchedUser);
-                        } catch (error) {
-                            console.error(`Error fetching user with ID ${newUserId}:`, error);
-                            this.errorMessage = "Failed to fetch user details. Please try again.";
-                        }
-                    }
-                }
-            },
-        },
+    computed: {
+        filteredUsers() {
+            return this.users.filter(user =>
+                user.firebase_uid !== this.currentUser.user_id &&
+                user.firebase_uid?.trim() !== "" &&
+                user.user_name?.trim() !== ""
+            );
+        }
     },
     mounted() {
-        console.log("Selected User ID:", this.selectedUserId);
-        this.getCurrentUser().then(async () => {
-            await this.fetchChatHistoryUsers();
-
-            let user = this.users.find(user => user.firebase_uid === this.selectedUserId);
-
-            if (!user && this.selectedUserId) {
-                try {
-                    const response = await UserService.getUserByFirebaseUID(this.selectedUserId);
-                    user = response.data;
-                    this.users.push(user);
-                } catch (error) {
-                    console.warn(`User with ID ${this.selectedUserId} could not be fetched.`, error);
-                    return;
+        console.log("Selected User ID:", this.selectedUserId); // Debugging log
+        this.getCurrentUser();
+        this.fetchUsers().then(() => {
+            if (this.selectedUserId) {
+                const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
+                if (user) {
+                    this.joinRoom(user);
+                } else {
+                    console.warn(`User with ID ${this.selectedUserId} not found.`);
                 }
-            }
-
-            if (user) {
-                this.joinRoom(user);
             } else {
-                console.warn("No user selected or user not found.");
+                console.log("No user selected. Displaying user list.");
             }
         });
     },
     methods: {
+        async fetchUsers() {
+            try {
+                const response = await axios.get("http://localhost:8080/users",
+                    { withCredentials: true }
+                );
+                this.users = response.data;
+                console.log("Fetched users:", this.users);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                this.errorMessage = "Failed to fetch users. Please try again later.";
+            }
+        },
         async getCurrentUser() {
             try {
-                const response = await UserService.getUser();
-                this.currentUser.user_id = response.firebase_uid;
-                this.currentUser.user_name = response.userName;
+                const response = await axios.get("http://localhost:8080/me", {
+                    withCredentials: true,
+                });
+                console.log(response.data)
+
+                this.currentUser.user_id = response.data.firebase_uid;
+                this.currentUser.user_name = response.data.user_name || "Anonymous";
             } catch (error) {
-                console.error("Error fetching current user:", error);
-                this.errorMessage = "Failed to fetch current user. Please try again.";
+                console.error("Error getting user:", error);
             }
         },
         async getOtherUsers(userID) {
             try {
-                const response = await UserService.getUserByFirebaseUID(userID)
-                console.log(response)
-                return response.userName;
-            }
-            catch(error) {
-                console.error("Error getting user:", error);
-                return "Unknown User";
-            };
-        },
-        async fetchChatHistoryUsers() {
-            try {
-                const response = await axios.get(`http://localhost:8080/users/${this.currentUser.user_id}/chat-history`, {
+                const response = await axios.get(`http://localhost:8080/firebase/${userID}`, {
                     withCredentials: true,
                 });
-                const userIds = response.data;
-
-                const userDetailsPromises = userIds.map(async (userId) => {
-                    try {
-                        const userResponse = await axios.get(`http://localhost:8080/firebase/${userId}`, {
-                            withCredentials: true,
-                        });
-                        return userResponse.data;
-                    } catch (error) {
-                        console.error(`Error fetching details for user ID ${userId}:`, error);
-                        return null;
-                    }
-                });
-
-                const userDetails = await Promise.all(userDetailsPromises);
-
-                this.users = userDetails.filter((user) => user !== null);
+                console.log(response)
+                return response.data.user_name
             } catch (error) {
-                console.error("Error fetching users with chat history:", error);
-                this.errorMessage = "Failed to load chat history users.";
+                console.error("Error getting user:", error);
+                return "Unknown User";
             }
         },
         handleNewMessage(event) {
@@ -213,6 +172,7 @@ export default {
 
                     const room = this.findRoom(msg.target);
                     if (room && room.name === msg.target) {
+                        // Check if we already have this message (by message_id)
                         const isDuplicate = room.messages.some(existingMsg =>
                             msg.message_id && existingMsg.message_id === msg.message_id
                         );
@@ -256,13 +216,15 @@ export default {
 
                 ws.send(JSON.stringify(messageData));
                 console.log("Message sent:", messageData);
+
+                // Add the new message to the room and replace the array for reactivity
                 room.messages.push({
                     message: room.newMessage,
                     sender: this.currentUser.user_name,
                     isSent: true,
                 });
 
-                room.newMessage = '';
+                room.newMessage = '';  // Clear input
             } else {
                 console.error("WebSocket is not open. Cannot send message.");
                 this.errorMessage = "Error: Cannot send message. Please try again later.";
@@ -278,6 +240,7 @@ export default {
             const roomName = [this.currentUser.user_id, user.firebase_uid].sort().join("-");
             console.log(`User ${this.currentUser.user_name} is joining room: ${roomName}`);
 
+            // Check if room already exists
             const existingRoom = this.rooms.find(r => r.name === roomName);
             if (existingRoom) {
                 this.currentRoom = roomName;
@@ -301,9 +264,7 @@ export default {
                 newRoom.otherUserName = response;
 
                 // Fetch chat history via REST API
-                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`,
-                    { withCredentials: true }
-                );
+                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`);
                 newRoom.messages = messagesResponse.data.map(msg => ({
                     message: msg.message,
                     sender: msg.sender,
@@ -348,12 +309,19 @@ export default {
 
             this.rooms.push(newRoom);
             this.sockets[roomName] = ws;
-            this.currentChatUser = user;
+            this.currentChatUser = user; // Set the current chat user
             this.currentRoom = roomName;
         },
-        redirectToUserTable() {
-            this.$router.push({ name: "search" });
-        },
+
+        // leaveRoom(room) {
+        //     const socket = this.sockets[room.name];
+        //     if (socket) {
+        //         socket.close();
+        //         delete this.sockets[room.name];
+        //     }
+        //     this.rooms = this.rooms.filter(r => r.name !== room.name);
+        //     this.currentChatUser = null;
+        // }
     },
 };
 </script>
@@ -378,7 +346,7 @@ export default {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    margin-top: 50px;
+    margin-top:50px;
 }
 
 .user-list ul {
@@ -422,7 +390,7 @@ export default {
 }
 
 .chat-card {
-    margin-top: 50px;
+    margin-top:50px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -534,19 +502,5 @@ export default {
     color: #6c757d;
     font-style: italic;
     margin-top: 1rem;
-}
-
-.user-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    margin: 0;
-    font-size: 1.2rem;
-    border-bottom: 1px solid #ddd;
-    background-color: #ffffff;
-    position: static;
-    top: auto;
-    z-index: auto;
 }
 </style>
