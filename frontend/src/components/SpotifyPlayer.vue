@@ -44,8 +44,8 @@ export default {
 .iframe-container {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: var(--sidebar-width, 310px);
+    width: calc(100% - var(--sidebar-width, 310px)); 
     height: 80px;
     z-index: 1000;
     border-radius: 0;
