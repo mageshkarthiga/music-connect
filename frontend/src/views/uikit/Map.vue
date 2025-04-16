@@ -1,6 +1,12 @@
 <template>
   <div class="map-wrapper">
-    <Button label="Load Map" icon="pi pi-map" @click="initMap" class="mb-3" />
+    <div class="flex justify-between items-center mb-3">
+      <Button label="Load Map" icon="pi pi-map" @click="initMap" />
+      <RouterLink to="/pages/search" class="text-blue-500 hover:underline">
+        Go to Search
+      </RouterLink>
+    </div>
+
     <div ref="map" class="map-container" v-show="mapLoaded"></div>
 
     <Popover ref="overlay" :dismissable="true" style="width: 450px">
@@ -22,10 +28,8 @@
     </Popover>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from "vue";
-import { Loader } from "@googlemaps/js-api-loader";
+import { ref, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { getAllUserLocations } from "@/firebase/locationController";
 
 const map = ref(null);
@@ -33,13 +37,8 @@ const mapLoaded = ref(false);
 const userLocations = ref({});
 const overlay = ref();
 const cardData = ref({ title: "", description: "", image: "" });
-let mapInstance;
-
-const loader = new Loader({
-  apiKey: process.env.GOOGLE_API_KEY,
-  version: "weekly",
-  libraries: ["maps", "marker"],
-});
+let mapInstance = null;
+let hasMapInitialised = false;
 
 const mockLandmarks = [
   {
@@ -88,96 +87,143 @@ const mockLandmarks = [
 
 onMounted(async () => {
   userLocations.value = await getAllUserLocations();
+  document.addEventListener("visibilitychange", handleVisibility);
+  window.addEventListener("focus", handleVisibility);
 });
 
+onBeforeUnmount(() => {
+  document.removeEventListener("visibilitychange", handleVisibility);
+  window.removeEventListener("focus", handleVisibility);
+});
+
+function handleVisibility() {
+  if (document.visibilityState === "visible") {
+    ensureMapRedraw();
+  }
+}
+
+function ensureMapRedraw() {
+  if (mapInstance && map.value) {
+    map.value.innerHTML = "";
+    mapInstance = null;
+    mapLoaded.value = false;
+    hasMapInitialised = false;
+    initMapCallback();
+  }
+}
+
 function showPopover(event, title, description, image) {
+  if (!event?.currentTarget) return;
   cardData.value = { title, description, image };
   overlay.value.show(event);
 }
 
-async function initMap() {
-  try {
-    await loader.load();
+function createMarkerImage(src, clickHandler) {
+  const img = document.createElement("img");
+  img.src = src;
+  img.style.width = "40px";
+  img.style.height = "40px";
+  img.style.cursor = "pointer";
+  if (clickHandler) img.addEventListener("click", clickHandler);
+  return img;
+}
 
-    if (!navigator.geolocation) return;
+function loadGoogleMapsScript(callback) {
+  if (window.google?.maps) return;
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
+  const existingScript = document.querySelector(
+    `script[src*="maps.googleapis.com/maps/api/js"]`
+  );
+  if (existingScript) return;
 
-        mapInstance = new google.maps.Map(map.value, {
-          center: userLocation,
-          zoom: 18,
-          mapTypeId: "roadmap",
-          mapId: "DEMO_MAP_ID",
-        });
-        function createMarkerImage(src) {
-          const img = document.createElement("img");
-          img.src = src;
-          img.style.width = "40px";
-          img.style.height = "40px";
-          return img;
-        }
+  const script = document.createElement("script");
+  script.src = `http://localhost:3000/api/maps?libraries=maps,marker&callback=${callback}&loading=async`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
 
-        const youMarker = new google.maps.marker.AdvancedMarkerElement({
+function initMapCallback() {
+  if (hasMapInitialised || !navigator.geolocation || !map.value) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const userLocation = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
+
+      mapInstance = new google.maps.Map(map.value, {
+        center: userLocation,
+        zoom: 18,
+        mapTypeId: "roadmap",
+        mapId: "DEMO_MAP_ID",
+      });
+
+      const youImg = createMarkerImage("/demo/images/person_light.svg", (e) =>
+        showPopover(
+          e,
+          "You",
+          "This is your current location.",
+          "/demo/images/person_light.svg"
+        )
+      );
+
+      new google.maps.marker.AdvancedMarkerElement({
+        map: mapInstance,
+        position: userLocation,
+        title: "You are here",
+        content: youImg,
+      });
+
+      mockLandmarks.forEach((loc) => {
+        const landmarkImg = createMarkerImage("/demo/images/logo.svg", (e) =>
+          showPopover(e, loc.name, loc.description, loc.image)
+        );
+        new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
-          position: userLocation,
-          title: "You are here",
-          content: createMarkerImage("/demo/images/person_light.svg"),
+          position: { lat: loc.lat, lng: loc.lng },
+          title: `Landmark: ${loc.name}`,
+          content: landmarkImg,
         });
+      });
 
-        youMarker.addListener("click", (e) => {
+      Object.entries(userLocations.value).forEach(([userId, loc]) => {
+        const userImg = createMarkerImage("/demo/images/person_dark.svg", (e) =>
           showPopover(
-            e.domEvent,
-            "You",
-            "This is your current location.",
-            "/demo/images/person_light.svg"
-          );
+            e,
+            `User: ${userId}`,
+            "Recently active in this area.",
+            "/demo/images/person_dark.svg"
+          )
+        );
+        new google.maps.marker.AdvancedMarkerElement({
+          map: mapInstance,
+          position: { lat: loc.lat, lng: loc.lon },
+          title: `User: ${userId}`,
+          content: userImg,
         });
+      });
 
-        mockLandmarks.forEach((loc) => {
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            map: mapInstance,
-            position: { lat: loc.lat, lng: loc.lng },
-            title: `Landmark: ${loc.name}`,
-            content: createMarkerImage("/demo/images/logo.svg"),
-          });
+      mapLoaded.value = true;
+      hasMapInitialised = true;
+    },
+    () => {}
+  );
+}
 
-          marker.addListener("click", (e) => {
-            showPopover(e.domEvent, loc.name, loc.description, loc.image);
-          });
-        });
+async function initMap() {
+  mapLoaded.value = false;
+  await nextTick();
+  map.value.innerHTML = "";
+  mapInstance = null;
+  hasMapInitialised = false;
 
-        Object.entries(userLocations.value).forEach(([userId, loc]) => {
-          const person = new google.maps.marker.AdvancedMarkerElement({
-            map: mapInstance,
-            position: {
-              lat: loc.lat,
-              lng: loc.lon,
-            },
-            title: `User: ${userId}`,
-            content: createMarkerImage("/demo/images/person_dark.svg"),
-          });
-
-          person.addListener("click", (e) => {
-            showPopover(
-              e.domEvent,
-              `User: ${userId}`,
-              "Recently active in this area.",
-              "/demo/images/person_dark.svg"
-            );
-          });
-        });
-
-        mapLoaded.value = true;
-      },
-      () => {}
-    );
-  } catch (error) {
-    console.error("Google Maps failed to load:", error);
+  if (window.google?.maps) {
+    initMapCallback();
+  } else {
+    window.initMapCallback = initMapCallback;
+    loadGoogleMapsScript("initMapCallback");
   }
 }
 </script>
