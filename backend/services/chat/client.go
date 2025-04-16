@@ -179,6 +179,7 @@ func (client *Client) handleJoinRoom(message Message) {
 
 func parseParticipantsFromRoomName(name string) []string {
 	// roomName is like "userA-userB"
+	log.Printf("Room name before parsing: %s", name)
 	parts := strings.Split(name, "-")
 	if len(parts) != 2 {
 		log.Printf("Unexpected room format: %s", name)

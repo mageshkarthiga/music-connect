@@ -4,7 +4,7 @@
         <div class="user-list">
             <h3>Users</h3>
             <ul>
-                <li v-for="user in filteredUsers" :key="user.user_id" @click="joinRoom(user)"
+                <li v-for="user in users" :key="user.user_id" @click="joinRoom(user)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
                     <Avatar :image="user.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
                     {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
@@ -22,7 +22,6 @@
                         <div class="chat-header">
                             <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() +
                                 room.otherUserName.slice(1) || "Loading..." }}</h3>
-                            <!-- <Button label="Leave Chat" class="p-button-danger" @click="leaveRoom(room)" /> -->
                         </div>
                     </template>
 
@@ -30,19 +29,24 @@
                         <div v-if="loading" class="card-spinner-container">
                             <i class="pi pi-spin pi-spinner card-spinner"></i>
                         </div>
-                        <div class="chat-body" ref="chatBody">
-                            <div v-if="room.messages.length === 0" class="no-messages">
-                                It's quiet here… start the conversation and share the vibes 🎧✨
-                            </div>
-                            <!-- Show messages if they exist -->
-                            <div v-else>
-                                <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
-                                    :class="{ 'sent': message.isSent, 'received': !message.isSent }">
-                                    <div class="message-bubble">
-                                        {{ message.message }}
+
+                        <div class="chat-body-wrapper">
+                            <div class="chat-body" :ref="el => setChatBodyRef(room.name, el)">
+                                <div v-if="room.messages.length === 0" class="no-messages">
+                                    It's quiet here… start the conversation and share the vibes 🎧✨
+                                </div>
+                                <div v-else>
+                                    <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
+                                        :class="{ 'sent': message.isSent, 'received': !message.isSent }">
+                                        <div class="message-bubble">
+                                            {{ message.message }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <Button v-if="room.showScrollArrow" icon="pi pi-arrow-down" class="scroll-to-bottom"
+                                @click="scrollToBottom(room.name)" />
                         </div>
                     </template>
 
@@ -65,6 +69,7 @@
 </template>
 
 <script>
+import UserService from "@/service/UserService";
 import axios from "axios";
 
 export default {
@@ -81,77 +86,89 @@ export default {
                 user_id: null,
                 user_name: null,
             },
-            users: [
-            ],
+            users: [],
             rooms: [],
             roomInput: "",
             ws: null,
             sockets: {},
             currentRoom: null,
             loading: false,
+            chatBodies: {},
         };
     },
-    computed: {
-        filteredUsers() {
-            return this.users.filter(user =>
-                user.firebase_uid !== this.currentUser.user_id &&
-                user.firebase_uid?.trim() !== "" &&
-                user.user_name?.trim() !== ""
-            );
+    async mounted() {
+        await this.getCurrentUser();
+        await this.fetchChatUsers();
+
+        if (this.selectedUserId) {
+            const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
+
+            if (user) {
+                this.joinRoom(user);
+            } else {
+                console.warn(`User with ID ${this.selectedUserId} not found in chat history.`);
+
+                try {
+                    const response = await UserService.getUserByFirebaseUID(this.selectedUserId);
+                    if (response) {
+                        this.users.push(response);
+
+                        this.joinRoom(response);
+                    } else {
+                        console.warn(`Unable to fetch details for user ID ${this.selectedUserId}`);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user details:", error);
+                }
+            }
+        } else {
+            console.log("No user selected. Displaying user list.");
         }
     },
-    mounted() {
-        console.log("Selected User ID:", this.selectedUserId); // Debugging log
-        this.getCurrentUser();
-        this.fetchUsers().then(() => {
-            if (this.selectedUserId) {
-                const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
-                if (user) {
-                    this.joinRoom(user);
-                } else {
-                    console.warn(`User with ID ${this.selectedUserId} not found.`);
-                }
-            } else {
-                console.log("No user selected. Displaying user list.");
-            }
-        });
-    },
     methods: {
-        async fetchUsers() {
-            try {
-                const response = await axios.get("http://localhost:8080/users",
-                    { withCredentials: true }
-                );
-                this.users = response.data;
-                console.log("Fetched users:", this.users);
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                this.errorMessage = "Failed to fetch users. Please try again later.";
-            }
-        },
         async getCurrentUser() {
             try {
-                const response = await axios.get("http://localhost:8080/me", {
-                    withCredentials: true,
-                });
-                console.log(response.data)
-
-                this.currentUser.user_id = response.data.firebase_uid;
-                this.currentUser.user_name = response.data.user_name || "Anonymous";
+                const response = await UserService.getUser();
+                this.currentUser.user_id = response.firebase_uid;
+                this.currentUser.user_name = response.user_name || "Anonymous";
             } catch (error) {
                 console.error("Error getting user:", error);
             }
         },
         async getOtherUsers(userID) {
             try {
-                const response = await axios.get(`http://localhost:8080/firebase/${userID}`, {
-                    withCredentials: true,
-                });
-                console.log(response)
-                return response.data.user_name
+                const response = await UserService.getUserByFirebaseUID(userID);
+                return response.user_name
             } catch (error) {
                 console.error("Error getting user:", error);
                 return "Unknown User";
+            }
+        },
+        async fetchChatUsers() {
+            try {
+                const response = await axios.get(`http://localhost:8080/users/${this.currentUser.user_id}/chat-history`, {
+                    withCredentials: true,
+                });
+                const userIds = response.data;
+                console.log("Fetched user IDs:", this.selectedUserId);
+
+                const userDetailsPromises = userIds.filter(userID => userID).map(async (userID) => {
+                    try {
+                        const userResponse = await UserService.getUserByFirebaseUID(userID);
+                        return userResponse;
+                    } catch (error) {
+                        console.error(`Error fetching details for user ID ${userID}:`, error);
+                        return null;
+                    }
+                });
+
+                const users = await Promise.all(userDetailsPromises);
+                this.users = users.filter(user => user !== null);
+
+                console.log("Fetched chat users:", this.users);
+            } catch (error) {
+                console.error("Error fetching chat history:", error);
+                this.errorMessage = "Failed to load chat users. Please try again later.";
             }
         },
         handleNewMessage(event) {
@@ -187,12 +204,14 @@ export default {
                             });
 
                             // Scroll to the bottom of the chat
-                            this.$nextTick(() => {
-                                const chatBody = this.$refs.chatBody;
-                                if (chatBody) {
-                                    chatBody.scrollTop = chatBody.scrollHeight;
-                                }
-                            });
+                            if (!this.isChatScrolledToBottom(room.name)) {
+                                room.showScrollArrow = true;
+                            } else {
+                                this.$nextTick(() => {
+                                    this.scrollToBottom(room.name);
+                                });
+                            }
+
                         } else {
                             console.log("Skipping duplicate message:", msg.message_id);
                         }
@@ -217,7 +236,6 @@ export default {
                 ws.send(JSON.stringify(messageData));
                 console.log("Message sent:", messageData);
 
-                // Add the new message to the room and replace the array for reactivity
                 room.messages.push({
                     message: room.newMessage,
                     sender: this.currentUser.user_name,
@@ -238,9 +256,9 @@ export default {
 
         async joinRoom(user) {
             const roomName = [this.currentUser.user_id, user.firebase_uid].sort().join("-");
-            console.log(`User ${this.currentUser.user_name} is joining room: ${roomName}`);
+            console.log("Joining room for user:", user);
+            console.log("Generated room name:", roomName);
 
-            // Check if room already exists
             const existingRoom = this.rooms.find(r => r.name === roomName);
             if (existingRoom) {
                 this.currentRoom = roomName;
@@ -252,31 +270,32 @@ export default {
                 name: roomName,
                 messages: [],
                 newMessage: '',
-                otherUserName: "Loading...", // Placeholder for the other user's name
+                otherUserName: user.user_name || "Loading...",
+                showScrollArrow: false,
             };
 
             this.loading = true;
 
             try {
-                // Fetch the other user's name
                 const otherUserID = roomName.split("-").filter(id => id !== this.currentUser.user_id)[0];
                 const response = await this.getOtherUsers(otherUserID);
                 newRoom.otherUserName = response;
 
-                // Fetch chat history via REST API
-                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`);
-                newRoom.messages = messagesResponse.data.map(msg => ({
-                    message: msg.message,
-                    sender: msg.sender,
-                    isSent: msg.sender === this.currentUser.user_id,
-                }));
-                console.log(`Fetched messages for room ${roomName}:`, newRoom.messages);
+                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`, { withCredentials: true });
+                if (messagesResponse.data.length > 0) {
+                    newRoom.messages = messagesResponse.data.map(msg => ({
+                        message: msg.message,
+                        sender: msg.sender,
+                        isSent: msg.sender === this.currentUser.user_id,
+                    }));
+                } else {
+                    console.log(`No previous messages for room ${roomName}`);
+                }
             } catch (error) {
                 console.error(`Error fetching messages for room ${roomName}:`, error);
                 this.errorMessage = "Failed to load chat history. Please try again later.";
             }
 
-            // Establish WebSocket connection for the room
             const ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
 
             ws.onopen = () => {
@@ -289,7 +308,6 @@ export default {
                     target: roomName,
                 };
                 ws.send(JSON.stringify(joinRoomMessage));
-                console.log("Join room message sent:", joinRoomMessage);
             };
 
             ws.onmessage = (event) => {
@@ -307,21 +325,43 @@ export default {
                 this.loading = false;
             };
 
+            // Push the new room to the rooms array
             this.rooms.push(newRoom);
             this.sockets[roomName] = ws;
-            this.currentChatUser = user; // Set the current chat user
-            this.currentRoom = roomName;
-        },
 
-        // leaveRoom(room) {
-        //     const socket = this.sockets[room.name];
-        //     if (socket) {
-        //         socket.close();
-        //         delete this.sockets[room.name];
-        //     }
-        //     this.rooms = this.rooms.filter(r => r.name !== room.name);
-        //     this.currentChatUser = null;
-        // }
+            // Set the current room and the chat user
+            this.currentChatUser = user;
+            this.currentRoom = roomName;
+
+            this.$nextTick(() => {
+                this.scrollToBottom(roomName);
+            });
+        },
+        setChatBodyRef(roomName, el) {
+            if (el) {
+                this.chatBodies[roomName] = el;
+
+                el.addEventListener('scroll', () => {
+                    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+                    const room = this.findRoom(roomName);
+                    if (room) {
+                        room.showScrollArrow = !nearBottom;
+                    }
+                });
+            }
+        },
+        scrollToBottom(roomName) {
+            this.$nextTick(() => {
+                const chatBody = this.chatBodies[roomName];
+                if (chatBody) {
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            });
+        },
+        isChatScrolledToBottom(roomName) {
+            const el = this.chatBodies[roomName];
+            return el && el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+        }
     },
 };
 </script>
@@ -346,7 +386,7 @@ export default {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    margin-top:50px;
+    margin-top: 50px;
 }
 
 .user-list ul {
@@ -390,7 +430,7 @@ export default {
 }
 
 .chat-card {
-    margin-top:50px;
+    margin-top: 50px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -502,5 +542,22 @@ export default {
     color: #6c757d;
     font-style: italic;
     margin-top: 1rem;
+}
+
+.chat-body-wrapper {
+    position: relative;
+}
+
+.scroll-to-bottom {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: white;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>
