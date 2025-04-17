@@ -117,6 +117,9 @@ export default {
 
   console.log("Selected track IDs:", trackIds);
 
+  const trackValues = Object.values(this.selectedTracks);
+  console.log("Selected track values:", trackValues);
+
   let newPlaylist;
 
   try {
@@ -137,11 +140,11 @@ export default {
   try {
     const playlistId = newPlaylist.playlist_id; // Now it's defined properly
     console.log("New Playlist ID:", playlistId);
-    console.log("Track IDs to add:", trackIds);
+    console.log("Track IDs to add:", trackValues);
     
     // Step 2: Add tracks to the newly created playlist
-    if (trackIds.length > 0) {
-      await PlaylistService.addTracksToPlaylist(playlistId, trackIds);
+    if (trackValues.length > 0) {
+      await PlaylistService.addTracksToPlaylist(playlistId, trackValues);
       console.log("Tracks successfully added to playlist.");
     }
 
