@@ -5,7 +5,7 @@ import threading
 app = Flask(__name__)
 
 @app.post("/scrape/ticketmaster")
-def hello():
+def ticketmaster_scrape():
     data = request.get_json()
     callback_url = data.get("callbackUrl")
 

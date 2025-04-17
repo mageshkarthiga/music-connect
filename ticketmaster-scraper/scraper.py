@@ -88,19 +88,6 @@ def scrape_ticketmaster(callback_url):
         print("Example: ", all_data[0])
     finally:
         driver.quit()
-
-    # time.sleep(5)  # pretend it's a long operation
-
-    # all_data = [
-    #     {
-    #         "eventDescription": "Buy tickets for VALLEY...",
-    #         "eventImageUrl": "https://static.ticketmaster.sg/images/activity/25sg_valley.jpg",
-    #         "eventName": "VALLEY: WATER THE FLOWERS...",
-    #         "eventUrl": "https://ticketmaster.sg/activity/detail/25sg_valley",
-    #         "location": "Singapore",
-    #         "venueName": "Capitol Theatre"
-    #     }
-    # ]
     
     try:
         res = requests.post(callback_url, json=all_data)

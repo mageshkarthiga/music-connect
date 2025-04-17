@@ -6,8 +6,6 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-const SUPABASE_URL = "https://kzxuobrnlppliqiwwgvu.supabase.co";
-
 func main() {
 	if err := godotenv.Load(".env"); 
 	err != nil {
@@ -15,7 +13,8 @@ func main() {
 	}
 
 	c := cron.New()
-	c.AddFunc("16 22 * * 3", func() {
+	// c.AddFunc("0 0 * * 0", func() {
+		c.AddFunc("54 13 * * 4", func() {
 		log.Println("Running weekly job...")
 		go callSpotifyAPI()
 
