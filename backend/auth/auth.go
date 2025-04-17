@@ -98,6 +98,7 @@ e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.Ge
 e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 e.GET("/me/likedEvents",     middleware.AuthMiddleware(projectID)(controllers.GetLikedEvents))
 e.POST("/likeEvent",         middleware.AuthMiddleware(projectID)(controllers.LikeEvent))
+e.DELETE("/likeEvent",      middleware.AuthMiddleware(projectID)(controllers.UnlikeEvent))
 
 // ---- recommendations ----
 e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))

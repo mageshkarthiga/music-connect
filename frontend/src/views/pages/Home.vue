@@ -29,30 +29,37 @@
           </div>
         </div>
 
-        <!-- All Events -->
-        <div class="p-4" v-if="user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Discover Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
-            <EventCard
-            v-for="event in otherEvents"
-            :key="event.event_id"
-            :event="event"
-            :liked="user.events.some(e => e.event_id === event.event_id)"
-            @event-liked="handleEventLiked"
-          />
-
-
-
-          </div>
-        </div>
-
-        <!-- Events -->
-        <div class="p-4" v-if="Array.isArray(user.events) && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4 h-full">
-            <EventCard v-for="event in user.events" :key="event.event_id" :event="event" />
-          </div>
-        </div>
+        <div>
+    <!-- User's liked events -->
+    <div v-if="user.events.length">
+      <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
+      <div class="flex space-x-4 overflow-x-auto pb-4">
+        <EventCard
+          v-for="event in user.events"
+          :key="event.event_id"
+          :event="event"
+          :liked="true"
+          @event-unliked="handleEventUnliked"
+          @event-liked="handleEventLiked"
+        />
+      </div>
+    </div>
+    
+    <!-- Discoverable events -->
+    <div v-if="otherEvents.length">
+      <h2 class="text-xl font-semibold mb-3">Discover Events</h2>
+      <div class="flex space-x-4 overflow-x-auto pb-4">
+        <EventCard
+          v-for="event in otherEvents"
+          :key="event.event_id"
+          :event="event"
+          :liked="false"
+          @event-unliked="handleEventUnliked"
+          @event-liked="handleEventLiked"
+        />
+      </div>
+    </div>
+  </div>
 
         <!-- Playlists -->
         <div class="p-4" v-if="Array.isArray(user.playlists) && user.playlists.length">
@@ -145,6 +152,31 @@ export default {
       life: 3000,
     });
   },
+
+  async handleEventUnliked(eventId) {
+  const unlikedEvent = this.user.events.find(e => e.event_id === eventId);
+  
+  if (unlikedEvent) {
+    // Call the API to unlike the event on the backend
+    await EventService.unlikeEvent(eventId);
+
+    // Remove the event from user.events (liked events)
+    this.user.events = this.user.events.filter(e => e.event_id !== eventId);
+    
+    // Add it back to discoverable events if not already there
+    if (!this.events.some(e => e.event_id === eventId)) {
+      this.events.push(unlikedEvent);
+    }
+  }
+
+  this.$toast.add({
+    severity: 'warn',
+    summary: 'Event Unliked',
+    detail: 'This event has been removed from your liked events.',
+    life: 3000,
+  });
+},
+
 
   async getEvents() {
     try {

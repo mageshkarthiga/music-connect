@@ -244,3 +244,27 @@ func LikeEvent(c echo.Context) error {
     return c.JSON(http.StatusOK, "Event liked successfully")
 }
 
+func UnlikeEvent(c echo.Context) error {
+    uid, ok := c.Get("uid").(uint)
+    if !ok {
+        return c.JSON(http.StatusUnauthorized, "User ID is required")
+    }
+
+    var req struct {
+        EventID uint `json:"event_id"`
+    }
+
+    if err := c.Bind(&req); err != nil {
+        return c.JSON(http.StatusBadRequest, "Invalid request body")
+    }
+
+    if err := config.DB.
+        Where("user_id = ? AND event_id = ?", uid, req.EventID).
+        Delete(&models.UserEvent{}).Error; err != nil {
+        log.Printf("Error unliking event %d by user %d: %v", req.EventID, uid, err)
+        return c.JSON(http.StatusInternalServerError, "Failed to unlike event")
+    }
+
+    return c.JSON(http.StatusOK, "Event unliked successfully")
+}
+

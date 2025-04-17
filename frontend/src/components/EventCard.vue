@@ -6,14 +6,15 @@
     <Card class="w-full h-full">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4">{{ event.event_name }}</div>
+          <div class="font-semibold text-xl mb-4">
+            {{ event.event_name }}
+          </div>
           <button @click.stop="toggleLike">
             <component
               :is="'lucide-heart'"
-              class="w-5 h-5"
+              class="w-5 h-5 transition-all"
               :class="isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'"
             />
-
           </button>
         </div>
       </template>
@@ -42,44 +43,39 @@ export default {
   },
   props: {
     event: Object,
+    liked: Boolean,
   },
-  props: {
-  event: Object,
-  liked: Boolean,
-},
-data() {
-  return {
-    isLiked: this.liked,
-  };
-},
-methods: {
-  async toggleLike() {
-    if (this.isLiked) return; // Already liked, don’t try again
-    try {
-      await EventService.likeEvent(this.event.event_id);
-      this.isLiked = true;
-      this.$emit("event-liked", this.event.event_id); // Emit to parent
-    } catch (err) {
-      if (err.response?.data === "Event already liked") {
-        this.isLiked = true; // Set liked locally
-        return; // No toast needed
-      }
-      console.error("Failed to like event:", err);
+  data() {
+    return {
+      isLiked: this.liked,
+    };
+  },
+  watch: {
+    liked(newVal) {
+      this.isLiked = newVal;
     }
   },
-},
-
+  methods: {
+    openEventUrl() {
+      if (this.event.event_url) {
+        window.open(this.event.event_url, "_blank");
+      }
+    },
     async toggleLike() {
-  if (this.liked) return;
-  try {
-    await EventService.likeEvent(this.event.event_id);
-    this.liked = true;
-
-    // Emit to parent
-    this.$emit("event-liked", this.event.event_id);
-  } catch (err) {
-    console.error("Failed to like event:", err);
-  }
-}
+      try {
+        if (this.isLiked) {
+          await EventService.unlikeEvent(this.event.event_id);
+          this.isLiked = false;
+          this.$emit("event-unliked", this.event.event_id);
+        } else {
+          await EventService.likeEvent(this.event.event_id);
+          this.isLiked = true;
+          this.$emit("event-liked", this.event.event_id);
+        }
+      } catch (err) {
+        console.error("Failed to toggle like:", err);
+      }
+    },
+  },
 };
 </script>

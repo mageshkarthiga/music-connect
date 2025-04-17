@@ -95,4 +95,19 @@ export default {
     });
     return response.data;
   },
+
+// EventService.js or inside your component
+async unlikeEvent(eventId) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/likeEvent`, {
+      withCredentials: true,
+      data: { event_id: eventId },  // Send the event_id in the request body
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to unlike event:", error);
+    throw error;
+  }
+}
+
 };
