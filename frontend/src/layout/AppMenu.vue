@@ -349,10 +349,10 @@ const model = ref([
     <!-- Playlist Dialog -->
     <AddPlaylistDialog
       v-if="showPlaylistDialog"
+      @save="handlePlaylistSave"
       @close="closeAddPlaylistDialog"
       @playlist-added="addNewPlaylist"
     />
-
   </div>
 </template>
 

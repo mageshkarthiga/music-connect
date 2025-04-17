@@ -32,7 +32,9 @@ const TRACK_URL = `${API_BASE_URL}/tracks`; // Assuming this is the endpoint for
 // Function to fetch all tracks
 export const getTracks = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/tracks`);
+    const response = await axios.get(`${API_BASE_URL}/tracks`,{
+      withCredentials: true,
+    });
     return response.data as Track[]; // Assuming response contains a list of tracks
   } catch (error) {
     console.error("Error fetching tracks:", error);
@@ -107,4 +109,14 @@ export const getUserTracksById = async (userId: number): Promise<Track[]> => {
     console.error("Error fetching user tracks:", error);
     throw error;
   }
+};
+
+export default {
+  getTracks,
+  getTrackById,
+  addTrackForUser,
+  updateTrackForUser,
+  deleteTrackForUser,
+  getUserTracks,
+  getUserTracksById,
 };

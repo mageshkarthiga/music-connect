@@ -40,6 +40,7 @@
 import PlaylistService from "@/service/PlaylistService"; // Import PlaylistService
 import TrackCard from "@/components/TrackCard.vue"; // Import the TrackCard component
 import userService from "@/service/UserService";
+import trackService from "@/service/TrackService"; // Import TrackService
 import axios from "axios"; // Import axios for fetching tracks
 import { API_BASE_URL } from "@/service/apiConfig"; // Import API base URL
 
@@ -49,9 +50,10 @@ export default {
   },
   props: {
     showDialog: Boolean,
-    onClose: Function,
     onSave: Function,
-    isDarkMode: Boolean, // New prop to track theme mode
+    onClose: Function,
+    // playlistAdded: 
+    // isDarkMode: Boolean, // New prop to track theme mode
   },
   data() {
     return {
@@ -74,10 +76,10 @@ export default {
 
     async fetchTracks() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/tracks`, {
-          withCredentials: true,
-        });
-        this.tracks = response.data; // Store fetched tracks in tracks array
+        const tracks = await trackService.getTracks();
+        console.log("Fetched Tracks:", tracks);
+        this.tracks = tracks; 
+
       } catch (error) {
         console.error("Error fetching tracks:", error);
       }
@@ -89,10 +91,8 @@ export default {
       console.log("Selected Track ID:", trackId);
 
       if (index > -1) {
-        // Remove from selected
         this.selectedTracks.splice(index, 1);
       } else {
-        // Add to selected
         this.selectedTracks.push(trackId);
       }
 
@@ -111,54 +111,56 @@ export default {
 
     async savePlaylist() {
   // Convert the hash map to an array of selected track IDs
-  const trackIds = Object.keys(this.selectedTracks)
-    .filter(trackId => this.selectedTracks[trackId])
-    .map(id => parseInt(id)); // ensure IDs are numbers
+      const trackIds = Object.keys(this.selectedTracks)
+        .filter(trackId => this.selectedTracks[trackId])
+        .map(id => parseInt(id)); // ensure IDs are numbers
 
-  console.log("Selected track IDs:", trackIds);
+      console.log("Selected track IDs:", trackIds);
 
-  const trackValues = Object.values(this.selectedTracks);
-  console.log("Selected track values:", trackValues);
+      const trackValues = Object.values(this.selectedTracks);
+      console.log("Selected track values:", trackValues);
 
-  let newPlaylist;
+      let newPlaylist;
 
-  try {
-    // Step 1: Create the playlist
-    newPlaylist = await PlaylistService.createPlaylistForUser(
-      this.playlistName,        // name
-      this.trackImageUrl,       // playlistImageUrl
-      this.userId               // userId
-    );
+      try {
+        // Step 1: Create the playlist
+        newPlaylist = await PlaylistService.createPlaylistForUser(
+          this.playlistName,        // name
+          this.trackImageUrl,       // playlistImageUrl
+          this.userId               // userId
+        );
 
-    console.log("New Playlist created:", newPlaylist);
+        console.log("New Playlist created:", newPlaylist);
 
-  } catch (error) {
-    console.error("Error creating playlist:", error);
-    return;
-  }
+      } catch (error) {
+        console.error("Error creating playlist:", error);
+        return;
+      }
 
-  try {
-    const playlistId = newPlaylist.playlist_id; // Now it's defined properly
-    console.log("New Playlist ID:", playlistId);
-    console.log("Track IDs to add:", trackValues);
-    
-    // Step 2: Add tracks to the newly created playlist
-    if (trackValues.length > 0) {
-      await PlaylistService.addTracksToPlaylist(playlistId, trackValues);
-      console.log("Tracks successfully added to playlist.");
-    }
+      try {
+        const playlistId = newPlaylist.playlist_id; 
+        console.log("New Playlist ID:", playlistId);
+        console.log("Track IDs to add:", trackValues);
+        
+        // Add tracks to the newly created playlist
+        if (trackValues.length > 0) {
+          await PlaylistService.addTracksToPlaylist(playlistId, trackValues);
+          console.log("Tracks successfully added to playlist.");
+        }
 
-    // Step 3: Notify parent and close dialog
-    if (this.onSave) {
-      this.onSave(newPlaylist); // Notify parent
-    }
+        // Notify parent and close dialog
+        if (this.onSave) {
+          this.onSave(newPlaylist); 
+        }
 
-    this.closeDialog();
+        this.$emit("playlist-added", newPlaylist);
 
-  } catch (error) {
-    console.error("Error saving playlist:", error);
-  }
-},
+        this.closeDialog();
+
+      } catch (error) {
+        console.error("Error saving playlist:", error);
+      }
+    },
 
     closeDialog() {
       if (this.onClose) {
@@ -170,6 +172,16 @@ export default {
     this.getUser(); // Fetch user details when the dialog is mounted
     this.fetchTracks(); // Fetch all tracks when the dialog is mounted
   },
+
+  computed: {
+    newPlaylist() {
+      return {
+        name: this.playlistName,
+        imageUrl: this.trackImageUrl,
+        userId: this.userId,
+      };
+    },
+  }
 };
 </script>
 
