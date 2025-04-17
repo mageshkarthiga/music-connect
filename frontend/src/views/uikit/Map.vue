@@ -47,7 +47,7 @@ function createMarkerImage(src, isSelf = false, isEvent = false) {
   return wrapper;
 }
 
-function createPopupOverlay(lat, lng, title, description, image) {
+function createPopupOverlay(lat, lng, title, description, image, link = null) {
   if (currentPopup) {
     currentPopup.setMap(null);
     currentPopup = null;
@@ -65,6 +65,19 @@ function createPopupOverlay(lat, lng, title, description, image) {
       this.div = document.createElement("div");
       this.div.style.position = "absolute";
       this.div.style.zIndex = 9999;
+      const buttonHTML = link
+        ? `<a href="${link}" style="
+              display:inline-block;
+              margin-top:8px;
+              background:#2563eb;
+              color:white;
+              padding:6px 12px;
+              border-radius:4px;
+              text-align:center;
+              text-decoration:none;
+              font-size:14px;
+            ">View Profile</a>`
+        : "";
       this.div.innerHTML = `
         <div style="
           background: white;
@@ -77,6 +90,7 @@ function createPopupOverlay(lat, lng, title, description, image) {
           <img src="${image}" style="width:100%; height:120px; object-fit:cover; border-radius:4px; margin-bottom:8px;" />
           <h3 style="margin: 0 0 4px; font-size: 16px;">${title}</h3>
           <p style="margin: 0; font-size: 14px; color: #555;">${description}</p>
+          ${buttonHTML}
         </div>
       `;
       this.getPanes().floatPane.appendChild(this.div);
@@ -122,7 +136,8 @@ onMounted(() => {
     userLocations.value = locatedUsers.map((user) => {
       const { lat, lon } = userLocs[user.firebase_uid];
       return {
-        name: user.user_name || `User: ${user.id}`,
+        id: user.user_id,
+        name: user.user_name || `User: ${user.user_id}`,
         lat,
         lon,
         firebase_uid: user.firebase_uid,
@@ -234,7 +249,8 @@ function initMapCallback() {
             user.lon,
             user.name,
             "Recently active in this area.",
-            imageSrc
+            imageSrc,
+            `/profile?user_id=${user.id}`
           );
         });
       });
