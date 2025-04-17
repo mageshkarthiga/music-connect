@@ -15,15 +15,15 @@
       <template v-if="hasContent">
 
         <!-- Tracks Section -->
-        <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg"
+        <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg mb-10"
           v-if="user.tracks.length">
           <!-- Title with Emoji -->
-          <h2 class="text-3xl font-bold text-center text-white mb-4">
+          <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4">
             🏆 Top Played Tracks
           </h2>
 
           <!-- Subheading with Emoji -->
-          <p class="text-center text-lg text-white mb-6 opacity-90">
+          <p class="text-center text-lg  text-gray-700 mb-6 opacity-90">
             🌟 Your most played tracks, right here!
           </p>
 
@@ -51,9 +51,20 @@
         </div>
 
         <!-- No Tracks Message -->
-        <div v-if="!user.tracks.length" class="p-4">
-          <p>No tracks found. Start Listening Today! 🎧</p>
+        <div v-if="!user.tracks.length"
+          class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-xl text-center mb-10">
+          <h2 class="text-3xl font-extrabold text-gray-800 mb-4">
+            ❗️ No Top Tracks Yet
+          </h2>
+          <p class="text-lg font-medium text-gray-700 mb-4">
+            Start listening to your favourite tunes and watch your top tracks appear right here! 🎧
+          </p>
+          <p class="text-sm text-gray-600 italic mb-6">
+            Every track counts! Start playing your music and track your journey. 🎶
+          </p>
         </div>
+
+
 
         <!-- Events -->
         <div class="p-4" v-if="Array.isArray(user.events) && user.events.length">
