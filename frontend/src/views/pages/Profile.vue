@@ -11,11 +11,17 @@
       <span>Loading…</span>
     </div>
 
+
+
     <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
       {{ errorMessage }}
     </div>
 
-    <div v-else class="profile-details p-card p-p-4 p-shadow-4">
+
+
+
+    <div v-else class="profile-details p-card p-p-4 p-shadow-4 m-4 p-8">
+
       <img
         :src="user.profile_photo_url || '/public/profile.svg'"
         alt="Profile Photo"
@@ -29,16 +35,33 @@
           margin: 0 auto; /* centres horizontally */
         "
       />
-      <h1 class="p-mt-3">{{ user.userName }}</h1>
-      <p><strong>Email:</strong> {{ user.email_address }}</p>
-      <p><strong>Phone:</strong> {{ user.phone_number }}</p>
-      <p><strong>Location:</strong> {{ user.location }}</p>
+      <br> 
+      
+      <div class="p-d-flex p-flex-column">
+  <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
+  <p class="text-sm text-muted p-mt-1">
+    {{ user.email_address }} · {{ user.phone_number }} · {{ user.location }}
+  </p>
+</div>
+</div>
+
+
+
+    <br>
 
       <template v-if="hasContent">
         <section class="p-4" v-if="user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Events</h2>
+          <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
+
           <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard v-for="e in user.events" :key="e.event_id" :event="e" />
+            <EventCard
+              v-for="event in user.events"
+              :key="event.event_id"
+              :event="event"
+              :liked="true"
+              @event-unliked="handleEventUnliked"
+              @event-liked="handleEventLiked"
+            />
           </div>
         </section>
 
@@ -54,7 +77,7 @@
         </section> -->
 
         <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <h2 class="text-xl font-semibold mb-3 text-left">Liked Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <TrackCard v-for="t in user.tracks" :key="t.track_id" :track="t" />
           </div>
@@ -66,7 +89,7 @@
         </section> -->
       </template>
     </div>
-  </div>
+
 </template>
 
 <script>

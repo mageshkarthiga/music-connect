@@ -25,13 +25,19 @@
           <h2 class="text-xl font-semibold mb-3">Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <!-- Handle track-selected event -->
-            <TrackCard
-              v-for="track in user.tracks"
-              :key="track.track_id"
-              :track="track"
-              :state="'redirect'"
-              @track-selected="setSelectedTrackURI"
-            />
+
+                      <TrackCard
+            v-for="track in user.tracks"
+            :key="track.track_id"
+            :track="track"
+            :state="'redirect'"
+            :liked="likedTracks.includes(track.track_id)"
+            :selectedTracks="selectedTracks"
+            @track-liked="handleTrackLiked"
+            @track-unliked="handleTrackUnliked"
+            @track-selected="setSelectedTrackURI"
+          />
+
           </div>
         </div>
 
@@ -110,6 +116,8 @@ export default {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       events: [],
+      likedTracks: [],
+      selectedTracks: [],
       errorMessage: "",
       selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
       filter: 'all',  // Default filter value
@@ -131,6 +139,21 @@ export default {
     }
   },
   methods: {
+
+    async handleTrackLiked(trackId) {
+      const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
+      if (likedTrack) {
+        this.likedTracks.push(likedTrack.track_id);
+        this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
+      }
+
+      this.$toast.add({
+        severity: 'success',
+        summary: 'Track Liked',
+        detail: 'This track has been added to your liked tracks!',
+        life: 3000,
+      });
+    },
     async handleEventLiked(eventId) {
       const likedEvent = this.otherEvents.find(e => e.event_id === eventId);
       if (likedEvent) {
