@@ -140,6 +140,9 @@ const signInWithGoogle = async () => {
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     const additionalUserInfo = getAdditionalUserInfo(userCredential);
+    const user = userCredential.user;
+    const accessToken = await getIdToken(user);
+    await AuthService.authenticateUser(accessToken);
     console.log("Google Sign-In successful:", userCredential.user);
 
     if (additionalUserInfo?.isNewUser) {
