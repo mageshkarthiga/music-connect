@@ -13,12 +13,10 @@
       </div>
     </div>
   </template>
-  
   <script>
-  import axios from "axios";
-  import { API_BASE_URL } from "@/service/apiConfig";
   import TrackList from "@/components/TrackList.vue";
   import PlaylistService from "@/service/PlaylistService";
+  
   export default {
     name: "Playlist",
     components: {
@@ -30,30 +28,30 @@
       };
     },
     async mounted() {
-  const playlistId = this.$route.query.id;
-  console.log("Playlist ID:", playlistId); 
-
-  try {
-    this.playlist = await PlaylistService.getPlaylistById(playlistId);
-    console.log("Playlist data:", this.playlist); 
-  } catch (error) {
-    console.error("Error fetching playlist:", error);
-  }
-},
-
+      await this.fetchPlaylist();
+    },
+    watch: {
+      '$route.query.id': {
+        handler() {
+          this.fetchPlaylist();
+        },
+        immediate: false,
+      }
+    },
+    methods: {
+      async fetchPlaylist() {
+        const playlistId = this.$route.query.id;
+        console.log("Fetching playlist ID:", playlistId); 
+  
+        try {
+          this.playlist = await PlaylistService.getPlaylistById(playlistId);
+          console.log("Fetched playlist:", this.playlist); 
+          this.$emit("playlistLoaded", this.playlist);
+        } catch (error) {
+          console.error("Error fetching playlist:", error);
+        }
+      },
+    },
   };
   </script>
-  
-  <style scoped>
-  .playlist-page {
-    padding: 2rem;
-  }
-  
-  .loading,
-  .no-tracks {
-    text-align: center;
-    margin-top: 2rem;
-    color: #aaa;
-  }
-  </style>
   
