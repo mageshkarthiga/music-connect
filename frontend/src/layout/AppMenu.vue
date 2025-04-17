@@ -354,6 +354,7 @@ const model = ref([
       @close="closeAddPlaylistDialog"
       @playlist-added="addNewPlaylist"
     />
+
   </div>
 </template>
 

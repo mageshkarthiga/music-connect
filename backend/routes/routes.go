@@ -38,6 +38,8 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.PUT("/events/:id", controllers.UpdateEvent)                // Update an existing event by ID
 	e.DELETE("/events/:id", controllers.DeleteEvent)             // Delete an event by ID
 	e.POST("/users/:userId/events", controllers.AddEventForUser) // Add an event for a specific user
+    e.GET("me/likedEvents", controllers.GetLikedEvents)  // Get liked events for a user
+    e.POST("/likeEvent", controllers.LikeEvent)            // Post request to like an event
 
 	//Playlist Routes
 	e.GET("/playlists", controllers.GetPlaylists)          // Fetch all playlists

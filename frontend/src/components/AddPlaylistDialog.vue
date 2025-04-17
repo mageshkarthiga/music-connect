@@ -1,4 +1,6 @@
 <template>
+
+  
   <div :class="'dialog-overlay'">
     <div :class="['dialog-box', { 'dark-theme': isDarkMode }]">
       <h3 :class="{'light': !isDarkMode, 'dark': isDarkMode}">Create Playlist</h3>
