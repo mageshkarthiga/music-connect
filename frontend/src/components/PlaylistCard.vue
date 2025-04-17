@@ -3,7 +3,7 @@
     <Card @click="navigateToPlaylist" class="cursor-pointer">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4">
+          <div class="font-semibold text-xl mb-4 clickable-link">
             {{ playlist.playlist_name }}
           </div>
         </div>
@@ -39,3 +39,17 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.clickable-link {
+    color: black;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.clickable-link:hover {
+    color: #10b981;
+    text-decoration: none;
+}
+
+</style>

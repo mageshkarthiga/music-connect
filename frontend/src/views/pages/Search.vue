@@ -58,7 +58,7 @@ function initFilters1() {
                                 <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle"
                                     size="large" />
                                 <span>
-                                    <a :href="`/profile?user_id=${data.user_id}`">
+                                    <a :href="`/profile?user_id=${data.user_id}`" class="clickable-link">
                                         {{ data.user_name }}
                                     </a>
                                 </span>

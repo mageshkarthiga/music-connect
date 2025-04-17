@@ -1,21 +1,19 @@
 package auth
 
 import (
-	"backend/controllers" 
+	"backend/controllers"
 	"backend/middleware"
-	"github.com/labstack/echo/v4"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
-	"fmt"
 )
-
 
 func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.POST("/auth/login", func(c echo.Context) error {
 
 		projectID := "music-connect-608f6"
-
 
 		authHeader := c.Request().Header.Get("Authorization")
 		if authHeader == "" {
@@ -45,7 +43,6 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		fmt.Printf("projectID: %s\n", projectID)
 		fmt.Printf("Token Issuer: %s\n", claims["iss"])
 		fmt.Printf("Token UID: %s\n", claims["user_id"])
-	
 
 		aud, ok := claims["aud"].(string)
 		if !ok || aud != projectID {
@@ -65,37 +62,41 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 		return c.JSON(http.StatusOK, map[string]string{
 			"message": "Login successful",
 			"uid":     uid,
-			
 		})
 	})
-// ---- user ----
-e.GET("/users/:id",          middleware.AuthMiddleware(projectID)(controllers.GetUserByUserID))
-e.GET("/users",              middleware.AuthMiddleware(projectID)(controllers.GetUsers))
-e.GET("/me",                 middleware.AuthMiddleware(projectID)(controllers.GetMe))
-e.PUT("/users/:id",          middleware.AuthMiddleware(projectID)(controllers.UpdateUser))
-e.DELETE("/users/:id",       middleware.AuthMiddleware(projectID)(controllers.DeleteUser))
-e.GET("/users/firebase/:uid",middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID))
+	// ---- user ----
+	e.GET("/users/:id", middleware.AuthMiddleware(projectID)(controllers.GetUserByUserID))
+	e.GET("/users", middleware.AuthMiddleware(projectID)(controllers.GetUsers))
+	e.GET("/me", middleware.AuthMiddleware(projectID)(controllers.GetMe))
+	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))
+	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))
+	e.GET("/users/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID))
 
-// ---- tracks ----
-e.GET("/tracks",             middleware.AuthMiddleware(projectID)(controllers.GetTracks))
-e.GET("/me/tracks",          middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
-e.POST("/me/tracks",         middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
-e.GET("/users/:id/tracks",   middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
+	// ---- tracks ----
+	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
+	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
+	e.POST("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
+	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
 
-// ---- playlists ----
-e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
-e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
-e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
+	// ---- playlists ----
+	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
+	e.POST("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
+	e.GET("/users/:id/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
 
-// ---- events ----
-e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))
-e.POST("/events",            middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
-e.PUT("/events/:id",         middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
-e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
-e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
-e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
-e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
+	// ---- events ----
+	e.GET("/events", middleware.AuthMiddleware(projectID)(controllers.GetEvents))
+	e.POST("/events", middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
+	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
+	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
+	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
+	e.GET("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+	e.POST("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 
-// ---- recommendations ----
-e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
+	// ---- recommendations ----
+	e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
+
+	// ---- chat ----
+	e.GET("/rooms/:roomName/messages", middleware.AuthMiddleware(projectID)(controllers.GetMessagesForRoom))
+	e.GET("/users/:userID/chat-history", middleware.AuthMiddleware(projectID)(controllers.GetUsersWithChatHistory)) 
+
 }

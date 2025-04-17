@@ -14,3 +14,12 @@ func GetMessagesForRoom(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, messages)
 }
+
+func GetUsersWithChatHistory(c echo.Context) error {
+	userID := c.Param("userID")
+	users, err := chat.GetUsersWithChatHistory(userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, users)
+}

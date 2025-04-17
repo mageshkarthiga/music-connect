@@ -156,6 +156,41 @@ func GetMessagesForRoom(roomName string) ([]Message, error) {
 	return messages, nil
 }
 
+func GetUsersWithChatHistory(userID string) ([]string, error) {
+	ctx := context.Background()
+	otherUsers := []string{}
+
+	iter := FirestoreClient.Collection("rooms").
+		Where("participants", "array-contains", userID).
+		Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		data := doc.Data()
+		participants, ok := data["participants"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for _, p := range participants {
+			uid, ok := p.(string)
+			if ok && uid != userID {
+				otherUsers = append(otherUsers, uid)
+			}
+		}
+	}
+
+	return otherUsers, nil
+}
+
+
 func (room *Room) GetName() string {
 	return room.name
 }
