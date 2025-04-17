@@ -123,10 +123,6 @@ const PlaylistService = {
         `${API_BASE_URL}/me/playlists`,
         playlistData,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getCookie('XSRF-TOKEN')}`,
-          },
           withCredentials: true,
         }
       );

@@ -1,69 +1,85 @@
 <template>
-
-  
-  <div :class="'dialog-overlay'">
-    <div :class="['dialog-box', { 'dark-theme': isDarkMode }]">
-      <h3 :class="{'light': !isDarkMode, 'dark': isDarkMode}">Create Playlist</h3>
-
-      <!-- Playlist Name -->
-      <div>
-        <label for="playlistName">Playlist Name:  </label>
-        <input
+  <Dialog
+    :visible="showDialog"
+    :modal="true"
+    :closable="true"
+    :breakpoints="{'960px': '75vw', '640px': '90vw'}"
+    :style="{ width: '50vw' }"
+    header="Create Playlist"
+    @hide="closeDialog"
+  >
+    <!-- Playlist Name -->
+    <div class="p-fluid">
+      <div class="field">
+        <label for="playlistName">Playlist Name</label>
+        <InputText
           v-model="playlistName"
           id="playlistName"
-          type="text"
           placeholder="Enter playlist name"
-          :class="{'light': !isDarkMode, 'dark': isDarkMode}"
         />
       </div>
+    </div>
 
-      <!-- Track Selection -->
-      <div class="track-list">
+    <!-- Track Selection -->
+    <div class="track-list">
+      <h6>Select Tracks:</h6>
+      <div v-if="tracks.length > 0">
         <TrackCard
           v-for="track in tracks"
           :key="track.track_id"
           :track="track"
-          :state="'select'"  
+          :state="'select'"
           :selectedTracks="selectedTracks"
           @toggle="toggleTrack"
         />
       </div>
-
-      <!-- Buttons -->
-      <Button @click="savePlaylist" :disabled="!playlistName || !selectedTracks.length ">
-        Save Playlist
-      </Button>
-      <Button @click="closeDialog">Cancel</Button>
+      <div v-else>
+        <p>No tracks available to display.</p>
+      </div>
     </div>
-  </div>
+
+    <!-- Buttons -->
+    <template #footer>
+      <Button
+        label="Save Playlist"
+        icon="pi pi-check"
+        @click="savePlaylist"
+        :disabled="!playlistName || !selectedTracks.length"
+        class="p-button-success"
+      />
+      <Button
+        label="Cancel"
+        icon="pi pi-times"
+        @click="closeDialog"
+        class="p-button-secondary"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script>
-import PlaylistService from "@/service/PlaylistService"; // Import PlaylistService
-import TrackCard from "@/components/TrackCard.vue"; // Import the TrackCard component
+import PlaylistService from "@/service/PlaylistService";
+import TrackCard from "@/components/TrackCard.vue";
 import userService from "@/service/UserService";
-import trackService from "@/service/TrackService"; // Import TrackService
-import axios from "axios"; // Import axios for fetching tracks
-import { API_BASE_URL } from "@/service/apiConfig"; // Import API base URL
+import trackService from "@/service/TrackService";
 
 export default {
   components: {
-    TrackCard, // Register the TrackCard component
+    TrackCard,
   },
   props: {
     showDialog: Boolean,
     onSave: Function,
     onClose: Function,
-    playlistToEdit: Object, // <- if this exists, we're editing
-    // isDarkMode: Boolean, // New prop to track theme mode
+    playlistToEdit: Object,
   },
   data() {
     return {
       playlistName: "",
-      selectedTracks: [], // Array to store selected track IDs
-      tracks: [], // Array to hold all the fetched tracks
-      userId: null, // Store userId here
-      trackImageUrl: "", // Store track image URL here
+      selectedTracks: [],
+      tracks: [],
+      userId: null,
+      trackImageUrl: "",
     };
   },
   methods: {
@@ -79,18 +95,14 @@ export default {
     async fetchTracks() {
       try {
         const tracks = await trackService.getTracks();
-        console.log("Fetched Tracks:", tracks);
-        this.tracks = tracks; 
-
+        this.tracks = tracks;
       } catch (error) {
         console.error("Error fetching tracks:", error);
       }
     },
 
-    // This method will be used to toggle track selection
     toggleTrack(trackId) {
       const index = this.selectedTracks.indexOf(trackId);
-      console.log("Selected Track ID:", trackId);
 
       if (index > -1) {
         this.selectedTracks.splice(index, 1);
@@ -98,67 +110,47 @@ export default {
         this.selectedTracks.push(trackId);
       }
 
-      console.log("Selected Tracks Array:", this.selectedTracks);
-
-      // Set the track image URL to the first selected track's image URL (if there are selected tracks)
       if (this.selectedTracks.length > 0) {
         const firstSelectedTrack = this.tracks.find(track => track.track_id === this.selectedTracks[0]);
         if (firstSelectedTrack) {
-          this.trackImageUrl = firstSelectedTrack.track_image_url; // Assuming the image URL is stored in `track_image_url`
+          this.trackImageUrl = firstSelectedTrack.track_image_url;
         }
       } else {
-        this.trackImageUrl = ""; // Clear the image URL if no tracks are selected
+        this.trackImageUrl = "";
       }
     },
 
     async savePlaylist() {
-  // Convert the hash map to an array of selected track IDs
-      const trackIds = Object.keys(this.selectedTracks)
-        .filter(trackId => this.selectedTracks[trackId])
-        .map(id => parseInt(id)); // ensure IDs are numbers
-
-      console.log("Selected track IDs:", trackIds);
-
-      const trackValues = Object.values(this.selectedTracks);
-      console.log("Selected track values:", trackValues);
+      if (!this.userId) {
+        console.error("User ID is missing");
+        return;
+      }
 
       let newPlaylist;
 
       try {
-        // Step 1: Create the playlist
         newPlaylist = await PlaylistService.createPlaylistForUser(
-          this.playlistName,        // name
-          this.trackImageUrl,       // playlistImageUrl
-          this.userId               // userId
+          this.playlistName,
+          this.trackImageUrl,
+          this.userId
         );
-
-        console.log("New Playlist created:", newPlaylist);
-
       } catch (error) {
         console.error("Error creating playlist:", error);
         return;
       }
 
       try {
-        const playlistId = newPlaylist.playlist_id; 
-        console.log("New Playlist ID:", playlistId);
-        console.log("Track IDs to add:", trackValues);
-        
-        // Add tracks to the newly created playlist
-        if (trackValues.length > 0) {
-          await PlaylistService.addTracksToPlaylist(playlistId, trackValues);
-          console.log("Tracks successfully added to playlist.");
+        const playlistId = newPlaylist.playlist_id;
+        if (this.selectedTracks.length > 0) {
+          await PlaylistService.addTracksToPlaylist(playlistId, this.selectedTracks);
         }
 
-        // Notify parent and close dialog
         if (this.onSave) {
-          this.onSave(newPlaylist); 
+          this.onSave(newPlaylist);
         }
 
         this.$emit("playlist-added", newPlaylist);
-
         this.closeDialog();
-
       } catch (error) {
         console.error("Error saving playlist:", error);
       }
@@ -166,372 +158,36 @@ export default {
 
     closeDialog() {
       if (this.onClose) {
-        this.onClose(); // Close the dialog when done
+        this.onClose();
       }
     },
   },
   mounted() {
-    this.getUser(); // Fetch user details when the dialog is mounted
-    this.fetchTracks(); // Fetch all tracks when the dialog is mounted
-  },
-
-  computed: {
-    newPlaylist() {
-      return {
-        name: this.playlistName,
-        imageUrl: this.trackImageUrl,
-        userId: this.userId,
-      };
-    },
+    this.getUser();
+    this.fetchTracks();
   },
 
   watch: {
-  playlistToEdit: {
-    immediate: true,
-    handler(playlist) {
-      if (playlist) {
-        this.playlistName = playlist.name;
-        this.trackImageUrl = playlist.image_url;
-        this.selectedTracks = [...playlist.tracks.map(t => t.track_id)];
+    playlistToEdit: {
+      immediate: true,
+      handler(playlist) {
+        if (playlist) {
+          this.playlistName = playlist.name;
+          this.trackImageUrl = playlist.image_url;
+          this.selectedTracks = playlist.tracks.map(t => t.track_id);
+        }
       }
     }
-  }
-},
-
+  },
 };
 </script>
 
 <style scoped>
-
 .track-list {
-  margin: 200px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Increased minimum width for better spacing */
-  gap: 24px; /* Increased the gap between track cards */
-}
-
-.track-card {
-  border-radius: 12px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.dark .track-list{
-  background-color: #2d3748; /* Darker background */
-  color: #fff; /* White text */
-  margin: 0;
-
-}
-
-.light .track-list{
-  background-color: #f8f9fa; /* Light background */
-  color: #000; /* Black text */
-}
-
-.dark .dialog-box {
-  background-color: #2d3748; /* Darker background */
-  color: #fff; /* White text */
-}
-
-.light .dialog-box {
-  background-color: #f8f9fa; /* Light background */
-  color: #000; /* Black text */
-}
-
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-/* Light mode styles */
-.dialog-box {
-  background-color: white;
   color: black;
-  padding: 20px;
-  border-radius: 8px;
-  width: 600px;
-  max-height: 60vh;
-  overflow-y: auto;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h3.light {
-  color: black;
-  margin-bottom: 20px;
-}
-
-h3.dark {
-  color: white;
-}
-
-.light .dialog-box {
-  background-color: #f8f9fa;
-  color: #212529;
-}
-
-.dark .dialog-box {
-  background-color: #343a40;
-  color: white;
-}
-
-.track-list {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
-}
-
-/* Dark mode styles */
-.dialog-overlay.dark-theme {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.dialog-box.dark-theme {
-  background-color: #333;
-  color: white;
-}
-
-.dialog-box.dark-theme button {
-  background-color: #444;
-  color: white;
-  border: 1px solid #666;
-}
-
-.dialog-box.dark-theme input {
-  background-color: #555;
-  color: white;
-  border: 1px solid #777;
-}
-
-/* Input field styles for light and dark themes */
-input.light {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
-}
-
-input.dark {
-  background-color: #444;
-  color: #fff;
-  border: 1px solid #666;
-}
-
-input::placeholder {
-  color: #aaa;
-}
-
-/* Placeholder for light and dark modes */
-input.light::placeholder {
-  color: #aaa;
-}
-
-input.dark::placeholder {
-  color: #888;
-}
-
-/* Dark mode styles */
-.dialog-overlay.dark-theme {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.dialog-box.dark-theme {
-  background-color: #2d3748; /* Darker background for the dialog box */
-  color: white; /* White text for better contrast */
-}
-
-h3.dark {
-  color: white; /* White text for dark mode */
-}
-
-.light .dialog-box {
-  background-color: #f8f9fa;
-  color: #212529;
-}
-
-.dark .dialog-box {
-  background-color: #343a40; /* Dark background for dialog box */
-  color: white; /* Light text in dark mode */
-}
-
-.track-list {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
-}
-
-/* Dark mode track-list styles */
-.track-list.dark {
-  background-color: #2d3748; /* Darker background for track-list */
-  color: white; /* Light text for track list items */
-}
-
-/* Input field styles for light and dark themes */
-input.light {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
-}
-
-input.dark {
-  background-color: #444;
-  color: #fff;
-  border: 1px solid #666;
-}
-
-/* Input placeholder styles for light and dark modes */
-input.light::placeholder {
-  color: #aaa;
-}
-
-input.dark::placeholder {
-  color: #888; /* Slightly lighter placeholder text for dark mode */
-}
-
-button.dark {
-  background-color: #444;
-  color: white;
-  border: 1px solid #666;
-}
-
-button.light {
-  background-color: #f8f9fa;
-  color: #212529;
-  border: 1px solid #ccc;
-}
-
-.dark .dialog-box {
-  background-color: #2d3748; /* Darker background */
-  color: white; /* White text */
-}
-
-.light .dialog-box {
-  background-color: #f8f9fa; /* Light background */
-  color: #212529; /* Dark text */
-}
-
-
-.dialog-box.dark-theme button {
-  background-color: #444;
-  color: white;
-  border: 1px solid #666;
-}
-
-.dialog-box.dark-theme input {
-  background-color: #555;
-  color: white;
-  border: 1px solid #777;
-}
-
-.dark  .dialog-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-
-}
-
-.light .dialog-overlay {
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-/* Global styles for dialog box */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.dialog-box {
+  flex-wrap: wrap;
+  gap: 10px;
   padding: 20px;
-  border-radius: 8px;
-  width: 700px;
-  max-height: 60vh;
-  overflow-y: auto;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  color: black; /* Default text color */
 }
-
-h3 {
-  margin-bottom: 20px;
-}
-
-.track-list {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
-}
-
-/* Light mode styles */
-.dialog-overlay.light-theme {
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-.dialog-box.light-theme {
-  background-color: #f8f9fa;
-  color: #212529;
-}
-
-.light input {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
-}
-
-.light button {
-  background-color: #f8f9fa;
-  color: #212529;
-  border: 1px solid #ccc;
-}
-
-/* Dark mode styles */
-.dialog-overlay.dark-theme {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.dialog-box.dark-theme {
-  background-color: #2d3748;
-  color: white;
-}
-
-.dark  h3. {
-  color: white;
-}
-
-.dark  input{
-  background-color: #444;
-  color: #fff;
-  border: 1px solid #666;
-}
-
-.dark .button {
-  background-color: #444;
-  color: white;
-  border: 1px solid #666;
-}
-
-.dark .track-list {
-  background-color: #2d3748;
-  color: white;
-}
-
-.light .track-list {
-  background-color: #f8f9fa;
-  color: #212529;
-}
-
-
 </style>
