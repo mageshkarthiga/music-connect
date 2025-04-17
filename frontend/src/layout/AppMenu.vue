@@ -320,9 +320,13 @@ const model = ref([
 
     <!-- Playlists List -->
     <div v-if="user.playlists.length" class="playlist-list">
-      <div v-for="playlist in user.playlists" :key="playlist.playlist_id" class="playlist-item"
-        @click="navigateToPlaylist(playlist.playlist_id, playlist.playlist_name)">
-        <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
+      <div
+        v-for="playlist in user.playlists"
+        :key="playlist.playlist_id"
+        class="playlist-item"  
+        @click="navigateToPlaylist(playlist.playlist_id,playlist.playlist_name)"
+      >
+        <img :src="playlist.playlist_image_url || `https://i.scdn.co/image/ab67616d0000b2735074bd0894cb1340b8d8a678`" alt="Playlist Image" class="playlist-image" />
         <div class="playlist-info">
           <span class="playlist-name">{{ playlist.playlist_name }}</span>
           <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>

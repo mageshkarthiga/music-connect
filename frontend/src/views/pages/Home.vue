@@ -46,9 +46,9 @@
         </div>
 
         <!-- Artists -->
-        <div class="p-4" v-if="user.tracks.length">
+        <!-- <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
-        </div>
+        </div> -->
 
         <div class="p-4">
           <div class="font-semibold text-xl mb-4">Recommended music</div>
@@ -63,10 +63,10 @@
         <p>No events, playlists, or tracks found.</p>
       </div>
     </template>
-  </div>
 
-  <!-- Spotify Player -->
-  <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
+    <!-- Spotify Player -->
+    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
+  </div>
 </template>
 
 <script>
