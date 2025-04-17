@@ -12,7 +12,7 @@
 <script>
 import { ref } from "vue";
 import AutoComplete from "primevue/autocomplete";
-
+import { API_BASE_URL } from "@/service/apiConfig";
 export default {
   name: "PlaceAutoComplete",
   components: { AutoComplete },
@@ -29,7 +29,7 @@ export default {
       }
       try {
         const response = await fetch(
-          `http://localhost:3000/api/autocomplete?input=${encodeURIComponent(input)}`
+          `${API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

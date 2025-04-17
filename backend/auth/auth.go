@@ -90,6 +90,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
 	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
 	e.GET("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+	e.GET("/events/venues", middleware.AuthMiddleware(projectID)(controllers.GetEventVenues))
 	e.POST("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 
 	// ---- recommendations ----
@@ -97,6 +98,6 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 
 	// ---- chat ----
 	e.GET("/rooms/:roomName/messages", middleware.AuthMiddleware(projectID)(controllers.GetMessagesForRoom))
-	e.GET("/users/:userID/chat-history", middleware.AuthMiddleware(projectID)(controllers.GetUsersWithChatHistory)) 
+	e.GET("/users/:userID/chat-history", middleware.AuthMiddleware(projectID)(controllers.GetUsersWithChatHistory))
 
 }

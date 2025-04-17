@@ -3,7 +3,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
-import Cookies from "js-cookie"; // Import js-cookie to access cookies
 
 export interface Event {
   id?: number;
@@ -46,6 +45,13 @@ export default {
 
   async getAllEvents() {
     const response = await axios.get<Event[]>(EVENT_URL, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
+
+  async getAllEventVenues() {
+    const response = await axios.get<Event[]>(`${EVENT_URL}/venues`, {
       withCredentials: true,
     });
     return response.data;
