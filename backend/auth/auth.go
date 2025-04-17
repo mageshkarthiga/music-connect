@@ -90,8 +90,10 @@ e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.Ge
 // ---- events ----
 e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))
 e.POST("/events",            middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
+
 e.PUT("/events/:id",         middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
 e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
+e.GET("/events/venues",             middleware.AuthMiddleware(projectID)(controllers.GetEventVenues))
 e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
 e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
 e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
