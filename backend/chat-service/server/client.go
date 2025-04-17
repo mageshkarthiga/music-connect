@@ -1,15 +1,16 @@
-package chat
+package server
 
 import (
+	"chat-service/firebase"
+	"chat-service/models"
+	"cloud.google.com/go/firestore"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
-	"cloud.google.com/go/firestore"
-	"strings"
-	"context"
-	"github.com/gorilla/websocket"
 )
 
 // for readPump goroutine
@@ -43,7 +44,7 @@ type Client struct {
 	UserID   string `json:"user_id"`
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, userID string) *Client {
+func NewClient(conn *websocket.Conn, wsServer *WsServer, userID string) *Client {
 	return &Client{
 		conn:     conn,
 		wsServer: wsServer,
@@ -54,7 +55,7 @@ func newClient(conn *websocket.Conn, wsServer *WsServer, userID string) *Client 
 }
 
 func (client *Client) disconnect() {
-	client.wsServer.unregister <- client
+	client.wsServer.Unregister <- client
 	for room := range client.rooms {
 		room.unregister <- client
 	}
@@ -128,7 +129,7 @@ func (client *Client) writePump() {
 }
 
 func (client *Client) handleNewMessage(jsonMessage []byte) {
-	var message Message
+	var message models.Message
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
 		log.Printf("Error while unmarshalling message: %v", err)
 		return
@@ -136,30 +137,28 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 
 	message.Sender = client.UserID
 	switch message.Action {
-	case SendMessageAction:
-		roomName := message.Target
-		if room := client.wsServer.findRoom(roomName); room != nil {
+	case models.SendMessageAction:
+		if room := client.wsServer.FindRoom(message.Target); room != nil {
 			room.broadcast <- &message
 		}
-	case JoinRoomAction:
-		log.Printf("Processing join-room action for room: %s", message.Message)
+	case models.JoinRoomAction:
 		client.handleJoinRoom(message)
-	case LeaveRoomAction:
+	case models.LeaveRoomAction:
 		client.handleLeaveRoom(message)
 	}
 }
 
-func (client *Client) handleJoinRoom(message Message) {
+func (client *Client) handleJoinRoom(message models.Message) {
 	roomName := message.Message
 
-	room := client.wsServer.findRoom(roomName)
+	room := client.wsServer.FindRoom(roomName)
 	if room == nil {
 		fmt.Printf("Creating new room: %s\n", roomName)
-		room = client.wsServer.createRoom(roomName)
+		room = client.wsServer.CreateRoom(roomName)
 
 		// Save room to Firestore with participants
-		participants := parseParticipantsFromRoomName(roomName) // new helper
-		_, err := FirestoreClient.Collection("rooms").Doc(roomName).Set(context.Background(), map[string]interface{}{
+		participants := ParseParticipantsFromRoomName(roomName) // new helper
+		_, err := firebase.FirestoreClient.Collection("rooms").Doc(roomName).Set(context.Background(), map[string]interface{}{
 			"participants": participants,
 			"created_at":   firestore.ServerTimestamp,
 		}, firestore.MergeAll)
@@ -177,25 +176,12 @@ func (client *Client) handleJoinRoom(message Message) {
 	room.register <- client
 }
 
-func parseParticipantsFromRoomName(name string) []string {
-	// roomName is like "userA-userB"
-	log.Printf("Room name before parsing: %s", name)
-	parts := strings.Split(name, "-")
-	if len(parts) != 2 {
-		log.Printf("Unexpected room format: %s", name)
-		return []string{}
-	}
-	return parts
-}
-
-
-func (client *Client) handleLeaveRoom(message Message) {
-	room := client.wsServer.findRoom(message.Message)
-	if _, ok := client.rooms[room]; ok {
+func (client *Client) handleLeaveRoom(message models.Message) {
+	room := client.wsServer.FindRoom(message.Target)
+	if room != nil {
 		delete(client.rooms, room)
+		room.unregister <- client
 	}
-
-	room.unregister <- client
 }
 
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
@@ -216,9 +202,9 @@ func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(conn, wsServer, userID)
+	client := NewClient(conn, wsServer, userID)
 
 	go client.writePump()
 	go client.readPump()
-	wsServer.register <- client
+	wsServer.Register <- client
 }

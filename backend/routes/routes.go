@@ -5,27 +5,27 @@ import (
 	"backend/services/chat"
 	services "backend/services/spotify"
 
+	"backend/services/maps"
+
 	"github.com/labstack/echo/v4"
-    "backend/services/chat"
-    "backend/services/maps"
 )
 
 // RegisterRoutes sets up API endpoints for users, tracks, events and third party services.
-    
+
 func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
 	// projectID := "music-connect-608f6" // Replace with your actual project ID
 
-    // User Routes        
-    e.GET("/users", controllers.GetUsers)             // Fetch all users
-    
-    // e.GET("/users/:UserID", controllers.GetUser)          // Fetch a user by ID
-    e.GET("/users/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch a user by Firebase UID
-    e.POST("/users", controllers.CreateUser)          // Create a new user
-    e.PUT("/users/:UserID", controllers.UpdateUser)       // Update an existing user by ID
-    e.DELETE("/users/:UserID", controllers.DeleteUser)    // Delete a user by ID
-    // e.POST("/auth/login", controllers.RegisterAuthRoutes)
-    e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
+	// User Routes
+	e.GET("/users", controllers.GetUsers) // Fetch all users
+
+	// e.GET("/users/:UserID", controllers.GetUser)          // Fetch a user by ID
+	e.GET("/users/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch a user by Firebase UID
+	e.POST("/users", controllers.CreateUser)                        // Create a new user
+	e.PUT("/users/:UserID", controllers.UpdateUser)                 // Update an existing user by ID
+	e.DELETE("/users/:UserID", controllers.DeleteUser)              // Delete a user by ID
+	// e.POST("/auth/login", controllers.RegisterAuthRoutes)
+	e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
 	// e.GET("/users/:UserID", controllers.GetUser)          // Fetch a user by ID
 	e.GET("/users/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch a user by Firebase UID
 	e.POST("/users", controllers.CreateUser)                        // Create a new user
@@ -73,19 +73,8 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	// Message Retrieval Route
 	e.GET("/rooms/:roomName/messages", controllers.GetMessagesForRoom)
 
-    // Service Routes
-    e.GET("/spotify/token", services.GetSpotifyToken)
-    // WebSocket Route
-    e.GET("/ws", func(c echo.Context) error {
-        chat.ServeWs(wsServer, c.Response().Writer, c.Request())
-        return nil
-    })
-    // Message Retrieval Route
-    e.GET("/rooms/:roomName/messages", controllers.GetMessagesForRoom)
-        
-    // Google Maps API Proxy Routes
-    e.GET("/places/autocomplete", maps.AutocompleteHandler)
-    e.GET("/maps", maps.MapsJSHandler)
+	// Google Maps API Proxy Routes
+	e.GET("/places/autocomplete", maps.AutocompleteHandler)
+	e.GET("/maps", maps.MapsJSHandler)
 
-    
 }

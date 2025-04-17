@@ -6,7 +6,7 @@
     <Card class="w-full h-full">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4">{{ event.event_name }}</div>
+          <div class="font-semibold text-xl mb-4 clickable-link">{{ event.event_name }}</div>
         </div>
       </template>
       <template v-slot:content>
@@ -37,3 +37,16 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.clickable-link {
+    color: black;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.clickable-link:hover {
+    color: #10b981;
+    text-decoration: none;
+}
+</style>
