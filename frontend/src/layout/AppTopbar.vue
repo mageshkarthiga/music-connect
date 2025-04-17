@@ -18,10 +18,10 @@ function goToSearchBar() {
   router.push("/pages/search");
 }
 function goToChat() {
-  router.push("/pages/chat"); 
+  router.push("/pages/chat");
 }
 function goToMap() {
-  router.push("/uikit/map");
+  router.push("/pages/map");
 }
 function logout() {
   signOut(auth)
@@ -78,15 +78,19 @@ function logout() {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <button type="button" class="layout-topbar-action" @click="goToMap"> 
+          <button type="button" class="layout-topbar-action" @click="goToMap">
             <i class="pi pi-map"></i>
             <span>Map</span>
           </button>
-          <button type="button" class="layout-topbar-action" @click="goToSearchBar">
+          <button
+            type="button"
+            class="layout-topbar-action"
+            @click="goToSearchBar"
+          >
             <i class="pi pi pi-search"></i>
             <span>Search</span>
           </button>
-          <button type="button" class="layout-topbar-action" @click="goToChat"> 
+          <button type="button" class="layout-topbar-action" @click="goToChat">
             <i class="pi pi-comments"></i>
             <span>Chat</span>
           </button>

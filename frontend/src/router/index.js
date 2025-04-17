@@ -94,9 +94,9 @@ const router = createRouter({
           component: () => import("@/views/pages/Crud.vue"),
         },
         {
-          path: "/uikit/map",
+          path: "/pages/map",
           name: "map",
-          component: () => import("@/views/uikit/Map.vue"),
+          component: () => import("@/views/pages/Map.vue"),
         },
         {
           path: "/pages/home",
@@ -107,8 +107,7 @@ const router = createRouter({
           path: "/pages/playlist/:playlist_id/:playlist_name?",
           name: "playlist",
           component: () => import("@/views/pages/Playlist.vue"),
-          props:true,
-
+          props: true,
         },
         {
           path: "/documentation",
@@ -133,7 +132,7 @@ const router = createRouter({
         {
           path: "/pages/map",
           name: "map",
-          component: () => import("@/views/uikit/Map.vue"),
+          component: () => import("@/views/pages/Map.vue"),
         },
       ],
     },

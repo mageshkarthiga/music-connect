@@ -1,6 +1,6 @@
 <template>
   <div
-    class="track-card flex items-center gap-4 rounded-lg p-8 min-w-[280px] max-w-md hover:bg-surface-400 dark:bg-surface-900 dark:hover:bg-surface-800 transition cursor-pointer light:bg-surface-800 light:hover:bg-surface-300"
+    class="track-card flex items-center rounded-lg p-8 min-w-[180px] max-w-md hover:bg-surface-400 dark:bg-surface-900 dark:hover:bg-surface-800 transition cursor-pointer light:bg-surface-800 light:hover:bg-surface-300"
     @click="handleClick"
   >
     <img
@@ -12,7 +12,11 @@
       {{ track.track_title }}
     </div>
     <!-- Display selected status if in select state -->
-    <div v-if="state === 'select'" v-show="isSelected" class="text-sm text-blue-500">
+    <div
+      v-if="state === 'select'"
+      v-show="isSelected"
+      class="text-sm text-blue-500"
+    >
       Selected
     </div>
   </div>
@@ -85,7 +89,12 @@ export default {
 
 /* Hover effect for dark mode */
 .dark .bg-surface-400:hover {
-  background-color: rgba(184, 184, 184, 0.5) /* Darker hover effect for dark mode */
+  background-color: rgba(
+    184,
+    184,
+    184,
+    0.5
+  ); /* Darker hover effect for dark mode */
 }
 
 /* Highlight the selected card */

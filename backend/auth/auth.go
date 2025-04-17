@@ -89,7 +89,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
 	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
 	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
+	e.GET("/me/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsForUser))
 	e.GET("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+	e.GET("/users/:id/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsByUserID))
 	e.GET("/events/venues", middleware.AuthMiddleware(projectID)(controllers.GetEventVenues))
 	e.POST("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 
