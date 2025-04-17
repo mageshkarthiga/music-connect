@@ -8,37 +8,20 @@
     </div>
 
     <div ref="map" class="map-container" v-show="mapLoaded"></div>
-
-    <Popover ref="overlay" :dismissable="true" style="width: 450px">
-      <Card class="w-72">
-        <template #header>
-          <img
-            :src="cardData.image"
-            alt="Profile"
-            class="w-full h-32 object-cover"
-          />
-        </template>
-        <template #title>
-          {{ cardData.title }}
-        </template>
-        <template #content>
-          <p>{{ cardData.description }}</p>
-        </template>
-      </Card>
-    </Popover>
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { getAllUserLocations } from "@/firebase/locationController";
 import { API_BASE_URL } from "@/service/apiConfig";
+
 const map = ref(null);
 const mapLoaded = ref(false);
 const userLocations = ref({});
-const overlay = ref();
-const cardData = ref({ title: "", description: "", image: "" });
 let mapInstance = null;
 let hasMapInitialised = false;
+let currentPopup = null;
 
 const mockLandmarks = [
   {
@@ -85,6 +68,75 @@ const mockLandmarks = [
   },
 ];
 
+function createMarkerImage(src) {
+  const wrapper = document.createElement("div");
+  const img = document.createElement("img");
+  img.src = src;
+  img.style.width = "40px";
+  img.style.height = "40px";
+  img.style.cursor = "pointer";
+  wrapper.appendChild(img);
+  return wrapper;
+}
+
+function createPopupOverlay(lat, lng, title, description, image) {
+  if (currentPopup) {
+    currentPopup.setMap(null);
+    currentPopup = null;
+  }
+
+  class PopupOverlay extends google.maps.OverlayView {
+    div;
+
+    constructor(position) {
+      super();
+      this.position = position;
+    }
+
+    onAdd() {
+      this.div = document.createElement("div");
+      this.div.style.position = "absolute";
+      this.div.style.zIndex = 9999;
+      this.div.innerHTML = `
+        <div style="
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          padding: 12px;
+          width: 250px;
+          transition: all 0.3s ease;
+        ">
+          <img src="${image}" style="width:100%; height:120px; object-fit:cover; border-radius:4px; margin-bottom:8px;" />
+          <h3 style="margin: 0 0 4px; font-size: 16px;">${title}</h3>
+          <p style="margin: 0; font-size: 14px; color: #555;">${description}</p>
+        </div>
+      `;
+
+      const panes = this.getPanes();
+      panes.floatPane.appendChild(this.div);
+    }
+
+    draw() {
+      const projection = this.getProjection();
+      const point = projection.fromLatLngToDivPixel(this.position);
+      if (point && this.div) {
+        this.div.style.left = `${point.x - 125}px`;
+        this.div.style.top = `${point.y - 180}px`;
+      }
+    }
+
+    onRemove() {
+      if (this.div && this.div.parentNode) {
+        this.div.parentNode.removeChild(this.div);
+      }
+      this.div = null;
+    }
+  }
+
+  currentPopup = new PopupOverlay(new google.maps.LatLng(lat, lng));
+  currentPopup.setMap(mapInstance);
+}
+
 onMounted(async () => {
   userLocations.value = await getAllUserLocations();
   document.addEventListener("visibilitychange", handleVisibility);
@@ -106,36 +158,10 @@ function ensureMapRedraw() {
   if (mapInstance && map.value) {
     map.value.innerHTML = "";
     mapInstance = null;
-    mapLoaded.value = false;
     hasMapInitialised = false;
+    currentPopup = null;
     initMapCallback();
   }
-}
-
-async function showPopover(targetElement, title, description, image) {
-  if (!targetElement) return;
-
-  cardData.value = { title, description, image };
-
-  // Wait for content update in <Popover> to complete
-  await nextTick();
-
-  // Slight additional delay to avoid race condition during transitions
-  setTimeout(() => {
-    if (overlay.value && targetElement?.offsetHeight) {
-      overlay.value.show(targetElement);
-    }
-  }, 0);
-}
-
-function createMarkerImage(src, clickHandler) {
-  const img = document.createElement("img");
-  img.src = src;
-  img.style.width = "40px";
-  img.style.height = "40px";
-  img.style.cursor = "pointer";
-  if (clickHandler) img.addEventListener("click", clickHandler);
-  return img;
 }
 
 function loadGoogleMapsScript(callback) {
@@ -170,53 +196,66 @@ function initMapCallback() {
         mapId: "DEMO_MAP_ID",
       });
 
-      const youImg = createMarkerImage("/demo/images/person_light.svg", (e) =>
-        showPopover(
-          e,
-          "You",
-          "This is your current location.",
-          "/demo/images/person_light.svg"
-        )
-      );
+      mapInstance.addListener("click", () => {
+        if (currentPopup) currentPopup.setMap(null);
+        currentPopup = null;
+      });
 
-      new google.maps.marker.AdvancedMarkerElement({
+      // Self
+      const youImg = createMarkerImage("/demo/images/person_light.svg");
+      const selfMarker = new google.maps.marker.AdvancedMarkerElement({
         map: mapInstance,
         position: userLocation,
         title: "You are here",
         content: youImg,
       });
+      selfMarker.addListener("click", () => {
+        createPopupOverlay(
+          userLocation.lat,
+          userLocation.lng,
+          "You",
+          "This is your current location.",
+          "/demo/images/person_light.svg"
+        );
+      });
 
+      // Landmarks
       mockLandmarks.forEach((loc) => {
         const landmarkImg = createMarkerImage("/demo/images/logo.svg");
-
         const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
           position: { lat: loc.lat, lng: loc.lng },
           title: `Landmark: ${loc.name}`,
           content: landmarkImg,
         });
-
         marker.addListener("click", () => {
-          showPopover(landmarkImg, loc.name, loc.description, loc.image);
+          createPopupOverlay(
+            loc.lat,
+            loc.lng,
+            loc.name,
+            loc.description,
+            loc.image
+          );
         });
       });
 
+      // Other users
       Object.entries(userLocations.value).forEach(([userId, loc]) => {
         const userImg = createMarkerImage("/demo/images/person_dark.svg");
-        userImg.addEventListener("click", (e) =>
-          showPopover(
-            userImg,
-            `User: ${userId}`,
-            "Recently active in this area.",
-            "/demo/images/person_dark.svg"
-          )
-        );
-
-        new google.maps.marker.AdvancedMarkerElement({
+        const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
           position: { lat: loc.lat, lng: loc.lon },
           title: `User: ${userId}`,
           content: userImg,
+        });
+        marker.addListener("click", () => {
+          createPopupOverlay(
+            loc.lat,
+            loc.lon,
+            `User: ${userId}`,
+            "Recently active in this area.",
+            "/demo/images/person_dark.svg"
+          );
         });
       });
 
@@ -248,6 +287,7 @@ async function initMap() {
   width: 100%;
   height: 100%;
   padding: 1rem;
+  position: relative;
 }
 
 .map-container {
