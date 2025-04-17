@@ -1,7 +1,7 @@
 <template>
     <AppTopbar />
     <div class="card mt-10">
-        <h2 class="music-title">{{ playlist_name }} Tracks 🎶🎧</h2>
+        <h2 class="music-title">{{ playlist_name }} </h2>
         <!-- Pass tracks as a prop to MusicTracks -->
         <MusicTracks :tracks="tracks" @track-selected="onTrackSelected" />
         <!-- SpotifyPlayer Component -->
@@ -31,12 +31,17 @@ export default {
     },
     data() {
         return {
-            tracks: [], // Tracks for the playlist
-            selectedTrackUri: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // URI of the selected track
+            tracks: [], 
+            selectedTrackUri: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", 
         };
     },
     async mounted() {
         await this.fetchPlaylistTracks();
+    },
+    watch: {
+        
+        playlist_id: "fetchPlaylistTracks",
+        playlist_name: "fetchPlaylistTracks",
     },
     methods: {
         async fetchPlaylistTracks() {
@@ -48,7 +53,7 @@ export default {
             }
         },
         onTrackSelected(uri) {
-            this.selectedTrackUri = uri; // Set the selected track URI
+            this.selectedTrackUri = uri;
         },
     },
 };

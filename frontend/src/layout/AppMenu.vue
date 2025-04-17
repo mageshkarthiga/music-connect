@@ -461,11 +461,14 @@ export default {
 .sidebar {
   padding: 1rem;
   width: 250px;
-  height: 100%;
+  height: auto;
+  max-height: 78vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 
 .dark {
   background-color: #121212;

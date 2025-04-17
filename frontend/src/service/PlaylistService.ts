@@ -186,6 +186,21 @@ const PlaylistService = {
       throw new Error(`Error fetching playlists for user ID ${userId}: ${error.message}`);
     }
   },
+
+
+async updatePlaylistDetails(playlistId, name, imageUrl) {
+  return axios.put(`${API_BASE_URL}/playlists/${playlistId}`, {
+    name,
+    image_url: imageUrl,
+  });
+},
+
+async replacePlaylistTracks(playlistId, trackIds) {
+  return axios.put(`${API_BASE_URL}/playlists/${playlistId}/tracks`, {
+    track_ids: trackIds,
+  });
+},
+
 };
 
 export default PlaylistService;

@@ -52,7 +52,7 @@ export default {
     showDialog: Boolean,
     onSave: Function,
     onClose: Function,
-    // playlistAdded: 
+    playlistToEdit: Object, // <- if this exists, we're editing
     // isDarkMode: Boolean, // New prop to track theme mode
   },
   data() {
@@ -181,7 +181,21 @@ export default {
         userId: this.userId,
       };
     },
+  },
+
+  watch: {
+  playlistToEdit: {
+    immediate: true,
+    handler(playlist) {
+      if (playlist) {
+        this.playlistName = playlist.name;
+        this.trackImageUrl = playlist.image_url;
+        this.selectedTracks = [...playlist.tracks.map(t => t.track_id)];
+      }
+    }
   }
+},
+
 };
 </script>
 

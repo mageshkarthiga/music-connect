@@ -240,3 +240,79 @@ func GetTracksByPlaylistID(c echo.Context) error {
 
     // Return the tracks associated with the playlist
     return c.JSON(http.StatusOK, playlist.Tracks)
+}
+
+func UpdatePlaylistDetails(c echo.Context) error {
+	id := c.Param("id")
+	var updateData struct {
+		Name     string `json:"name"`
+		PlaylistImageURL string `json:"image_url"`
+	}
+
+	if err := c.Bind(&updateData); err != nil {
+		log.Printf("Error binding playlist update data: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request body")
+	}
+
+	var playlist models.Playlist
+	if err := config.DB.First(&playlist, id).Error; err != nil {
+		log.Printf("Playlist not found: %v", err)
+		return c.JSON(http.StatusNotFound, "Playlist not found")
+	}
+
+	playlist.PlaylistName = updateData.Name
+	playlist.PlaylistImageURL = updateData.PlaylistImageURL
+
+	if err := config.DB.Save(&playlist).Error; err != nil {
+		log.Printf("Error updating playlist details: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to update playlist")
+	}
+
+	return c.JSON(http.StatusOK, playlist)
+}
+
+
+
+func ReplacePlaylistTracks(c echo.Context) error {
+	id := c.Param("id")
+	var requestBody struct {
+		TrackIDs []uint `json:"track_ids"`
+	}
+
+	if err := c.Bind(&requestBody); err != nil {
+		log.Printf("Error binding track IDs: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request format")
+	}
+
+	// Start a transaction to ensure atomicity
+	tx := config.DB.Begin()
+
+	// Delete all existing tracks for the playlist
+	if err := tx.Where("playlist_id = ?", id).Delete(&models.PlaylistTrack{}).Error; err != nil {
+		tx.Rollback()
+		log.Printf("Error removing existing tracks: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to clear existing tracks")
+	}
+
+	// Add the new tracks
+	for _, trackID := range requestBody.TrackIDs {
+		if err := tx.Create(&models.PlaylistTrack{
+			PlaylistID: parseUint(id),
+			TrackID:    trackID,
+		}).Error; err != nil {
+			tx.Rollback()
+			log.Printf("Error adding track %d: %v", trackID, err)
+			return c.JSON(http.StatusInternalServerError, "Failed to replace tracks")
+		}
+	}
+
+	tx.Commit()
+	return c.JSON(http.StatusOK, "Playlist tracks replaced successfully")
+}
+
+//helper functions
+
+func parseUint(s string) uint {
+	val, _ := strconv.ParseUint(s, 10, 64)
+	return uint(val)
+}

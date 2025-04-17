@@ -29,72 +29,34 @@
 </template>
 
 <script>
-import axios from "axios";
-import SpotifyPlayer from "./SpotifyPlayer.vue";
-
 export default {
     name: "MusicTracks",
     props: {
-        playlist_id: {
-            type: String,
-            required: true,
-        },
-        playlist_name: {
-            type: String,
-            required: true,
-        },
         tracks: {
             type: Array,
-            required: true,
+            required: true, // Ensure tracks are passed as a prop
         },
-    },
-    components: {
-        SpotifyPlayer,
     },
     data() {
         return {
-            iframeSrc: "",
-            accessToken: "",
-            localTracks: [], // Local copy of tracks
+            localTracks: [], 
             paginatedTracks: [],
             totalTracks: 0,
             rowsPerPage: 12,
             first: 0,
         };
     },
-    async mounted() {
-        const response = await axios.get("http://localhost:8080/spotify/token");
-        this.accessToken = response.data.access_token;
-
-        await this.loadTracks();
-        this.updatePaginatedTracks();
-    },
     watch: {
         tracks: {
             immediate: true,
             handler(newTracks) {
-                this.localTracks = [...newTracks]; // Copy tracks to localTracks
+                this.localTracks = [...newTracks]; 
                 this.totalTracks = this.localTracks.length;
-                this.updatePaginatedTracks();
+                this.updatePaginatedTracks(); 
             },
         },
     },
     methods: {
-        selectTrack(uri) {
-            this.selectedTrackUri = uri; 
-        },
-        async loadTracks() {
-            try {
-                const response = await axios.get("http://localhost:8080/me/tracks", {
-                    withCredentials: true,
-                });
-                this.localTracks = response.data; // Update localTracks instead of tracks
-                this.totalTracks = this.localTracks.length; // Update totalTracks
-                this.updatePaginatedTracks();
-            } catch (error) {
-                console.error("Error loading tracks:", error);
-            }
-        },
         updatePaginatedTracks() {
             const start = this.first;
             const end = this.first + this.rowsPerPage;
@@ -133,7 +95,6 @@ export default {
     border: 0;
     background: #191414;
     color: #fff;
-    cursor: pointer;
 }
 
 .track:hover {

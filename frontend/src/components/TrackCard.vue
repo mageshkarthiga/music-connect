@@ -12,7 +12,7 @@
       {{ track.track_title }}
     </div>
     <!-- Display selected status if in select state -->
-    <div v-if="state === 'select' && isSelected" class="text-sm text-blue-500">
+    <div v-if="state === 'select'" v-show="isSelected" class="text-sm text-blue-500">
       Selected
     </div>
   </div>
@@ -22,7 +22,7 @@
 export default {
   props: {
     track: { type: Object, required: true },
-    state: { type: String, required: true }, // 'redirect' or 'select'
+    state: { type: String, required: true }, // The state to control behavior ('redirect' or 'select')
     selectedTracks: { type: Array, required: true },
   },
   data() {
@@ -32,17 +32,24 @@ export default {
   },
   computed: {
     isSelected() {
-      return Array.isArray(this.selectedTracks) && this.selectedTracks.includes(this.track.track_id);
+      return this.selectedTracks.includes(this.track.track_id);
     },
   },
   methods: {
     handleClick() {
-      if (this.state === 'redirect') {
-        if (this.track?.track_uri) {
-          window.open(this.track.track_uri, "_blank");
-        }
-      } else if (this.state === 'select') {
-        this.$emit('toggle', this.track.track_id);
+      if (this.state === "redirect") {
+        // Emit the track URI to the parent component
+        this.$emit("track-selected", this.track.track_uri);
+      } else if (this.state === "select") {
+        this.toggleTrackSelection();
+      }
+    },
+    toggleTrackSelection() {
+      const index = this.selectedTracks.indexOf(this.track.track_id);
+      if (index > -1) {
+        this.selectedTracks.splice(index, 1);
+      } else {
+        this.selectedTracks.push(this.track.track_id);
       }
     },
   },
@@ -50,43 +57,51 @@ export default {
 </script>
 
 <style scoped>
+/* Track card styles */
 .track-card {
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid rgba(184, 184, 184, 0.5);
+  border: 1px solid rgba(184, 184, 184, 0.5); /* Light border for light mode */
   cursor: pointer;
   transition: 0.2s;
 }
 
+/* Hover effect for light mode */
 .bg-surface-400:hover {
   background-color: rgba(245, 245, 245, 0.5);
 }
 
+/* Dark mode background and border */
 .dark .track-card {
-  background-color: #101318;
-  border: 1px solid #4a5568;
+  background-color: #101318; /* Darker background for track cards in dark mode */
+  border: 1px solid #4a5568; /* Darker border for dark mode */
 }
 
+/* Light mode specific card styles */
 .track-card.light {
-  background-color: #ffffff;
-  border: 1px solid #ddd;
+  background-color: #ffffff; /* Set light mode card background to #ffffff */
+  border: 1px solid #ddd; /* Light border */
 }
 
+/* Hover effect for dark mode */
 .dark .bg-surface-400:hover {
-  background-color: rgba(184, 184, 184, 0.5);
+  background-color: rgba(184, 184, 184, 0.5) /* Darker hover effect for dark mode */
 }
 
+/* Highlight the selected card */
 .track-card.selected {
   border: 2px solid #585858;
   background-color: #f0f9ff;
 }
 
+/* Image style */
 .track-image {
   width: 100%;
   height: auto;
   border-radius: 8px;
 }
 
+/* Track info style */
 .track-info {
   margin-top: 0.5rem;
 }
