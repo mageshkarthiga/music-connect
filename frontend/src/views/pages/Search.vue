@@ -4,25 +4,39 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { onBeforeMount, ref } from 'vue';
 import UserService from '@/service/UserService';
 import EventService from '@/service/EventService';
+import axios from 'axios';
 
 const allUsers = ref(null);
 const allEvents = ref(null);
-const filters1 = ref(null);
+const filters1 = ref({
+  global: { value: null }
+});
 const isLoading = ref(null);
 
-onBeforeMount(() => {
-    UserService.getAllUsers().then((data) => {
-        console.log('data', data);
-        allUsers.value = data;
-        isLoading.value = false;
+onBeforeMount(async () => {
+  try {
+    // 1. Get the current user
+    const meResponse = await axios.get("http://localhost:8080/me", {
+      withCredentials: true,
     });
+    const currentUserId = meResponse.data.firebase_uid;
 
-    EventService.getAllEvents().then((data) => {
-        allEvents.value = data;
-        isLoading.value = false;
-    });
+    // 2. Fetch all users
+    const users = await UserService.getAllUsers();
 
+    // 3. Filter out the current user
+    allUsers.value = users.filter(user => user.firebase_uid !== currentUserId);
+
+    // 4. Fetch all events (optional: wait for this separately or in parallel with above)
+    allEvents.value = await EventService.getAllEvents();
+
+    // 5. Init filters & stop loading
     initFilters1();
+    isLoading.value = false;
+  } catch (error) {
+    console.error("Failed to fetch user data:", error);
+    isLoading.value = false;
+  }
 });
 
 function initFilters1() {
