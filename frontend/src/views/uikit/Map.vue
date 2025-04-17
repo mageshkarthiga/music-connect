@@ -172,6 +172,8 @@ async function initMap() {
           });
         });
 
+        console.log('user position: ', userLocation);
+
         mapLoaded.value = true;
       },
       () => {}

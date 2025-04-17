@@ -28,6 +28,8 @@ func InitFirebase() {
 		log.Fatalf("error initializing app: %v\n", err)
 	}
 
+
+
 	client, err := app.Firestore(ctx)
 	if err != nil {
 		log.Fatalf("error initializing Firestore: %v\n", err)

@@ -1,13 +1,13 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 
-// Define types for playlists and tracks (assuming you have the corresponding models)
+// Define types for playlists and tracks
 export interface Playlist {
   playlist_id: number;
   playlist_name: string;
   playlist_image_url: string;
   user_id: number;
-  tracks: Track[]; // Assuming a playlist has multiple tracks
+  tracks: Track[];
 }
 
 export interface Track {
@@ -29,14 +29,28 @@ export interface Artist {
   tracks: Track[];
 }
 
-// PlaylistService class to interact with API endpoints
-export default {
+export interface PlaylistTrack {
+  playlist_id: number;
+  track_id: number;
+}
+
+// Helper function
+function getCookie(name: string): string | undefined {
+    const cookies = document.cookie.split('=').map(cookie => cookie.trim()); // Remove any leading/trailing spaces
+    console.log("Cookies:", cookies[1]);
+    return cookies[1];
+  }
+  
+  
+
+// PlaylistService
+const PlaylistService = {
   // Fetch all playlists
   async getPlaylists(): Promise<Playlist[]> {
     try {
       const response = await axios.get(`${API_BASE_URL}/playlists`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error fetching playlists: ${error.message}`);
     }
   },
@@ -44,43 +58,17 @@ export default {
   // Fetch a single playlist by ID
   async getPlaylistById(id: number): Promise<Playlist> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/playlists/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/playlists/${id}`, {
+        withCredentials: true,
+      });
       return response.data;
-    } catch (error) {
-      throw new Error(
-        `Error fetching playlist with ID ${id}: ${error.message}`
-      );
-    }
-  },
-
-  // Create a new playlist for a specific user
-  async createPlaylist(
-    userId: number,
-    name: string,
-    trackIds: number[]
-  ): Promise<Playlist> {
-    const playlistData = {
-      user_id: userId,
-      name,
-      track_ids: trackIds,
-    };
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/playlists`,
-        playlistData
-      );
-      return response.data;
-    } catch (error) {
-      throw new Error(`Error creating playlist: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Error fetching playlist with ID ${id}: ${error.message}`);
     }
   },
 
   // Update an existing playlist
-  async updatePlaylist(
-    id: number,
-    name: string,
-    trackIds: number[]
-  ): Promise<Playlist> {
+  async updatePlaylist(id: number, name: string, trackIds: number[]): Promise<Playlist> {
     const playlistData = { name, track_ids: trackIds };
     try {
       const response = await axios.put(
@@ -88,10 +76,8 @@ export default {
         playlistData
       );
       return response.data;
-    } catch (error) {
-      throw new Error(
-        `Error updating playlist with ID ${id}: ${error.message}`
-      );
+    } catch (error: any) {
+      throw new Error(`Error updating playlist with ID ${id}: ${error.message}`);
     }
   },
 
@@ -99,10 +85,8 @@ export default {
   async deletePlaylist(id: number): Promise<void> {
     try {
       await axios.delete(`${API_BASE_URL}/playlists/${id}`);
-    } catch (error) {
-      throw new Error(
-        `Error deleting playlist with ID ${id}: ${error.message}`
-      );
+    } catch (error: any) {
+      throw new Error(`Error deleting playlist with ID ${id}: ${error.message}`);
     }
   },
 
@@ -122,24 +106,18 @@ export default {
     }
   },
 
-  
-  // Add a playlist for a specific user
-
-  async addPlaylistForUser(
-    // playlistId: number,  // Playlist ID
-    name: string,    // Playlist name
-    playlistImageUrl: string, // Track Image URL
-    userId: number,     // Single User ID (a number)
-    trackIds: number[],  // Array of Track IDs
-
+  // Create a new playlist
+  async createPlaylistForUser(
+    name: string,
+    playlistImageUrl: string,
+    userId: number
   ): Promise<Playlist> {
     const playlistData = {
-      playlist_name: name,  // This is the playlist name
-      track_ids: playlistImageUrl,  // Array of track IDs
-      user_id: userId,      // Single user ID
-      playlist_image_url: trackIds  // Track Image URL
+      playlist_name: name,
+      user_id: userId,
+      playlist_image_url: playlistImageUrl,
     };
-  
+
     try {
       const response = await axios.post(
         `${API_BASE_URL}/me/playlists`,
@@ -147,41 +125,56 @@ export default {
         {
           headers: {
             'Content-Type': 'application/json',
-            'x-xsrf-token': getCookie('XSRF-TOKEN'),
+            'Authorization': `Bearer ${getCookie('XSRF-TOKEN')}`,
           },
-          withCredentials: true,  // Ensure cookies are sent
+          withCredentials: true,
         }
       );
       return response.data;
     } catch (error: any) {
-      if (error.response) {
-        console.error("Error response from backend:", error.response);
-      } else {
-        console.error("Network or unknown error:", error.message);
-      }
-      throw new Error(
-        `Error creating playlist for user: ${error.message}`
-      );
-    }
-  },  
-  
-  
-  
-  // Get playlist image URL
-  async getPlaylistImage(playlistId: number): Promise<string> {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/playlists/${playlistId}/image`
-      );
-      return response.data.image_url; // Assuming the API returns an object with image_url
-    } catch (error) {
-      throw new Error(
-        `Error fetching playlist image for ID ${playlistId}: ${error.message}`
-      );
+      console.error("Error creating playlist:", error.response || error.message);
+      throw new Error(`Failed to create playlist: ${error.message}`);
     }
   },
 
-  // Fetch playlists for a specific user by their userId
+  // Add tracks to an existing playlist
+  async addTracksToPlaylist(
+    playlistId: number,
+    trackIds: number[]
+  ): Promise<void> {
+    const trackData = { track_ids: trackIds };
+
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/me/playlists/${playlistId}/tracks`,
+        trackData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-xsrf-token': getCookie('XSRF-TOKEN'),
+          },
+          withCredentials: true,
+        }
+      );
+
+      console.log("Tracks added response:", response.data);
+    } catch (error: any) {
+      console.error("Error adding tracks:", error.response || error.message);
+      throw new Error(`Failed to add tracks: ${error.message}`);
+    }
+  },
+
+  // Get playlist image URL
+  async getPlaylistImage(playlistId: number): Promise<string> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/playlists/${playlistId}/image`);
+      return response.data.image_url;
+    } catch (error: any) {
+      throw new Error(`Error fetching playlist image: ${error.message}`);
+    }
+  },
+
+  // Fetch playlists for a specific user
   async getPlaylistsByUserId(userId: number): Promise<Playlist[]> {
     try {
       const response = await axios.get(
@@ -189,18 +182,10 @@ export default {
         { withCredentials: true }
       );
       return response.data;
-    } catch (error) {
-      throw new Error(
-        `Error fetching playlists for user ID ${userId}: ${error.message}`
-      );
+    } catch (error: any) {
+      throw new Error(`Error fetching playlists for user ID ${userId}: ${error.message}`);
     }
   },
 };
 
-// Helper function for getting cookie (this can be moved to a separate utility file)
-function getCookie(name: string): string | undefined {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
-  return undefined;
-}
+export default PlaylistService;

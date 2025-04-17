@@ -50,6 +50,8 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
     e.GET("/me/playlists", controllers.GetPlaylistsForUser) // Fetch playlists for a specific user
     e.POST("/me/playlists", controllers.AddPlaylistForUser) // Add a playlist for a specific user
 
+
+    // e.PUT("/me/playlists/:playlistId/tracks", controllers.AddTracksToPlaylist) // Add tracks to a playlist
     // Service Routes
     e.GET("/spotify/token", services.GetSpotifyToken)
     // WebSocket Route

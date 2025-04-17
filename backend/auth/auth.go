@@ -86,6 +86,7 @@ e.GET("/users/:id/tracks",   middleware.AuthMiddleware(projectID)(controllers.Ge
 e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
 e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
 e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
+e.PUT("/me/playlists/:id/tracks",middleware.AuthMiddleware(projectID) (controllers.AddTracksToPlaylist)) 
 
 // ---- events ----
 e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))

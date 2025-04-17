@@ -6,6 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"log"
+	"strconv"
+	"fmt"
 )
 
 // GetPlaylists fetches all playlists
@@ -23,14 +25,16 @@ func GetPlaylists(c echo.Context) error {
 
 // GetPlaylistByID fetches a single playlist by ID
 func GetPlaylistByID(c echo.Context) error {
-	id := c.Param("id")
-	var playlist models.Playlist
-	if err := config.DB.First(&playlist, id).Error; err != nil {
-		log.Printf("Error fetching playlist with ID %s: %v", id, err)
-		return c.JSON(http.StatusNotFound, "Playlist not found")
-	}
-	return c.JSON(http.StatusOK, playlist)
+    id := c.Param("id")
+    var playlist models.Playlist
+    if err := config.DB.Preload("Tracks").Find(&playlist, "playlist_id = ?", id).Error; err != nil {
+        log.Printf("Error fetching playlist with ID %s: %v", id, err)
+        return c.JSON(http.StatusNotFound, "Playlist not found")
+    }
+    return c.JSON(http.StatusOK, playlist)
 }
+
+
 
 // CreatePlaylist creates a new playlist with the user's existing tracks
 func CreatePlaylist(c echo.Context) error {
@@ -170,4 +174,55 @@ func GetPlaylistByUserID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, playlists)
+}
+
+//Add tracks to a playlist
+
+// Define a struct for the request body
+type AddTracksRequest struct {
+	TrackIDs []uint `json:"track_ids"`
+}
+
+func AddTracksToPlaylist(c echo.Context) error {
+	// Get the playlist ID from the route parameter
+	playlistID := c.Param("id")
+	log.Println("Extracted playlist ID:", playlistID)
+
+	// Convert the playlist ID to uint (if necessary)
+	playlistIDInt, err := strconv.Atoi(playlistID)
+	if err != nil {
+		log.Printf("Error parsing playlist ID: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid playlist ID")
+	}
+
+	// Bind the request body to the struct
+	var requestBody AddTracksRequest
+	if err := c.Bind(&requestBody); err != nil {
+		log.Printf("Error binding track IDs: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request format")
+	}
+
+	// Check if the playlist exists in the database
+	var playlist models.Playlist
+	if err := config.DB.First(&playlist, playlistIDInt).Error; err != nil {
+		log.Printf("Error fetching playlist: %v", err)
+		return c.JSON(http.StatusNotFound, "Playlist not found")
+	}
+
+	fmt.Printf("Playlist found: %+v\n", playlist)
+
+	// Add each track to the playlist_tracks table
+	for _, trackID := range requestBody.TrackIDs {
+		// Insert into playlist_tracks table
+		if err := config.DB.Create(&models.PlaylistTrack{
+			PlaylistID: uint(playlistIDInt), // Correctly use PlaylistID as uint
+			TrackID:    trackID,
+		}).Error; err != nil {
+			log.Printf("Error adding track %d to playlist %d: %v", trackID, playlistIDInt, err)
+			return c.JSON(http.StatusInternalServerError, "Failed to add tracks")
+		}
+	}
+
+	// Return success message
+	return c.JSON(http.StatusOK, "Tracks added successfully")
 }

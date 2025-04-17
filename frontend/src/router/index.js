@@ -88,6 +88,12 @@ const router = createRouter({
           name: "timeline",
           component: () => import("@/views/uikit/TimelineDoc.vue"),
         },
+
+        {
+          path: "/uikit/map",
+          name: "map",
+          component: () => import("@/views/uikit/Map.vue"),
+        },
         {
           path: "/pages/crud",
           name: "crud",
@@ -115,10 +121,17 @@ const router = createRouter({
           component: () => import("@/views/pages/Search.vue"),
         },
         {
+          path: '/playlist',
+          name: 'Playlist',
+          component: () => import('@/views/pages/Playlist.vue'), // Adjust path as needed
+        },
+        {
           path: "/pages/music",
           name: "music",
           component: () => import("@/views/pages/Music.vue"),
         },
+
+        
       ],
     },
     {

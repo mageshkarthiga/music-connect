@@ -110,24 +110,52 @@ export default {
     },
 
     async savePlaylist() {
-      const trackIds = this.selectedTracks;
-      console.log("Selected track IDs:", trackIds);
-      try {
-        // Call PlaylistService with trackImageUrl
-        const newPlaylist = await PlaylistService.addPlaylistForUser(
-          this.playlistName,    // Playlist name
-          trackIds,             // Array of track IDs
-          this.userId,          // User ID
-          this.trackImageUrl    // Track image URL
-        );
-        if (this.onSave) {
-          this.onSave(newPlaylist); // Pass new playlist back to parent component
-        }
-        this.closeDialog();
-      } catch (error) {
-        console.error("Error saving playlist:", error);
-      }
-    },
+  // Convert the hash map to an array of selected track IDs
+  const trackIds = Object.keys(this.selectedTracks)
+    .filter(trackId => this.selectedTracks[trackId])
+    .map(id => parseInt(id)); // ensure IDs are numbers
+
+  console.log("Selected track IDs:", trackIds);
+
+  let newPlaylist;
+
+  try {
+    // Step 1: Create the playlist
+    newPlaylist = await PlaylistService.createPlaylistForUser(
+      this.playlistName,        // name
+      this.trackImageUrl,       // playlistImageUrl
+      this.userId               // userId
+    );
+
+    console.log("New Playlist created:", newPlaylist);
+
+  } catch (error) {
+    console.error("Error creating playlist:", error);
+    return;
+  }
+
+  try {
+    const playlistId = newPlaylist.playlist_id; // Now it's defined properly
+    console.log("New Playlist ID:", playlistId);
+    console.log("Track IDs to add:", trackIds);
+    
+    // Step 2: Add tracks to the newly created playlist
+    if (trackIds.length > 0) {
+      await PlaylistService.addTracksToPlaylist(playlistId, trackIds);
+      console.log("Tracks successfully added to playlist.");
+    }
+
+    // Step 3: Notify parent and close dialog
+    if (this.onSave) {
+      this.onSave(newPlaylist); // Notify parent
+    }
+
+    this.closeDialog();
+
+  } catch (error) {
+    console.error("Error saving playlist:", error);
+  }
+},
 
     closeDialog() {
       if (this.onClose) {

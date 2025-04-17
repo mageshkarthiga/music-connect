@@ -321,17 +321,25 @@ const model = ref([
 
     <!-- Playlists List -->
     <div v-if="user.playlists.length" class="playlist-list">
+
       <div
         v-for="playlist in user.playlists"
         :key="playlist.playlist_id"
         class="playlist-item"  
       >
+
+
+      <Button @click="openPlaylist(playlist.playlist_id)" class="playlist-button" label="Secondary" severity="secondary" text >
         <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
+
+
         <div class="playlist-info">
           <span class="playlist-name">{{ playlist.playlist_name }}</span>
           <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>
         </div>
+      </Button>
       </div>
+
     </div>
 
     <div v-else>
@@ -407,6 +415,14 @@ export default {
     closeAddPlaylistDialog() {
       this.showPlaylistDialog = false;
     },
+
+    openPlaylist(playlistId) {
+  // Use query params instead of route params
+  this.$router.push({ name: "Playlist", query: { id: playlistId } });
+},
+
+
+
 
     addNewPlaylist(newPlaylist) {
   // Push the new playlist directly to the playlists array (Vue handles reactivity)

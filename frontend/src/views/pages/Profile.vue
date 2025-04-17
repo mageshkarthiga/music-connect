@@ -42,7 +42,7 @@
           </div>
         </section>
 
-        <section class="p-4" v-if="user.playlists.length">
+        <!-- <section class="p-4" v-if="user.playlists.length">
           <h2 class="text-xl font-semibold mb-3">Playlists</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
             <PlaylistCard
@@ -51,7 +51,7 @@
               :playlist="p"
             />
           </div>
-        </section>
+        </section> -->
 
         <section class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Tracks</h2>
@@ -60,10 +60,10 @@
           </div>
         </section>
 
-        <section class="p-4" v-if="user.tracks.length">
+        <!-- <section class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Artists</h2>
           <SpotifyPlayer />
-        </section>
+        </section> -->
       </template>
     </div>
   </div>
