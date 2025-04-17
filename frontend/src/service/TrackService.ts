@@ -108,3 +108,20 @@ export const getUserTracksById = async (userId: number): Promise<Track[]> => {
     throw error;
   }
 };
+
+export const incrementTrackPlayCount = async (trackId: number) => {
+  try {
+    const response = await axios.put(
+      `${TRACK_URL}/${trackId}/increment`,
+      {}, // Sending an empty body required for POST/PUT requests
+      {
+        withCredentials: true, 
+      }
+    );
+
+    return response.data.play_count;
+  } catch (error) {
+    console.error("Error incrementing track play count:", error);
+    throw error;
+  }
+};

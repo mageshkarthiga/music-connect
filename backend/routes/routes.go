@@ -43,8 +43,8 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.PUT("/tracks/:track_id/like", controllers.LikeTrack) 
 	e.PUT("/tracks/:track_id/dislike", controllers.DislikeTrack)
 	e.GET("/tracks/liked", controllers.GetLikedTracks)
-	e.GET("/tracks/top", controllers.GetTopPlayedTracks)
-	e.PUT("/tracks/:track_id/increment", controllers.IncrementTrackPlayCount)
+	// e.GET("/tracks/top", controllers.GetTopPlayedTracks)
+	// e.PUT("/tracks/:track_id/increment", controllers.IncrementTrackPlayCount)
 
 	// Event Routes
 	e.GET("/events", controllers.GetEvents)                      // Fetch all events

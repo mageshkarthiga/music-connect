@@ -5,8 +5,8 @@ import (
 	"backend/models"
 	"backend/services/recommender"
 	"fmt"
-	"net/http"
 	"gorm.io/gorm"
+	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -96,95 +96,95 @@ func DeleteTrack(c echo.Context) error {
 }
 
 func GetTrackRecommendation(c echo.Context) error {
-    uid, ok := c.Get("uid").(uint)
-    if !ok {
+	uid, ok := c.Get("uid").(uint)
+	if !ok {
 		return c.JSON(http.StatusUnauthorized, "Missing or invalid user ID in context")
 	}
 
-    uidStr := fmt.Sprintf("%d", uid)
-    listOfSongs, err  := recommender.GetTrackRecommendation(uidStr)
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to fetch track recommendations")
-    }
+	uidStr := fmt.Sprintf("%d", uid)
+	listOfSongs, err := recommender.GetTrackRecommendation(uidStr)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch track recommendations")
+	}
 
-    return c.JSON(http.StatusOK, listOfSongs)
+	return c.JSON(http.StatusOK, listOfSongs)
 }
 
 // GetTracksForUser fetches all tracks for a specific user based on their preferences
 func GetTracksForUser(c echo.Context) error {
-    userID := c.Get("uid").(uint)  // Assuming the user ID is stored in the context
+	userID := c.Get("uid").(uint) // Assuming the user ID is stored in the context
 
-    // Find the track IDs that the user has selected in their MusicPreferences
-    var musicPreferences []models.MusicPreference
-    if err := config.DB.Where("user_id = ?", userID).Find(&musicPreferences).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to fetch music preferences")
-    }
+	// Find the track IDs that the user has selected in their MusicPreferences
+	var musicPreferences []models.MusicPreference
+	if err := config.DB.Where("user_id = ?", userID).Find(&musicPreferences).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch music preferences")
+	}
 
-    // Extract TrackIDs from MusicPreferences
-    var trackIDs []uint
-    for _, mp := range musicPreferences {
-        trackIDs = append(trackIDs, mp.TrackID)
-    }
+	// Extract TrackIDs from MusicPreferences
+	var trackIDs []uint
+	for _, mp := range musicPreferences {
+		trackIDs = append(trackIDs, mp.TrackID)
+	}
 
-    // Fetch tracks that are associated with the user through MusicPreferences
-    var tracks []models.Track
-    if err := config.DB.Where("track_id IN ?", trackIDs).Find(&tracks).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks for user")
-    }
+	// Fetch tracks that are associated with the user through MusicPreferences
+	var tracks []models.Track
+	if err := config.DB.Where("track_id IN ?", trackIDs).Find(&tracks).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks for user")
+	}
 
-    return c.JSON(http.StatusOK, tracks)
+	return c.JSON(http.StatusOK, tracks)
 }
 
 func AddTracksForUser(c echo.Context) error {
-    userID := c.Get("uid").(uint)  // Assuming the user ID is stored in the context
+	userID := c.Get("uid").(uint) // Assuming the user ID is stored in the context
 
-    // Bind the request data to a slice of MusicPreference objects
-    var musicPreferences []models.MusicPreference
-    if err := c.Bind(&musicPreferences); err != nil {
-        return c.JSON(http.StatusBadRequest, "Invalid request data")
-    }
+	// Bind the request data to a slice of MusicPreference objects
+	var musicPreferences []models.MusicPreference
+	if err := c.Bind(&musicPreferences); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request data")
+	}
 
-    // Iterate over each MusicPreference and ensure the TrackID is valid
-    for _, musicPreference := range musicPreferences {
-        var track models.Track
-        if err := config.DB.First(&track, musicPreference.TrackID).Error; err != nil {
-            return c.JSON(http.StatusNotFound, "Track not found")
-        }
+	// Iterate over each MusicPreference and ensure the TrackID is valid
+	for _, musicPreference := range musicPreferences {
+		var track models.Track
+		if err := config.DB.First(&track, musicPreference.TrackID).Error; err != nil {
+			return c.JSON(http.StatusNotFound, "Track not found")
+		}
 
-        // Set the UserID for each MusicPreference
-        musicPreference.UserID = userID
+		// Set the UserID for each MusicPreference
+		musicPreference.UserID = userID
 
-        // Insert the MusicPreference into the database
-        if err := config.DB.Create(&musicPreference).Error; err != nil {
-            return c.JSON(http.StatusInternalServerError, "Failed to add track for user")
-        }
-    }
+		// Insert the MusicPreference into the database
+		if err := config.DB.Create(&musicPreference).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, "Failed to add track for user")
+		}
+	}
 
-    return c.JSON(http.StatusCreated, musicPreferences)
+	return c.JSON(http.StatusCreated, musicPreferences)
 }
 
 // returns tracks for the given user ID.
 func GetUserTracksByID(c echo.Context) error {
-    uid := c.Param("id")
+	uid := c.Param("id")
 
-    var prefs []models.MusicPreference
-    if err := config.DB.Select("track_id").Where("user_id = ?", uid).Find(&prefs).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "DB error")
-    }
-    if len(prefs) == 0 {
-        return c.JSON(http.StatusOK, []models.Track{})
-    }
+	var prefs []models.MusicPreference
+	if err := config.DB.Select("track_id").Where("user_id = ?", uid).Find(&prefs).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "DB error")
+	}
+	if len(prefs) == 0 {
+		return c.JSON(http.StatusOK, []models.Track{})
+	}
 
-    ids := make([]uint, len(prefs))
-    for i, p := range prefs {
-        ids[i] = p.TrackID
-    }
+	ids := make([]uint, len(prefs))
+	for i, p := range prefs {
+		ids[i] = p.TrackID
+	}
 
-    var tracks []models.Track
-    if err := config.DB.Where("track_id IN ?", ids).Find(&tracks).Error; err != nil {
-        return c.JSON(http.StatusInternalServerError, "DB error")
-    }
-    return c.JSON(http.StatusOK, tracks)
+	var tracks []models.Track
+	if err := config.DB.Where("track_id IN ?", ids).Find(&tracks).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "DB error")
+	}
+	return c.JSON(http.StatusOK, tracks)
 }
 
 func LikeTrack(c echo.Context) error {
@@ -233,7 +233,7 @@ func LikeTrack(c echo.Context) error {
 }
 
 func DislikeTrack(c echo.Context) error {
-	uid := c.Get("uid").(uint)  
+	uid := c.Get("uid").(uint)
 	trackID := c.Param("track_id")
 
 	var musicPreference models.MusicPreference
@@ -251,7 +251,7 @@ func DislikeTrack(c echo.Context) error {
 }
 
 func GetLikedTracks(c echo.Context) error {
-	uid := c.Get("uid").(uint)  
+	uid := c.Get("uid").(uint)
 
 	var musicPreferences []models.MusicPreference
 	if err := config.DB.Where("user_id = ? AND is_liked = ?", uid, true).Find(&musicPreferences).Error; err != nil {
@@ -276,10 +276,21 @@ func GetTopPlayedTracks(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, "Invalid user ID")
 	}
 
-	var topTracks []models.MusicPreference
+	var topTracks []struct {
+		TrackID       uint   `json:"track_id"`
+		TrackTitle    string `json:"track_title"`
+		TrackImageURL string `json:"track_image_url"`
+		TrackURI      string `json:"track_uri"`
+		PlayCount     int    `json:"play_count"`
+	}
+
+	// Perform the join to fetch the track details along with the play count
 	if err := config.DB.
-		Where("user_id = ?", uid).
-		Order("play_count DESC").
+		Table("music_preferences"). // Specify the table explicitly
+		Select("music_preferences.track_id, tracks.track_title, tracks.track_image_url, tracks.track_uri, music_preferences.play_count").
+		Joins("JOIN tracks ON music_preferences.track_id = tracks.track_id").
+		Where("music_preferences.user_id = ?", uid).
+		Order("music_preferences.play_count DESC").
 		Limit(5).
 		Find(&topTracks).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch top played tracks")
@@ -303,13 +314,13 @@ func IncrementTrackPlayCount(c echo.Context) error {
 
 	var musicPreference models.MusicPreference
 	err = config.DB.Where("user_id = ? AND track_id = ?", uid, tid).First(&musicPreference).Error
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			// If the record is not found, create a new record
 			musicPreference = models.MusicPreference{
 				UserID:    uid,
 				TrackID:   uint(tid),
-				IsLiked:  false,
+				IsLiked:   false,
 				PlayCount: 1,
 			}
 			if err := config.DB.Create(&musicPreference).Error; err != nil {
@@ -320,6 +331,7 @@ func IncrementTrackPlayCount(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error checking music preference")
 	}
 
+	// If record is found, increment the play count
 	musicPreference.PlayCount++
 	if err := config.DB.Save(&musicPreference).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to increment play count")

@@ -77,6 +77,8 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
 	e.POST("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
 	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
+	e.GET("/tracks/top", middleware.AuthMiddleware(projectID)(controllers.GetTopPlayedTracks))
+	e.PUT("/tracks/:track_id/increment", middleware.AuthMiddleware(projectID)(controllers.IncrementTrackPlayCount))
 
 	// ---- playlists ----
 	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))

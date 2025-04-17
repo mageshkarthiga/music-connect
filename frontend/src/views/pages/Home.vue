@@ -16,16 +16,11 @@
 
         <!-- Tracks -->
         <div class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <h2 class="text-xl font-semibold mb-3">Top Played Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <!-- Handle track-selected event -->
-            <TrackCard
-              v-for="track in user.tracks"
-              :key="track.track_id"
-              :track="track"
-              :state="'redirect'"
-              @track-selected="setSelectedTrackURI"
-            />
+            <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
+              @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)" />
           </div>
         </div>
 
@@ -77,6 +72,7 @@ import PlaylistCard from "@/components/PlaylistCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
+import { incrementTrackPlayCount } from "@/service/TrackService";
 
 export default {
   components: {
@@ -126,7 +122,7 @@ export default {
     },
     async getTracksForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/tracks`, {
+        const response = await axios.get(`${API_BASE_URL}/tracks/top`, {
           withCredentials: true,
         });
         this.user.tracks = response.data;
@@ -154,6 +150,15 @@ export default {
     },
     setSelectedTrackURI(trackURI) {
       this.selectedTrackURI = trackURI; // Update the selected track URI
+    },
+    incrementPlayCount(trackId) {
+      incrementTrackPlayCount(trackId)
+        .then(() => {
+          console.log(`Play count incremented for track ID: ${trackId}`);
+        })
+        .catch((error) => {
+          console.error(`Error incrementing play count for track ID: ${trackId}`, error);
+        });
     },
   },
   mounted() {
