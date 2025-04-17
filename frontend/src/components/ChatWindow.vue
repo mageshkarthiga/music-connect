@@ -94,6 +94,7 @@ export default {
             currentRoom: null,
             loading: false,
             chatBodies: {},
+            errorMessage: ""
         };
     },
     async mounted() {
@@ -146,7 +147,7 @@ export default {
         },
         async fetchChatUsers() {
             try {
-                const response = await axios.get(`http://localhost:8080/users/${this.currentUser.user_id}/chat-history`, {
+                const response = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/users/${this.currentUser.user_id}/chat-history`, {
                     withCredentials: true,
                 });
                 const userIds = response.data;
@@ -281,13 +282,14 @@ export default {
                 const response = await this.getOtherUsers(otherUserID);
                 newRoom.otherUserName = response;
 
-                const messagesResponse = await axios.get(`http://localhost:8080/rooms/${roomName}/messages`, { withCredentials: true });
+                const messagesResponse = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/rooms/${roomName}/messages`, { withCredentials: true });
                 if (messagesResponse.data.length > 0) {
                     newRoom.messages = messagesResponse.data.map(msg => ({
                         message: msg.message,
                         sender: msg.sender,
                         isSent: msg.sender === this.currentUser.user_id,
                     }));
+                    console.log(`Fetched messages for room ${roomName}:`, newRoom.messages);
                 } else {
                     console.log(`No previous messages for room ${roomName}`);
                 }
@@ -296,7 +298,7 @@ export default {
                 this.errorMessage = "Failed to load chat history. Please try again later.";
             }
 
-            const ws = new WebSocket(`ws://localhost:8080/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
+            const ws = new WebSocket(`wss://music-connect-chat-555448022527.us-central1.run.app/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
 
             ws.onopen = () => {
                 console.log(`WebSocket connection established for room: ${roomName}`);
