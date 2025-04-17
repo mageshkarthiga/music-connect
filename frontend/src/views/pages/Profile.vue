@@ -15,7 +15,7 @@
 
     <div v-else class="profile-details p-card p-p-4 p-shadow-4 pt-4">
       <img
-        :src="user.profile_photo_url"
+        :src="user.profile_photo_url || '/public/profile.svg'"
         alt="Profile Photo"
         style="
           width: 120px;
