@@ -6,6 +6,8 @@ import (
 	"backend/services/recommender"
 	"fmt"
 	"net/http"
+	"gorm.io/gorm"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -186,16 +188,43 @@ func GetUserTracksByID(c echo.Context) error {
 }
 
 func LikeTrack(c echo.Context) error {
-	uid := c.Get("uid").(uint)  
-	trackID := c.Param("track_id")
-
-	var musicPreference models.MusicPreference
-	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "Music preference not found")
+	// Extract UID from context
+	uidInterface := c.Get("uid")
+	uid, ok := uidInterface.(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid user ID")
 	}
 
-	musicPreference.IsLiked = true
+	// Extract and validate track ID
+	trackID := c.Param("track_id")
+	tid, err := strconv.Atoi(trackID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid track ID")
+	}
 
+	var musicPreference models.MusicPreference
+	err = config.DB.Where("user_id = ? AND track_id = ?", uid, tid).First(&musicPreference).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Create new preference record with IsLiked = true
+			musicPreference = models.MusicPreference{
+				UserID:    uint(uid),
+				TrackID:   uint(tid),
+				IsLiked:   true,
+				PlayCount: 0,
+			}
+			if err := config.DB.Create(&musicPreference).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, "Failed to create music preference")
+			}
+			return c.JSON(http.StatusOK, musicPreference)
+		}
+		// Other DB error
+		return c.JSON(http.StatusInternalServerError, "Error checking music preference")
+	}
+
+	// Update existing preference
+	musicPreference.IsLiked = true
 	if err := config.DB.Save(&musicPreference).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to like track")
 	}
@@ -240,29 +269,58 @@ func GetLikedTracks(c echo.Context) error {
 	return c.JSON(http.StatusOK, likedTracks)
 }
 
-func GetTrackPlayCount(c echo.Context) error {
-	uid := c.Get("uid").(uint)  
-	trackID := c.Param("track_id")
-
-	var musicPreference models.MusicPreference
-	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "Music preference not found")
+func GetTopPlayedTracks(c echo.Context) error {
+	uidInterface := c.Get("uid")
+	uid, ok := uidInterface.(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid user ID")
 	}
 
-	return c.JSON(http.StatusOK, musicPreference.PlayCount)
+	var topTracks []models.MusicPreference
+	if err := config.DB.
+		Where("user_id = ?", uid).
+		Order("play_count DESC").
+		Limit(5).
+		Find(&topTracks).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch top played tracks")
+	}
+
+	return c.JSON(http.StatusOK, topTracks)
 }
 
 func IncrementTrackPlayCount(c echo.Context) error {
-	uid := c.Get("uid").(uint)  
+	uidInterface := c.Get("uid")
+	uid, ok := uidInterface.(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, "Invalid user ID")
+	}
+
 	trackID := c.Param("track_id")
+	tid, err := strconv.Atoi(trackID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid track ID")
+	}
 
 	var musicPreference models.MusicPreference
-	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
-		return c.JSON(http.StatusNotFound, "Music preference not found")
+	err = config.DB.Where("user_id = ? AND track_id = ?", uid, tid).First(&musicPreference).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			musicPreference = models.MusicPreference{
+				UserID:    uid,
+				TrackID:   uint(tid),
+				IsLiked:  false,
+				PlayCount: 1,
+			}
+			if err := config.DB.Create(&musicPreference).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, "Failed to create music preference")
+			}
+			return c.JSON(http.StatusOK, musicPreference)
+		}
+		return c.JSON(http.StatusInternalServerError, "Error checking music preference")
 	}
 
 	musicPreference.PlayCount++
-
 	if err := config.DB.Save(&musicPreference).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to increment play count")
 	}
