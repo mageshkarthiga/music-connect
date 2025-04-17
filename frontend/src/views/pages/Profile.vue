@@ -29,7 +29,7 @@
           margin: 0 auto; /* centres horizontally */
         "
       />
-      <h1 class="p-mt-3">{{ user.userName }}</h1>
+      <h1 class="p-mt-3">{{ user.user_name }}</h1>
       <p><strong>Email:</strong> {{ user.email_address }}</p>
       <p><strong>Phone:</strong> {{ user.phone_number }}</p>
       <p><strong>Location:</strong> {{ user.location }}</p>

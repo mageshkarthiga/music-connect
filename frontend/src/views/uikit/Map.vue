@@ -13,68 +13,36 @@
 
 <script setup>
 import { ref, onMounted, nextTick, onBeforeUnmount } from "vue";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { getAllUserLocations } from "@/firebase/locationController";
+import UserService from "@/service/UserService";
+import EventService from "@/service/EventService";
 import { API_BASE_URL } from "@/service/apiConfig";
 
 const map = ref(null);
 const mapLoaded = ref(false);
-const userLocations = ref({});
+const userLocations = ref([]);
+const eventLandmarks = ref([]);
 let mapInstance = null;
 let hasMapInitialised = false;
 let currentPopup = null;
 
-const mockLandmarks = [
-  {
-    name: "SMU",
-    lat: 1.28944,
-    lng: 103.849983,
-    description: "Singapore Management University – heart of city campus life.",
-    image: "/demo/images/smu.jpg",
-  },
-  {
-    name: "Springleaf Prata",
-    lat: 1.401419,
-    lng: 103.824061,
-    description: "Late-night favourite for crispy prata and curry.",
-    image: "/demo/images/prata.jpg",
-  },
-  {
-    name: "Tiong Bahru Bakery",
-    lat: 1.2842,
-    lng: 103.828,
-    description: "Famed for its buttery croissants and rustic charm.",
-    image: "/demo/images/bakery.jpg",
-  },
-  {
-    name: "Marina Bay Sands",
-    lat: 1.2834,
-    lng: 103.8607,
-    description: "Iconic hotel with infinity pool and rooftop views.",
-    image: "/demo/images/mbs.jpg",
-  },
-  {
-    name: "HortPark",
-    lat: 1.2753,
-    lng: 103.7996,
-    description: "Nature-lovers' hub for walks and gardening.",
-    image: "/demo/images/hortpark.jpg",
-  },
-  {
-    name: "Cafe",
-    lat: 1.355,
-    lng: 103.812,
-    description: "Hidden gem for quiet study and rich espresso.",
-    image: "/demo/images/cafe.jpg",
-  },
-];
-
-function createMarkerImage(src) {
+function createMarkerImage(src, isSelf = false, isEvent = false) {
   const wrapper = document.createElement("div");
   const img = document.createElement("img");
   img.src = src;
   img.style.width = "40px";
   img.style.height = "40px";
   img.style.cursor = "pointer";
+
+  if (isEvent) {
+    img.style.borderRadius = "0"; // square
+    img.style.border = "1px solid black";
+  } else {
+    img.style.borderRadius = "50%"; // circle for users
+    img.style.border = isSelf ? "3px solid #16a34a" : "1px solid black";
+  }
+
   wrapper.appendChild(img);
   return wrapper;
 }
@@ -111,9 +79,7 @@ function createPopupOverlay(lat, lng, title, description, image) {
           <p style="margin: 0; font-size: 14px; color: #555;">${description}</p>
         </div>
       `;
-
-      const panes = this.getPanes();
-      panes.floatPane.appendChild(this.div);
+      this.getPanes().floatPane.appendChild(this.div);
     }
 
     draw() {
@@ -137,8 +103,55 @@ function createPopupOverlay(lat, lng, title, description, image) {
   currentPopup.setMap(mapInstance);
 }
 
-onMounted(async () => {
-  userLocations.value = await getAllUserLocations();
+onMounted(() => {
+  const auth = getAuth();
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    if (!firebaseUser) return;
+
+    const currentUID = firebaseUser.uid;
+
+    const [userLocs, users, venues] = await Promise.all([
+      getAllUserLocations(),
+      UserService.getAllUsers(),
+      EventService.getAllEventVenues(),
+    ]);
+    console.log("Venue data:", venues);
+
+    const locatedUsers = users.filter((u) => userLocs[u.firebase_uid]);
+
+    userLocations.value = locatedUsers.map((user) => {
+      const { lat, lon } = userLocs[user.firebase_uid];
+      return {
+        name: user.user_name || `User: ${user.id}`,
+        lat,
+        lon,
+        firebase_uid: user.firebase_uid,
+        profilePhotoUrl: user.profile_photo_url,
+        isSelf: user.firebase_uid === currentUID,
+      };
+    });
+
+    const venueSet = new Map();
+    venues.forEach((evt) => {
+      evt.venues?.forEach((venue) => {
+        if (venue.lat && venue.lon && !venueSet.has(venue.venue_id)) {
+          venueSet.set(venue.venue_id, {
+            lat: venue.lat,
+            lon: venue.lon,
+            name: venue.venue_name,
+            description: venue.location,
+            image:
+              evt.event_image_url || venue.seat_map || "/demo/images/logo.svg",
+          });
+        }
+      });
+    });
+
+    eventLandmarks.value = Array.from(venueSet.values());
+
+    initMap();
+  });
+
   document.addEventListener("visibilitychange", handleVisibility);
   window.addEventListener("focus", handleVisibility);
 });
@@ -201,60 +214,48 @@ function initMapCallback() {
         currentPopup = null;
       });
 
-      // Self
-      const youImg = createMarkerImage("/demo/images/person_light.svg");
-      const selfMarker = new google.maps.marker.AdvancedMarkerElement({
-        map: mapInstance,
-        position: userLocation,
-        title: "You are here",
-        content: youImg,
-      });
-      selfMarker.addListener("click", () => {
-        createPopupOverlay(
-          userLocation.lat,
-          userLocation.lng,
-          "You",
-          "This is your current location.",
-          "/demo/images/person_light.svg"
-        );
-      });
+      userLocations.value.forEach((user) => {
+        const imageSrc = user.profilePhotoUrl?.trim()
+          ? user.profilePhotoUrl
+          : "/demo/images/person_dark.svg";
 
-      // Landmarks
-      mockLandmarks.forEach((loc) => {
-        const landmarkImg = createMarkerImage("/demo/images/logo.svg");
+        const userImg = createMarkerImage(imageSrc, user.isSelf);
+
         const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
-          position: { lat: loc.lat, lng: loc.lng },
-          title: `Landmark: ${loc.name}`,
-          content: landmarkImg,
+          position: { lat: user.lat, lng: user.lon },
+          title: user.name,
+          content: userImg,
         });
+
         marker.addListener("click", () => {
           createPopupOverlay(
-            loc.lat,
-            loc.lng,
-            loc.name,
-            loc.description,
-            loc.image
+            user.lat,
+            user.lon,
+            user.name,
+            "Recently active in this area.",
+            imageSrc
           );
         });
       });
 
-      // Other users
-      Object.entries(userLocations.value).forEach(([userId, loc]) => {
-        const userImg = createMarkerImage("/demo/images/person_dark.svg");
+      eventLandmarks.value.forEach((venue) => {
+        const landmarkImg = createMarkerImage(venue.image, false, true);
+
         const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
-          position: { lat: loc.lat, lng: loc.lon },
-          title: `User: ${userId}`,
-          content: userImg,
+          position: { lat: venue.lat, lng: venue.lon },
+          title: `Venue: ${venue.name}`,
+          content: landmarkImg,
         });
+
         marker.addListener("click", () => {
           createPopupOverlay(
-            loc.lat,
-            loc.lon,
-            `User: ${userId}`,
-            "Recently active in this area.",
-            "/demo/images/person_dark.svg"
+            venue.lat,
+            venue.lon,
+            venue.name,
+            venue.description,
+            venue.image
           );
         });
       });
@@ -269,6 +270,7 @@ function initMapCallback() {
 async function initMap() {
   mapLoaded.value = false;
   await nextTick();
+  mapLoaded.value = true;
   map.value.innerHTML = "";
   mapInstance = null;
   hasMapInitialised = false;
