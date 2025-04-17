@@ -326,6 +326,7 @@ const model = ref([
         v-for="playlist in user.playlists"
         :key="playlist.playlist_id"
         class="playlist-item"  
+        @click="navigateToPlaylist(playlist.playlist_id,playlist.playlist_name)"
       >
 
 
@@ -437,6 +438,16 @@ export default {
     toggleTheme() {
       this.darkTheme = !this.darkTheme;
       localStorage.setItem("theme", this.darkTheme ? "dark" : "light");
+    },
+    navigateToPlaylist(playlist_id, playlist_name) {
+      this.$router.push({
+        name: "playlist",
+        params:
+        {
+          playlist_id: playlist_id,
+          playlist_name: playlist_name
+        }
+      });
     },
   },
   mounted() {

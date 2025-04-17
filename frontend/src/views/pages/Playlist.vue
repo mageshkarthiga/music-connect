@@ -1,57 +1,66 @@
 <template>
-    <div class="playlist-page">
-      <div v-if="playlist?.tracks?.length">
-        <TrackList :tracks="playlist.tracks" />
-      </div>
-  
-      <div v-else-if="playlist" class="no-tracks">
-        <p>This playlist is empty.</p>
-      </div>
-  
-      <div v-else class="loading">
-        <p>Loading playlist...</p>
-      </div>
+    <AppTopbar />
+    <div class="card mt-10">
+        <h2 class="music-title">{{ playlist_name }} Tracks 🎶🎧</h2>
+        <!-- Pass tracks as a prop to MusicTracks -->
+        <MusicTracks :tracks="tracks" @track-selected="onTrackSelected" />
+        <!-- SpotifyPlayer Component -->
+        <SpotifyPlayer v-if="selectedTrackUri" :spotifyUri="selectedTrackUri" />
     </div>
-  </template>
-  <script>
-  import TrackList from "@/components/TrackList.vue";
-  import PlaylistService from "@/service/PlaylistService";
-  
-  export default {
-    name: "Playlist",
+</template>
+
+<script>
+import MusicTracks from '@/components/MusicTracks.vue';
+import SpotifyPlayer from '@/components/SpotifyPlayer.vue';
+import axios from 'axios';
+
+export default {
     components: {
-      TrackList,
+        SpotifyPlayer,
+        MusicTracks,
+    },
+    props: {
+        playlist_id: {
+            type: String,
+            required: true,
+        },
+        playlist_name: {
+            type: String,
+            required: true,
+        },
     },
     data() {
-      return {
-        playlist: null,
-      };
+        return {
+            tracks: [], // Tracks for the playlist
+            selectedTrackUri: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // URI of the selected track
+        };
     },
     async mounted() {
-      await this.fetchPlaylist();
-    },
-    watch: {
-      '$route.query.id': {
-        handler() {
-          this.fetchPlaylist();
-        },
-        immediate: false,
-      }
+        await this.fetchPlaylistTracks();
     },
     methods: {
-      async fetchPlaylist() {
-        const playlistId = this.$route.query.id;
-        console.log("Fetching playlist ID:", playlistId); 
-  
-        try {
-          this.playlist = await PlaylistService.getPlaylistById(playlistId);
-          console.log("Fetched playlist:", this.playlist); 
-          this.$emit("playlistLoaded", this.playlist);
-        } catch (error) {
-          console.error("Error fetching playlist:", error);
-        }
-      },
+        async fetchPlaylistTracks() {
+            try {
+                const response = await axios.get(`http://localhost:8080/playlists/${this.playlist_id}/tracks`);
+                this.tracks = response.data; // Populate tracks
+            } catch (error) {
+                console.error("Error fetching playlist tracks:", error);
+            }
+        },
+        onTrackSelected(uri) {
+            this.selectedTrackUri = uri; // Set the selected track URI
+        },
     },
-  };
-  </script>
-  
+};
+</script>
+
+<style scoped>
+.music-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+}
+</style>

@@ -226,3 +226,17 @@ func AddTracksToPlaylist(c echo.Context) error {
 	// Return success message
 	return c.JSON(http.StatusOK, "Tracks added successfully")
 }
+
+// GetTracksByPlaylistID fetches the tracks associated with a specific playlist
+func GetTracksByPlaylistID(c echo.Context) error {
+    playlistID := c.Param("id")
+	
+    var playlist models.Playlist
+    // Fetch the playlist and preload its tracks
+    if err := config.DB.Preload("Tracks").First(&playlist, playlistID).Error; err != nil {
+        log.Printf("Error fetching playlist with ID %s: %v", playlistID, err)
+        return c.JSON(http.StatusNotFound, "Playlist not found")
+    }
+
+    // Return the tracks associated with the playlist
+    return c.JSON(http.StatusOK, playlist.Tracks)

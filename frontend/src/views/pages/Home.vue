@@ -1,11 +1,7 @@
 <template>
   <div>
     <!-- Loading Spinner -->
-    <div
-      ref="loadingSpinner"
-      v-if="loading"
-      class="p-d-flex p-jc-center p-ai-center"
-    >
+    <div ref="loadingSpinner" v-if="loading" class="p-d-flex p-jc-center p-ai-center">
       <span>Loading...</span>
     </div>
 
@@ -26,13 +22,14 @@
                       <div class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3">Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Handle track-selected event -->
             <TrackCard
               v-for="track in user.tracks"
               :key="track.track_id"
               :track="track"
-              :state="'redirect'"  
+              :state="'redirect'"
+              @track-selected="setSelectedTrackURI"
             />
-
           </div>
         </div>
 
@@ -63,7 +60,6 @@
             />
           </div>
         </div> -->
-
 
         <!-- Artists -->
         <!-- <div class="p-4" v-if="user.tracks.length">
@@ -100,6 +96,16 @@
       </template>
     </div>
 
+    <!-- No Content -->
+    <template v-else>
+      <div class="p-4">
+        <p>No events, playlists, or tracks found.</p>
+      </div>
+    </template>
+  </div>
+
+  <!-- Spotify Player -->
+  <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
 </template>
 
 <script>
@@ -117,13 +123,14 @@ export default {
     PlaylistCard,
     TrackCard,
     SpotifyPlayer,
-    RecommendedTracks
+    RecommendedTracks,
   },
   data() {
     return {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       errorMessage: "",
+      selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
     };
   },
   computed: {
@@ -183,6 +190,9 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    setSelectedTrackURI(trackURI) {
+      this.selectedTrackURI = trackURI; // Update the selected track URI
     },
   },
   mounted() {
