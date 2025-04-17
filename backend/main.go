@@ -3,7 +3,7 @@ package main
 import (
 	"backend/auth"
 	"backend/config"
-	"backend/middleware" // Make sure this is the correct path
+	"backend/middleware" 
 	"backend/models"
 	"backend/routes"
 	"backend/services/spotify"

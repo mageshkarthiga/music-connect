@@ -31,7 +31,7 @@
 <script setup>
 import { ref, onMounted, nextTick, onBeforeUnmount } from "vue";
 import { getAllUserLocations } from "@/firebase/locationController";
-
+import { API_BASE_URL } from "@/service/apiConfig";
 const map = ref(null);
 const mapLoaded = ref(false);
 const userLocations = ref({});
@@ -112,10 +112,20 @@ function ensureMapRedraw() {
   }
 }
 
-function showPopover(event, title, description, image) {
-  if (!event?.currentTarget) return;
+async function showPopover(targetElement, title, description, image) {
+  if (!targetElement) return;
+
   cardData.value = { title, description, image };
-  overlay.value.show(event);
+
+  // Wait for content update in <Popover> to complete
+  await nextTick();
+
+  // Slight additional delay to avoid race condition during transitions
+  setTimeout(() => {
+    if (overlay.value && targetElement?.offsetHeight) {
+      overlay.value.show(targetElement);
+    }
+  }, 0);
 }
 
 function createMarkerImage(src, clickHandler) {
@@ -137,7 +147,7 @@ function loadGoogleMapsScript(callback) {
   if (existingScript) return;
 
   const script = document.createElement("script");
-  script.src = `http://localhost:3000/api/maps?libraries=maps,marker&callback=${callback}&loading=async`;
+  script.src = `${API_BASE_URL}/maps?libraries=maps,marker&callback=${callback}&loading=async`;
   script.async = true;
   script.defer = true;
   document.head.appendChild(script);
@@ -177,26 +187,31 @@ function initMapCallback() {
       });
 
       mockLandmarks.forEach((loc) => {
-        const landmarkImg = createMarkerImage("/demo/images/logo.svg", (e) =>
-          showPopover(e, loc.name, loc.description, loc.image)
-        );
-        new google.maps.marker.AdvancedMarkerElement({
+        const landmarkImg = createMarkerImage("/demo/images/logo.svg");
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
           position: { lat: loc.lat, lng: loc.lng },
           title: `Landmark: ${loc.name}`,
           content: landmarkImg,
         });
+
+        marker.addListener("click", () => {
+          showPopover(landmarkImg, loc.name, loc.description, loc.image);
+        });
       });
 
       Object.entries(userLocations.value).forEach(([userId, loc]) => {
-        const userImg = createMarkerImage("/demo/images/person_dark.svg", (e) =>
+        const userImg = createMarkerImage("/demo/images/person_dark.svg");
+        userImg.addEventListener("click", (e) =>
           showPopover(
-            e,
+            userImg,
             `User: ${userId}`,
             "Recently active in this area.",
             "/demo/images/person_dark.svg"
           )
         );
+
         new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
           position: { lat: loc.lat, lng: loc.lon },
