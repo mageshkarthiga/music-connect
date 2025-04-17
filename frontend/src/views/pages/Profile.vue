@@ -95,7 +95,12 @@ import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
 import PlaylistService from "@/service/PlaylistService";
-import { getUserTracksById, getUserTracks } from "@/service/TrackService";
+import {
+  getUserTracksById,
+  getUserTracks,
+  getFavUserTracksById,
+  getFavUserTracks,
+} from "@/service/TrackService";
 
 export default {
   name: "Profile",
@@ -126,7 +131,7 @@ export default {
             UserService.getUserByUserId(userId),
             EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
-            getUserTracksById(userId),
+            getFavUserTracksById(userId),
           ]);
           this.user = { ...u, events, playlists, tracks };
         } else {
@@ -135,7 +140,7 @@ export default {
             UserService.getUser({ withCredentials: true }), // /me endpoint inside UserService
             EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
-            getUserTracks(),
+            getFavUserTracks(),
           ]);
           this.user = { ...u, events, playlists, tracks };
         }

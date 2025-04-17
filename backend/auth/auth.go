@@ -75,8 +75,11 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	// ---- tracks ----
 	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
 	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
+	e.GET("/me/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavTracksForUser))
 	e.POST("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
+	
 	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
+	e.GET("/users/:id/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavUserTracksByID))
 
 	// ---- playlists ----
 	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
