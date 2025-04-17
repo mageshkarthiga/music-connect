@@ -218,17 +218,17 @@ func getArtistName(artistId int, apiKey string) string {
 	return artists[0].ArtistName
 }
 
-func computeJaccardScore(a, b TrackSet) float64 {
+func computeJaccardScore(userPlaylist TrackSet, otherPlaylist TrackSet) float64 {
 	intersection := 0
 	union := make(map[int]bool)
 
-	for track := range a {
+	for track := range userPlaylist {
 		union[track] = true
-		if b[track] {
+		if otherPlaylist[track] {
 			intersection++
 		}
 	}
-	for track := range b {
+	for track := range otherPlaylist {
 		union[track] = true
 	}
 
@@ -305,6 +305,6 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 		tracks = append(tracks, track)
 	}
 
-	fmt.Println("CHECKPOINT MUSIC RECOMMENDER: ", tracks)
+	log.Println("CHECKPOINT MUSIC RECOMMENDER: ", tracks)
 	return tracks, nil
 }
