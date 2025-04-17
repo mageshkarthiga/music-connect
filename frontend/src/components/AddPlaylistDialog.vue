@@ -11,7 +11,7 @@
     <!-- Playlist Name -->
     <div class="p-fluid">
       <div class="field">
-        <label for="playlistName">Playlist Name</label>
+        <label for="playlistName">Playlist Name: </label>
         <InputText
           v-model="playlistName"
           id="playlistName"
@@ -21,8 +21,9 @@
     </div>
 
     <!-- Track Selection -->
+    <h6>Select Tracks: </h6>
     <div class="track-list">
-      <h6>Select Tracks:</h6>
+
       <div v-if="tracks.length > 0">
         <TrackCard
           v-for="track in tracks"
@@ -187,7 +188,10 @@ export default {
   color: black;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 20px;
+  gap: 30px;
+  padding: 10px;
+  margin: 10px;
+  justify-content: center; /* Centers the tracks horizontally */
+  align-items: center; /* Centers the tracks vertically */
 }
 </style>
