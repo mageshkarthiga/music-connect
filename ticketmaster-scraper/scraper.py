@@ -73,7 +73,6 @@ def scrape_ticketmaster(callback_url):
         event_urls = get_event_links(driver)
         print(f"Found {len(event_urls)} events.")
 
-        event_urls = [event_urls[0]]
         all_data = []
         for url in event_urls:
             print(f"Scraping: {url}")
