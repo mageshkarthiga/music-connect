@@ -14,14 +14,45 @@
     <div v-if="!loading">
       <template v-if="hasContent">
 
-        <!-- Tracks -->
-        <div class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3">Top Played Tracks</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Handle track-selected event -->
+        <!-- Tracks Section -->
+        <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg"
+          v-if="user.tracks.length">
+          <!-- Title with Emoji -->
+          <h2 class="text-3xl font-bold text-center text-white mb-4">
+            🏆 Top Played Tracks
+          </h2>
+
+          <!-- Subheading with Emoji -->
+          <p class="text-center text-lg text-white mb-6 opacity-90">
+            🌟 Your most played tracks, right here!
+          </p>
+
+          <!-- Track Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
+            <!-- Track Card Loop -->
             <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-              @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)" />
+              @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
+              class="bg-white p-4 rounded-lg shadow-md hover:scale-105 hover:shadow-xl">
+              <div class="flex items-center justify-between">
+                <!-- Track Info -->
+                <div class="flex items-center space-x-3">
+                  <!-- Track Title -->
+                  <h3 class="text-lg font-semibold text-gray-900">
+                    {{ track.track_title }}
+                  </h3>
+                </div>
+                <!-- Play Count Icon -->
+                <div class="text-sm text-gray-600">
+                  🌟 {{ track.play_count }}
+                </div>
+              </div>
+            </TrackCard>
           </div>
+        </div>
+
+        <!-- No Tracks Message -->
+        <div v-if="!user.tracks.length" class="p-4">
+          <p>No tracks found. Start Listening Today! 🎧</p>
         </div>
 
         <!-- Events -->
