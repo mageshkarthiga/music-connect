@@ -185,4 +185,87 @@ func GetUserTracksByID(c echo.Context) error {
     return c.JSON(http.StatusOK, tracks)
 }
 
+func LikeTrack(c echo.Context) error {
+	uid := c.Get("uid").(uint)  
+	trackID := c.Param("track_id")
 
+	var musicPreference models.MusicPreference
+	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "Music preference not found")
+	}
+
+	musicPreference.IsLiked = true
+
+	if err := config.DB.Save(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to like track")
+	}
+
+	return c.JSON(http.StatusOK, musicPreference)
+}
+
+func DislikeTrack(c echo.Context) error {
+	uid := c.Get("uid").(uint)  
+	trackID := c.Param("track_id")
+
+	var musicPreference models.MusicPreference
+	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "Music preference not found")
+	}
+
+	musicPreference.IsLiked = false
+
+	if err := config.DB.Save(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to unlike track")
+	}
+
+	return c.JSON(http.StatusOK, musicPreference)
+}
+
+func GetLikedTracks(c echo.Context) error {
+	uid := c.Get("uid").(uint)  
+
+	var musicPreferences []models.MusicPreference
+	if err := config.DB.Where("user_id = ? AND is_liked = ?", uid, true).Find(&musicPreferences).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch liked tracks")
+	}
+
+	var likedTracks []models.Track
+	for _, mp := range musicPreferences {
+		var track models.Track
+		if err := config.DB.First(&track, mp.TrackID).Error; err == nil {
+			likedTracks = append(likedTracks, track)
+		}
+	}
+
+	return c.JSON(http.StatusOK, likedTracks)
+}
+
+func GetTrackPlayCount(c echo.Context) error {
+	uid := c.Get("uid").(uint)  
+	trackID := c.Param("track_id")
+
+	var musicPreference models.MusicPreference
+	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "Music preference not found")
+	}
+
+	return c.JSON(http.StatusOK, musicPreference.PlayCount)
+}
+
+func IncrementTrackPlayCount(c echo.Context) error {
+	uid := c.Get("uid").(uint)  
+	trackID := c.Param("track_id")
+
+	var musicPreference models.MusicPreference
+	if err := config.DB.Where("user_id = ? AND track_id = ?", uid, trackID).First(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "Music preference not found")
+	}
+
+	musicPreference.PlayCount++
+
+	if err := config.DB.Save(&musicPreference).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to increment play count")
+	}
+
+	return c.JSON(http.StatusOK, musicPreference)
+}

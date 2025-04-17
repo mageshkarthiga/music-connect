@@ -35,12 +35,16 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
 
 	// Track Routes
-
 	e.GET("/tracks", controllers.GetTracks)          // Fetch all tracks
 	e.GET("/tracks/:id", controllers.GetTrackByID)   // Fetch a track by ID (Updated function name)
 	e.POST("/tracks", controllers.CreateTrack)       // Create a new track
 	e.PUT("/tracks/:id", controllers.UpdateTrack)    // Update an existing track by ID
 	e.DELETE("/tracks/:id", controllers.DeleteTrack) // Delete a track by ID
+	e.PUT("/tracks/:track_id/like", controllers.LikeTrack) 
+	e.PUT("/tracks/:track_id/dislike", controllers.DislikeTrack)
+	e.GET("/tracks/liked", controllers.GetLikedTracks)
+	e.GET("/tracks/:track_id/playcount", controllers.GetTrackPlayCount)
+	e.PUT("/tracks/:track_id/increment", controllers.IncrementTrackPlayCount)
 
 	// Event Routes
 	e.GET("/events", controllers.GetEvents)                      // Fetch all events
