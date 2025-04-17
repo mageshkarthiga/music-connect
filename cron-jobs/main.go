@@ -11,15 +11,14 @@ func main() {
 	err != nil {
 		log.Println("Warning: .env file not found, relying on environment variables")
 	}
+	go CallbackServer()
 
 	c := cron.New()
-	// c.AddFunc("0 0 * * 0", func() {
-		c.AddFunc("54 13 * * 4", func() {
+	c.AddFunc("0 0 * * 0", func() {
 		log.Println("Running weekly job...")
 		go callSpotifyAPI()
 
 		triggerScraper()
-		go CallbackServer()
 	})
 	c.Start()
 	select {}
