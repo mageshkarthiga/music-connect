@@ -12,6 +12,7 @@ declare module 'vue' {
     AccordionHeader: typeof import('primevue/accordionheader')['default']
     AccordionPanel: typeof import('primevue/accordionpanel')['default']
     AddPlaylistDialog: typeof import('./src/components/AddPlaylistDialog.vue')['default']
+    AllEventCard: typeof import('./src/components/AllEventCard.vue')['default']
     AutoComplete: typeof import('primevue/autocomplete')['default']
     Avatar: typeof import('primevue/avatar')['default']
     AvatarGroup: typeof import('primevue/avatargroup')['default']

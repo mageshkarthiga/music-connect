@@ -76,20 +76,23 @@ export default {
     return response.data;
   },
 
-  //   async getEventsByUserId(userId: number): Promise<Event[]> {
-  //     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
-  //       withCredentials: true, // Send cookies automatically, like auth_token
-  //     });
+  async likeEvent(eventId) {
+    const token = Cookies.get("accessToken");
+    return await axios.post(
+      `${API_BASE_URL}/likeEvent`,
+      { event_id: eventId }, // ✅ Must match expected format
+      {
+        withCredentials: true,
+      }
+    );
+  },
+  
 
-  //     return response.data;
-
-  // }
-
-  //   async getUserByEventId(eventId: number, token: string) {
-  //     const response = await axios.get<Event>(`${EVENT_URL}/users/${eventId}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-  //     return response.data;
+  async getLikedEvents(): Promise<Event[]> {
+    const token = Cookies.get("token");
+    const response = await axios.get(`${API_BASE_URL}/me/likedEvents`, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
 };
