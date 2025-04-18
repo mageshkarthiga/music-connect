@@ -22,7 +22,7 @@
       <template v-if="hasContent">
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <h2 class="text-xl font-semibold mb-3">Tracks</h2>
+          <h2 class="text-xl font-semibold mb-3"> Frequently Accessed Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <!-- Handle track-selected event -->
 
@@ -44,7 +44,7 @@
         <br>
 
         <!-- User's liked events -->
-        <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
+        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
           <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
             <EventCard
@@ -56,7 +56,7 @@
               @event-liked="handleEventLiked"
             />
           </div>
-        </div>
+        </div> -->
 
         <br>
 

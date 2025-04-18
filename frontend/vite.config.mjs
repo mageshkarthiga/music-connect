@@ -36,5 +36,8 @@ export default defineConfig(({ mode }) => {
     define: {
       "process.env": env, // Ensure variables are accessible
     },
+    build: {
+      target: 'esnext', // Ensure compatibility with top-level await and modern JS features
+    },
   };
 });
