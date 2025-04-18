@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -9,54 +9,74 @@ import time
 BASE_URL = "https://ticketmaster.sg"
 
 def get_driver():
+    print("Initializing WebDriver...")
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.binary_location = "/usr/bin/chromium"
 
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=chrome_options)
+    # Use the Service class to provide the chromedriver path
+    service = Service(executable_path="/usr/bin/chromedriver")
+    print("Starting ChromeDriver service...")
+
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    print("WebDriver initialized successfully.")
+    return driver
 
 def get_event_links(driver):
+    print("Opening the base URL...")
     driver.get(BASE_URL)
     time.sleep(3)
     soup = BeautifulSoup(driver.page_source, "html.parser")
+    print("Page loaded. Extracting event links...")
 
     event_links = []
     for a in soup.select("a[href*='/activity/detail/']"):
         href = a.get("href")
         if href and href not in event_links:
             event_links.append(BASE_URL + href)
+    print(f"Found {len(event_links)} event links.")
     return event_links
 
 def extract_event_data(driver, url):
+    print(f"Extracting data from event: {url}")
     driver.get(url)
     time.sleep(2)
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     try:
         event_name = soup.find("h1").get_text(strip=True)
+        print(f"Event name found: {event_name}")
     except:
         event_name = "Unknown Event"
+        print("Event name not found.")
 
     try:
         desc_tag = soup.find("meta", {"name": "description"})
         event_description = desc_tag["content"] if desc_tag else "No description"
+        print(f"Event description: {event_description}")
     except:
         event_description = "No description"
+        print("Event description not found.")
 
     try:
         img_tag = soup.find("meta", {"name": "og:image"})
-        image_url = image_url = img_tag["content"] if img_tag else ""
+        image_url = img_tag["content"] if img_tag else ""
+        print(f"Image URL: {image_url}")
     except:
         image_url = ""
+        print("Image URL not found.")
 
     try:
         venue_tag = soup.find("span", {"id": "synopsisEventVenue"})
         venue_name = venue_tag.get_text(strip=True) if venue_tag else "Unknown Venue"
+        print(f"Venue: {venue_name}")
     except:
         venue_name = "Unknown Venue"
+        print("Venue not found.")
 
     return {
         "eventName": event_name,
@@ -68,42 +88,34 @@ def extract_event_data(driver, url):
     }
 
 def scrape_ticketmaster(callback_url):
+    print("Starting scraping process...")
     driver = get_driver()
     try:
+        print("Getting event links...")
         event_urls = get_event_links(driver)
         print(f"Found {len(event_urls)} events.")
 
-        event_urls = [event_urls[0]]
         all_data = []
         for url in event_urls:
-            print(f"Scraping: {url}")
+            print(f"Scraping event: {url}")
             try:
                 data = extract_event_data(driver, url)
                 all_data.append(data)
+                print(f"Scraped data for event: {url}")
             except Exception as e:
                 print(f"Failed to scrape {url}: {e}")
             time.sleep(1)
 
         print(f"Total events scraped: {len(all_data)}")
-        print("Example: ", all_data[0])
+        print(f"Example event data: {all_data[0] if all_data else 'No data'}")
     finally:
         driver.quit()
-
-    # time.sleep(5)  # pretend it's a long operation
-
-    # all_data = [
-    #     {
-    #         "eventDescription": "Buy tickets for VALLEY...",
-    #         "eventImageUrl": "https://static.ticketmaster.sg/images/activity/25sg_valley.jpg",
-    #         "eventName": "VALLEY: WATER THE FLOWERS...",
-    #         "eventUrl": "https://ticketmaster.sg/activity/detail/25sg_valley",
-    #         "location": "Singapore",
-    #         "venueName": "Capitol Theatre"
-    #     }
-    # ]
+        print("WebDriver closed.")
     
     try:
+        print("Sending scraped data to callback URL...")
         res = requests.post(callback_url, json=all_data)
         print(f"Callback status: {res.status_code}")
     except Exception as e:
         print(f"Error posting to callback: {e}")
+
