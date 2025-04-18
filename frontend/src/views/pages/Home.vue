@@ -33,10 +33,20 @@
             :state="'redirect'"
             :liked="likedTracks.includes(track.track_id)"
             :selectedTracks="selectedTracks"
+            @track-selected="setSelectedTrackURI"
+          />
+
+          <!-- <TrackCard
+            v-for="track in user.tracks"
+            :key="track.track_id"
+            :track="track"
+            :state="'redirect'"
+            :liked="likedTracks.includes(track.track_id)"
+            :selectedTracks="selectedTracks"
             @track-liked="handleTrackLiked"
             @track-unliked="handleTrackUnliked"
             @track-selected="setSelectedTrackURI"
-          />
+          /> -->
 
           </div>
         </div>

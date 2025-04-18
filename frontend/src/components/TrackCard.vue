@@ -23,11 +23,11 @@
   @click.stop="toggleLike"
   class="absolute right-2 top-1/2 transform -translate-y-1/2"
 >
-  <i
+  <!-- <i
     class="pi"
     :class="liked ? 'pi-heart-fill text-red-500' : 'pi-heart'"
     style="font-size: 1.2rem;"
-  ></i>
+  ></i> -->
 </div>
   </div>
 </template>
