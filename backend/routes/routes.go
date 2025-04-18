@@ -24,6 +24,18 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	// e.POST("/auth/login", controllers.RegisterAuthRoutes)
 	e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
 
+    e.POST("/users/friends", controllers.AddFriend)
+    e.GET("/users/:id/friends", controllers.GetFriends)
+
+    //Friend Routes
+
+    e.POST("/friend/:friend_id/request", controllers.SendFriendRequest)
+    e.POST("/friend/:friend_id/accept", controllers.AcceptFriendRequest)
+    e.POST("/friend/:friend_id/reject", controllers.RejectFriendRequest)
+    e.POST("/friend/:friend_id/remove", controllers.RemoveFriend)
+    e.GET("/friends", controllers.GetFriends)
+
+
 	// Track Routes
 
 	e.GET("/tracks", controllers.GetTracks)          // Fetch all tracks
@@ -31,6 +43,10 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.POST("/tracks", controllers.CreateTrack)       // Create a new track
 	e.PUT("/tracks/:id", controllers.UpdateTrack)    // Update an existing track by ID
 	e.DELETE("/tracks/:id", controllers.DeleteTrack) // Delete a track by ID
+    // e.GET("/tracks/:id/playlist", controllers.GetPlaylistByTrackID) // Fetch playlist by track ID
+    e.GET("/likedTracks", controllers.GetLikedTracks) // Fetch liked tracks for a user
+    e.POST("/likeTrack", controllers.LikeTrack) // Post request to like a track
+    e.DELETE("/likeTrack", controllers.UnlikeTrack) // Delete request to unlike a track
 
 	// Event Routes
 	e.GET("/events", controllers.GetEvents)                      // Fetch all events

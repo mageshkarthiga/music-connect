@@ -75,13 +75,27 @@ e.GET("/me",                 middleware.AuthMiddleware(projectID)(controllers.Ge
 e.PUT("/users/:id",          middleware.AuthMiddleware(projectID)(controllers.UpdateUser))
 e.DELETE("/users/:id",       middleware.AuthMiddleware(projectID)(controllers.DeleteUser))
 e.GET("/users/firebase/:uid",middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID))
+e.POST("/users/friends",     middleware.AuthMiddleware(projectID)(controllers.AddFriend))
+e.GET("/users/:id/friends",  middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
+
+// ---- friends ----
+
+e.POST("/friend/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
+e.POST("/friend/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
+e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
+e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
+e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
 
 // ---- tracks ----
 e.GET("/tracks",             middleware.AuthMiddleware(projectID)(controllers.GetTracks))
 e.GET("/me/tracks",          middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
 e.POST("/me/tracks",         middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
 e.GET("/users/:id/tracks",   middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
-
+e.GET("/likedTracks",        middleware.AuthMiddleware(projectID) (controllers.GetLikedTracks)  )
+e.POST("/likeTrack",         middleware.AuthMiddleware(projectID) (controllers.LikeTrack)  )
+e.DELETE("/likeTrack",       middleware.AuthMiddleware(projectID) (controllers.UnlikeTrack)  )
 // ---- playlists ----
 e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
 e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
