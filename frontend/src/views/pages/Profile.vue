@@ -1,8 +1,6 @@
+<!-- Profile.vue -->
 <template>
-  <div
-    class="profile-page"
-    style="max-width: 1000px; margin: 2rem auto; text-align: center"
-  >
+  <div class="profile-page" style="max-width: 1000px; margin: 2rem auto">
     <div
       v-if="loading"
       class="p-d-flex p-jc-center p-ai-center"
@@ -31,8 +29,8 @@
           object-fit: cover;
           border-radius: 50%;
           border: 3px solid var(--primary-color);
-          display: block; /* makes margin work */
-          margin: 0 auto; /* centres horizontally */
+          display: block;
+          margin: 0 auto;
         "
       />
       <br> 
@@ -106,67 +104,55 @@ import { getUserTracksById, getUserTracks } from "@/service/TrackService";
 export default {
   name: "Profile",
   components: { EventCard, PlaylistCard, TrackCard, SpotifyPlayer },
+
   data: () => ({
     loading: true,
     user: { events: [], playlists: [], tracks: [] },
     errorMessage: "",
   }),
+
   computed: {
     hasContent() {
       const { events, playlists, tracks } = this.user;
       return events.length || playlists.length || tracks.length;
     },
   },
+
   methods: {
     async fetchData() {
       this.loading = true;
       const userId = Number(this.$route.query.user_id);
 
-      // First, get the core user data. If this fails, the page cannot render.
-      let userData;
       try {
-        userData = await UserService.getUser({ withCredentials: true });
+        if (!Number.isNaN(userId)) {
+          // explicit user
+          const [u, events, playlists, tracks] = await Promise.all([
+            UserService.getUserByUserId(userId),
+            EventService.getEventsByUserId(userId),
+            PlaylistService.getPlaylistsByUserId(userId),
+            getUserTracksById(userId),
+          ]);
+          this.user = { ...u, events, playlists, tracks };
+        } else {
+          // current logged‑in user
+          const [u, events, playlists, tracks] = await Promise.all([
+            UserService.getUser({ withCredentials: true }), // /me endpoint inside UserService
+            EventService.getEventsForCurrentUser(),
+            PlaylistService.getPlaylistsForUser(),
+            getUserTracks(),
+          ]);
+          this.user = { ...u, events, playlists, tracks };
+        }
       } catch (err) {
-        console.error("Failed to fetch user details:", err);
+        console.error("profile fetch error:", err);
         this.errorMessage =
-          "Failed to fetch user details. Please try again later.";
+          err?.response?.data?.message ?? "Failed to fetch profile.";
+      } finally {
         this.loading = false;
-        return;
       }
-
-      // Now load additional data; if any fail, log the error and fallback to empty lists.
-      const eventsPromise = userId
-        ? EventService.getEventsByUserId(userId)
-        : EventService.getEventsForCurrentUser();
-      const playlistsPromise = userId
-        ? PlaylistService.getPlaylistsByUserId(userId)
-        : PlaylistService.getPlaylistsForUser();
-      const tracksPromise = userId
-        ? getUserTracksById(userId)
-        : getUserTracks();
-
-      const results = await Promise.allSettled([
-        eventsPromise,
-        playlistsPromise,
-        tracksPromise,
-      ]);
-      const events = results[0].status === "fulfilled" ? results[0].value : [];
-      const playlists =
-        results[1].status === "fulfilled" ? results[1].value : [];
-      const tracks = results[2].status === "fulfilled" ? results[2].value : [];
-
-      if (results.some((result) => result.status === "rejected")) {
-        console.error("One or more profile sections failed to load", results);
-        // You might choose to provide more detail, but a generic message keeps things simple.
-        this.errorMessage = "Some parts of your profile failed to load.";
-      } else {
-        this.errorMessage = "";
-      }
-
-      this.user = { ...userData, events, playlists, tracks };
-      this.loading = false;
     },
   },
+
   mounted() {
     this.fetchData();
   },

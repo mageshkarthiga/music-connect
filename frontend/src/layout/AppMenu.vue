@@ -5,7 +5,7 @@
     <div class="library-header">
       <h4>Your Library</h4>
       <Button @click="openAddPlaylistDialog" class="add-playlist-btn">
-        <i class="pi pi-plus"></i> 
+        <i class="pi pi-plus"></i>
       </Button>
     </div>
 
@@ -24,7 +24,7 @@
           severity="secondary"
           text
         >
-          <img :src="playlist.playlist_image_url" alt="Playlist Image" class="playlist-image" />
+          <img :src="playlist.playlist_image_url || `https://i.scdn.co/image/ab67616d0000b2735074bd0894cb1340b8d8a678`" alt="Playlist Image" class="playlist-image" />
           <div class="playlist-info">
             <span class="playlist-name">{{ playlist.playlist_name }}</span>
             <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>
@@ -50,7 +50,6 @@
 
 <script>
 import axios from "axios";
-import { ref, onMounted } from "vue";
 import { API_BASE_URL } from "@/service/apiConfig";
 import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
 

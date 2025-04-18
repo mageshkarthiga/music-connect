@@ -18,6 +18,19 @@ func GetEvents(c echo.Context) error {
     return c.JSON(http.StatusOK, events)
 }
 
+func GetEventVenues(c echo.Context) error {
+    var events []models.Event
+
+    if err := config.DB.
+        Preload("Venues"). // this loads the many-to-many relation
+        Find(&events).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch event venues")
+    }
+
+    return c.JSON(http.StatusOK, events)
+}
+
+
 // GetEventByID fetches a single event by ID
 func GetEventByID(c echo.Context) error {
     id := c.Param("id")

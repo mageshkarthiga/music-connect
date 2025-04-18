@@ -1,15 +1,32 @@
-<script setup>
-import { ProductService } from '@/service/ProductService';
+<script>
 import { getRecommendedTracks } from '@/service/RecommenderService';
-import { onMounted, ref } from 'vue';
 
-const tracks = ref(null);
-
-onMounted(() => {
-    getRecommendedTracks().then((data) => {
-        tracks.value = data;
-    });
-});
+export default {
+    name: 'RecommendedTracks',
+    data() {
+        return {
+            tracks: null,
+            selectedTrackUri: null,
+        };
+    },
+    methods: {
+        async fetchRecommendedTracks() {
+            try {
+                const data = await getRecommendedTracks();
+                this.tracks = data;
+            } catch (error) {
+                console.error('Error fetching recommended tracks:', error);
+            }
+        },
+        handleClick(trackUri) {
+            this.selectedTrackUri = trackUri;
+            this.$emit('track-selected', trackUri);
+        },
+    },
+    mounted() {
+        this.fetchRecommendedTracks();
+    },
+};
 </script>
 
 <template>
@@ -31,8 +48,9 @@ onMounted(() => {
                 </template>
             </Column>
             <Column style="width: 10%" header="">
-                <template #body>
-                    <Button icon="pi pi-caret-right" type="button" class="p-button-text"></Button>
+                <template #body="{ data }">
+                    <Button icon="pi pi-play" type="button" class="p-button-text"
+                        @click="handleClick(data.track_uri)"></Button>
                 </template>
             </Column>
         </DataTable>

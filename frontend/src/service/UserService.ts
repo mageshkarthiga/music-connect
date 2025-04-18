@@ -68,14 +68,7 @@ export default {
     });
     const data = response.data;
 
-    return {
-      id: data.user_id,
-      userName: data.user_name,
-      emailAddress: data.email_address,
-      phoneNumber: data.phone_number,
-      location: data.location,
-      profilePhotoUrl: data.profile_photo_url,
-    };
+    return data;
   },
 
   async fetchSecureData(idToken: string) {
@@ -93,17 +86,10 @@ export default {
   },
 
   async getUserByUserId(userId: number): Promise<User> {
-    const { data } = await axios.get(`${USER_URL}/${userId}`, {
+    const response = await axios.get(`${USER_URL}/users/${userId}`, {
       withCredentials: true,
     });
 
-    return {
-      id: data.user_id,
-      userName: data.user_name,
-      emailAddress: data.email_address,
-      phoneNumber: data.phone_number,
-      location: data.location,
-      profilePhotoUrl: data.profile_photo_url,
-    };
+    return response.data;
   },
 };

@@ -79,3 +79,16 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.clickable-link {
+    color: black;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.clickable-link:hover {
+    color: #10b981;
+    text-decoration: none;
+}
+</style>

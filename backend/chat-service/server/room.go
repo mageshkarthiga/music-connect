@@ -1,82 +1,72 @@
-package chat
+package server
 
 import (
+	"chat-service/firebase"
+	"chat-service/models"
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"log"
+	"strings"
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
 )
 
 type Room struct {
-	name       string
-	clients    map[*Client]bool
+	Name       string
+	Clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan *Message
+	broadcast  chan *models.Message
 }
 
 func NewRoom(name string) *Room {
 	return &Room{
-		name:       name,
-		clients:    make(map[*Client]bool),
+		Name:       name,
+		Clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan *Message),
+		broadcast:  make(chan *models.Message),
 	}
 }
 
-// const welcomeMessage = "%s joined the room"
-
-// func (room *Room) notifyClientJoined(client *Client) {
-// 	message := &Message{
-// 		Action:  SendMessageAction,
-// 		Target:  room.name,
-// 		Message: fmt.Sprintf(welcomeMessage, client.UserID),
-// 	}
-
-// 	room.broadcastMessageToClients(message.encode())
-// }
-
 // RunRoom to run the room and accept various requests
-func (room *Room) RunRoom() {
-	fmt.Printf("RunRoom started for room: %s\n", room.name)
+func (room *Room) Run() {
+	fmt.Printf("RunRoom started for room: %s\n", room.Name)
 	for {
 		select {
 		case client := <-room.register:
-			fmt.Printf("Registering client %s in room %s\n", client.UserID, room.name)
-			room.registerClientInRoom(client)
+			fmt.Printf("Registering client %s in room %s\n", client.UserID, room.Name)
+			room.registerClient(client)
 		case client := <-room.unregister:
-			fmt.Printf("Unregistering client %s from room %s\n", client.UserID, room.name)
-			room.unregisterClientInRoom(client)
+			fmt.Printf("Unregistering client %s from room %s\n", client.UserID, room.Name)
+			room.unregisterClient(client)
 		case message := <-room.broadcast:
-			fmt.Printf("Broadcasting message in room %s: %s\n", room.name, string(message.encode()))
-			room.broadcastMessageToClients(message.encode())
+			fmt.Printf("Broadcasting message in room %s: %s\n", room.Name, string(message.Encode()))
+			room.broadcastMessage(message.Encode())
 		}
 	}
 }
 
-func (room *Room) registerClientInRoom(client *Client) {
-	// room.notifyClientJoined(client)
-	room.clients[client] = true
-	fmt.Printf("Client %s joined room %s\n", client.UserID, room.name)
-	fmt.Printf("Current clients in room %s: ", room.name)
-	for c := range room.clients {
+func (room *Room) registerClient(client *Client) {
+	room.Clients[client] = true
+	fmt.Printf("Client %s joined room %s\n", client.UserID, room.Name)
+	fmt.Printf("Current clients in room %s: ", room.Name)
+	for c := range room.Clients {
 		fmt.Printf("%s ", c.UserID)
 	}
 	fmt.Println()
 }
 
-func (room *Room) unregisterClientInRoom(client *Client) {
-	if _, ok := room.clients[client]; ok {
-		delete(room.clients, client)
+func (room *Room) unregisterClient(client *Client) {
+	if _, ok := room.Clients[client]; ok {
+		delete(room.Clients, client)
 	}
 }
 
-func (room *Room) broadcastMessageToClients(message []byte) {
-	fmt.Printf("Broadcasting message to room %s: %s\n", room.name, string(message))
-	var msg Message
+func (room *Room) broadcastMessage(message []byte) {
+	fmt.Printf("Broadcasting message to room %s: %s\n", room.Name, string(message))
+	var msg models.Message
 	if err := json.Unmarshal(message, &msg); err != nil {
 		fmt.Printf("Error unmarshalling message: %v\n", err)
 		return
@@ -86,13 +76,13 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 	if msg.MessageID == "" {
 		msg.GenerateMessageID()
 		// Re-encode with the message ID
-		message = msg.encode()
+		message = msg.Encode()
 	}
 
 	// Save to Firestore only once
-	go func(msg Message) {
-		_, _, err := FirestoreClient.Collection("rooms").
-			Doc(room.name).
+	go func(msg models.Message) {
+		_, _, err := firebase.FirestoreClient.Collection("rooms").
+			Doc(room.Name).
 			Collection("messages").
 			Add(context.Background(), map[string]interface{}{
 				"sender":     msg.Sender,
@@ -105,12 +95,12 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 		if err != nil {
 			fmt.Printf("Failed to save message to Firestore: %v\n", err)
 		} else {
-			fmt.Printf("Message saved to Firestore for room %s\n", room.name)
+			fmt.Printf("Message saved to Firestore for room %s\n", room.Name)
 		}
 	}(msg)
 
 	// Broadcast to all clients
-	for client := range room.clients {
+	for client := range room.Clients {
 		// Skip sending the message back to the sender
 		if client.UserID == msg.Sender {
 			continue
@@ -126,12 +116,15 @@ func (room *Room) broadcastMessageToClients(message []byte) {
 	}
 }
 
-func GetMessagesForRoom(roomName string) ([]Message, error) {
+func GetMessagesForRoom(roomName string) ([]models.Message, error) {
+	if firebase.FirestoreClient == nil {
+		return nil, fmt.Errorf("Firestore client is not initialized")
+	}
 	ctx := context.Background()
-	messages := []Message{}
+	messages := []models.Message{}
 
 	// Query the messages subcollection for the room
-	iter := FirestoreClient.Collection("rooms").
+	iter := firebase.FirestoreClient.Collection("rooms").
 		Doc(roomName).
 		Collection("messages").
 		OrderBy("timestamp", firestore.Asc).
@@ -146,7 +139,7 @@ func GetMessagesForRoom(roomName string) ([]Message, error) {
 			return nil, fmt.Errorf("failed to retrieve messages: %v", err)
 		}
 
-		var msg Message
+		var msg models.Message
 		if err := doc.DataTo(&msg); err != nil {
 			return nil, fmt.Errorf("failed to parse message: %v", err)
 		}
@@ -157,10 +150,13 @@ func GetMessagesForRoom(roomName string) ([]Message, error) {
 }
 
 func GetUsersWithChatHistory(userID string) ([]string, error) {
+	if firebase.FirestoreClient == nil {
+		return nil, fmt.Errorf("Firestore client is not initialized")
+	}
 	ctx := context.Background()
 	otherUsers := []string{}
 
-	iter := FirestoreClient.Collection("rooms").
+	iter := firebase.FirestoreClient.Collection("rooms").
 		Where("participants", "array-contains", userID).
 		Documents(ctx)
 
@@ -190,6 +186,15 @@ func GetUsersWithChatHistory(userID string) ([]string, error) {
 	return otherUsers, nil
 }
 
+func ParseParticipantsFromRoomName(name string) []string {
+	parts := strings.Split(name, "-")
+	if len(parts) != 2 {
+		log.Printf("Unexpected room format: %s", name)
+		return []string{}
+	}
+	return parts
+}
+
 func (room *Room) GetName() string {
-	return room.name
+	return room.Name
 }

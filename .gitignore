@@ -4,5 +4,4 @@ music-connect/src/.DS_Store
 
 music-connect/node_modules
 .DS_Store
-
-firebaseServiceAccountKey.json
+backend/firebaseServiceAccountKey.json
