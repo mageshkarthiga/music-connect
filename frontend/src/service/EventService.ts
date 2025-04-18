@@ -72,9 +72,26 @@ export default {
 
     return response.data;
   },
+  async getFavEventsForCurrentUser(): Promise<Event[]> {
+    const response = await axios.get<Event[]>(`${API_BASE_URL}/me/favevents`, {
+      withCredentials: true, // Ensures cookies (like Firebase auth token) are sent
+    });
+
+    return response.data;
+  },
   async getEventsByUserId(userId: number): Promise<Event> {
     const response = await axios.get<Event>(
       `${API_BASE_URL}/users/${userId}/events`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  },
+
+  async getFavEventsByUserId(userId: number): Promise<Event> {
+    const response = await axios.get<Event>(
+      `${API_BASE_URL}/users/${userId}/favevents`,
       {
         withCredentials: true,
       }

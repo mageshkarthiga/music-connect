@@ -75,8 +75,11 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	// ---- tracks ----
 	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
 	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
+	e.GET("/me/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavTracksForUser))
 	e.POST("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
+	
 	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
+	e.GET("/users/:id/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavUserTracksByID))
 
 	// ---- playlists ----
 	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
@@ -89,7 +92,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
 	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
 	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
+	e.GET("/me/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsForUser))
 	e.GET("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+	e.GET("/users/:id/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsByUserID))
 	e.GET("/events/venues", middleware.AuthMiddleware(projectID)(controllers.GetEventVenues))
 	e.POST("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
 

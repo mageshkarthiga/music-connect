@@ -66,6 +66,7 @@ declare module 'vue' {
     NotificationsWidget: typeof import('./src/components/dashboard/NotificationsWidget.vue')['default']
     OrderList: typeof import('primevue/orderlist')['default']
     OverlayBadge: typeof import('primevue/overlaybadge')['default']
+    Paginator: typeof import('primevue/paginator')['default']
     Panel: typeof import('primevue/panel')['default']
     PanelMenu: typeof import('primevue/panelmenu')['default']
     Password: typeof import('primevue/password')['default']
