@@ -6,13 +6,11 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-const SUPABASE_URL = "https://kzxuobrnlppliqiwwgvu.supabase.co";
-
 func main() {
-	if err := godotenv.Load("../.env"); 
-	err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Println("Warning: .env file not found, relying on environment variables")
 	}
+	go CallbackServer()
 
 	c := cron.New()
 	c.AddFunc("0 0 * * 0", func() {
@@ -20,7 +18,6 @@ func main() {
 		go callSpotifyAPI()
 
 		triggerScraper()
-		go CallbackServer()
 	})
 	c.Start()
 	select {}

@@ -90,6 +90,11 @@ const router = createRouter({
         },
 
         {
+          path: "/pages/map",
+          name: "map",
+          component: () => import("@/views/pages/Map.vue"),
+        },
+        {
           path: "/pages/crud",
           name: "crud",
           component: () => import("@/views/pages/Crud.vue"),

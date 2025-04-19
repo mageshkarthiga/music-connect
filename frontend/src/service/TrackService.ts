@@ -32,7 +32,7 @@ const TRACK_URL = `${API_BASE_URL}/tracks`; // Assuming this is the endpoint for
 // Function to fetch all tracks
 export const getTracks = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/tracks`,{
+    const response = await axios.get(`${API_BASE_URL}/tracks`, {
       withCredentials: true,
     });
     return response.data as Track[]; // Assuming response contains a list of tracks
@@ -151,3 +151,20 @@ export default {
   getUserTracks,
   getUserTracksById,};
   
+
+export const incrementTrackPlayCount = async (trackId: number) => {
+  try {
+    const response = await axios.put(
+      `${TRACK_URL}/${trackId}/increment`,
+      {}, // Sending an empty body required for POST/PUT requests
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data.play_count;
+  } catch (error) {
+    console.error("Error incrementing track play count:", error);
+    throw error;
+  }
+};
