@@ -1,15 +1,21 @@
 <template>
   <div>
     <!-- Top Bar with Filter Buttons -->
-    <div class="p-4 flex space-x-4">
-      <Button label="All" severity="secondary" outlined @click="filterContent('all')" />
-      <Button label="Music" severity="secondary" outlined @click="filterContent('music')" />
-      <Button label="Events" severity="secondary" outlined @click="filterContent('events')" />
+    <div class="p-4 flex flex-wrap gap-3 justify-center sm:justify-start">
+      <Button label="All" icon="pi pi-list" :severity="filter === 'all' ? 'success' : 'secondary'"
+        :outlined="filter !== 'all'" class="transition-all duration-200 rounded-full px-4 py-2"
+        @click="filterContent('all')" />
+      <Button label="Music" icon="pi pi-headphones" :severity="filter === 'music' ? 'success' : 'secondary'"
+        :outlined="filter !== 'music'" class="transition-all duration-200 rounded-full px-4 py-2"
+        @click="filterContent('music')" />
+      <Button label="Events" icon="pi pi-calendar" :severity="filter === 'events' ? 'success' : 'secondary'"
+        :outlined="filter !== 'events'" class="transition-all duration-200 rounded-full px-4 py-2"
+        @click="filterContent('events')" />
     </div>
 
     <!-- Loading Spinner -->
-    <div ref="loadingSpinner" v-if="loading" class="p-d-flex p-jc-center p-ai-center">
-      <span>Loading...</span>
+    <div v-if="loading" class="flex justify-center items-center py-10">
+      <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="5" animationDuration=".7s" />
     </div>
 
     <!-- Error Message -->
@@ -22,87 +28,58 @@
       <template v-if="hasContent">
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <h2 class="text-xl font-semibold mb-3"> Frequently Accessed Tracks</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Handle track-selected event -->
+          <!-- Tracks Section -->
+          <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg"
+            v-if="user.tracks.length">
+            <!-- Title with Emoji -->
+            <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4">
+              🏆 Top Played Tracks
+            </h2>
 
-            <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-selected="setSelectedTrackURI"
-          />
+            <!-- Subheading with Emoji -->
+            <p class="text-center text-lg  text-gray-700 mb-6 opacity-90">
+              🌟 Your most played tracks, right here!
+            </p>
 
-          <!-- <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-liked="handleTrackLiked"
-            @track-unliked="handleTrackUnliked"
-            @track-selected="setSelectedTrackURI"
-          /> -->
-        </div>
-        </div>
-        <!-- Tracks Section -->
-        <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg mb-10"
-          v-if="user.tracks.length">
-          <!-- Title with Emoji -->
-          <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4">
-            🏆 Top Played Tracks
-          </h2>
-
-          <!-- Subheading with Emoji -->
-          <p class="text-center text-lg  text-gray-700 mb-6 opacity-90">
-            🌟 Your most played tracks, right here!
-          </p>
-
-          <!-- Track Cards Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-            <!-- Track Card Loop -->
-            <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-              @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
-              class="bg-white p-4 rounded-lg">
-              <div class="flex items-center justify-between">
-                <!-- Track Info -->
-                <div class="flex items-center space-x-3">
-                  <!-- Track Title -->
-                  <h3 class="text-lg font-semibold text-gray-900">
-                    {{ track.track_title }}
-                  </h3>
+            <!-- Track Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+              <!-- Track Card Loop -->
+              <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
+                @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
+                :selectedTracks="selectedTracks" :liked="likedTracks.includes(track.track_id)"
+                class="bg-white p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                  <!-- Track Info -->
+                  <div class="flex items-center space-x-3">
+                    <!-- Track Title -->
+                    <h3 class="text-lg font-semibold text-gray-900">
+                      {{ track.track_title }}
+                    </h3>
+                  </div>
+                  <!-- Play Count Icon -->
+                  <div class="text-sm text-gray-600">
+                    🌟 {{ track.play_count }}
+                  </div>
                 </div>
-                <!-- Play Count Icon -->
-                <div class="text-sm text-gray-600">
-                  🌟 {{ track.play_count }}
-                </div>
-              </div>
-            </TrackCard>
+              </TrackCard>
+            </div>
+          </div>
+
+          <!-- No Tracks Message -->
+          <div v-if="!user.tracks.length"
+            class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-xl text-center">
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-4">
+              ❗️ No Top Tracks Yet
+            </h2>
+            <p class="text-lg font-medium text-gray-700 mb-4">
+              Start listening to your favourite tunes and watch your top tracks appear right here! 🎧
+            </p>
+            <p class="text-sm text-gray-600 italic mb-6">
+              Every track counts! Start playing your music and track your journey. 🎶
+            </p>
           </div>
         </div>
-
-        <!-- No Tracks Message -->
-        <div v-if="!user.tracks.length"
-          class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-xl text-center mb-10">
-          <h2 class="text-3xl font-extrabold text-gray-800 mb-4">
-            ❗️ No Top Tracks Yet
-          </h2>
-          <p class="text-lg font-medium text-gray-700 mb-4">
-            Start listening to your favourite tunes and watch your top tracks appear right here! 🎧
-          </p>
-          <p class="text-sm text-gray-600 italic mb-6">
-            Every track counts! Start playing your music and track your journey. 🎶
-          </p>
-        </div>
-
-
-
         <br>
-
         <!-- User's liked events -->
         <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
           <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
@@ -121,19 +98,15 @@
         <br>
 
         <!-- Discoverable events -->
-        <div v-if="(filter === 'all' || filter === 'events') && otherEvents.length">
+        <div v-if="(filter === 'all' || filter === 'events') && otherEvents.length" class="mb-10 p-3">
           <h2 class="text-xl font-semibold mb-3">Discover Events</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in otherEvents"
-              :key="event.event_id"
-              :event="event"
-              :liked="false"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
+            <EventCard v-for="event in otherEvents" :key="event.event_id" :event="event" :liked="false"
+              @event-unliked="handleEventUnliked" @event-liked="handleEventLiked" />
           </div>
         </div>
+
+        <br />
 
         <!-- Recommended Music -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">

@@ -1,30 +1,19 @@
 <template>
-  <div
-    class="min-w-[250px] max-w-[300px] flex-shrink-0 cursor-pointer relative"
-    @click="openEventUrl"
-  >
+  <div class="min-w-[250px] max-w-[300px] flex-shrink-0 cursor-pointer relative" @click="openEventUrl">
     <Card class="w-full h-full">
       <template v-slot:title>
-        <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4">
+        <div class="flex items-start justify-between mb-0">
+          <div class="font-semibold text-xl mb-4 min-h-[50px]">
             {{ event.event_name }}
           </div>
-          <button @click.stop="toggleLike">
-            <component
-              :is="'lucide-heart'"
-              class="w-5 h-5 transition-all"
-              :class="isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'"
-            />
+          <button @click.stop="toggleLike" class="hover:scale-110 transition-transform duration-200">
+            <component :is="'lucide-heart'" class="w-5 h-5 transition-all duration-200"
+              :class="isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-400'" />
           </button>
         </div>
       </template>
-
       <template v-slot:content>
-        <img
-          :src="event.event_image_url"
-          alt="Event image"
-          class="w-full h-40 object-cover rounded-xl mb-3"
-        />
+        <img :src="event.event_image_url" alt="Event image" class="w-full h-40 object-cover rounded-xl mb-3" />
         <p class="text-sm text-gray-800 line-clamp-3 mt-1 mb-4">
           {{ event.event_description }}
         </p>
@@ -82,13 +71,13 @@ export default {
 
 <style scoped>
 .clickable-link {
-    color: black;
-    cursor: pointer;
-    transition: color 0.2s ease-in-out;
+  color: black;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
 }
 
 .clickable-link:hover {
-    color: #10b981;
-    text-decoration: none;
+  color: #10b981;
+  text-decoration: none;
 }
 </style>
