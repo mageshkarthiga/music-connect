@@ -103,6 +103,10 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
 	// Service Routes
 	e.GET("/spotify/token", services.GetSpotifyToken)
+
+    e.GET("/calculateSimilarity", controllers.CalculateUserSimilarityHandler)
+    e.GET("/userProfile", controllers.GetUserProfileHandler)
+
 	// WebSocket Route
 	e.GET("/ws", func(c echo.Context) error {
 		chat.ServeWs(wsServer, c.Response().Writer, c.Request())
