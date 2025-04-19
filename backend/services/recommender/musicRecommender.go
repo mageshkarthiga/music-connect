@@ -73,6 +73,7 @@ func getUserPlaylistIds(userId string, apiKey string) ([]int, error) {
 	for _, playlist := range playlistObjIds {
 		playlistIds = append(playlistIds, playlist.PlaylistID)
 	}
+
 	return playlistIds, nil
 }
 
@@ -143,6 +144,7 @@ func getAllPlaylistsExceptUserPlaylists(userId string, apiKey string) ([]Playlis
 	if err := json.NewDecoder(resp.Body).Decode(&playlists); err != nil {
 		return nil, err
 	}
+	fmt.Println("CHECKPOINT MUSIC RECOMMENDER 3: ", playlists)
 	return playlists, nil
 }
 
@@ -182,6 +184,8 @@ func getTrackDetails(trackID int, apiKey string) (RecommendationResponse, error)
 		Track:      tracks[0],
 		ArtistName: artistName,
 	}
+
+	fmt.Println("CHECKPOINT MUSIC RECOMMENDER 4: ", trackDetails)
 	return trackDetails, nil
 }
 
@@ -215,6 +219,7 @@ func getArtistName(artistId int, apiKey string) string {
 		return ""
 	}
 
+	fmt.Println("CHECKPOINT MUSIC RECOMMENDER 5: ", artists[0].ArtistName)
 	return artists[0].ArtistName
 }
 
@@ -286,16 +291,19 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 
 	var recommendations []int
 	for _, playlists := range similarities {
+		fmt.Println("CHECKPOINT MUSIC RECOMMENDER playlists: ", playlists)
 		for trackID := range playlists.Tracks {
-			if !userTrackSet[trackID] {
-				recommendations = append(recommendations, trackID)
-			}
+			fmt.Println("CHECKPOINT MUSIC RECOMMENDER trackID: ", trackID)
 			if len(recommendations) == 10 {
 				break
+			}
+			if !userTrackSet[trackID] {
+				recommendations = append(recommendations, trackID)
 			}
 		}
 	}
 
+	fmt.Println("CHECKPOINT MUSIC RECOMMENDER recommendations: ", recommendations)
 	var tracks []RecommendationResponse
 	for _, trackID := range recommendations {
 		track, err := getTrackDetails(trackID, apiKey)
