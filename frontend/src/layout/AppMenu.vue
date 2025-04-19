@@ -138,7 +138,7 @@ export default {
   padding: 1rem;
   width: 250px;
   height: auto;
-  max-height: 78vh;
+  max-height: 92.5%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;

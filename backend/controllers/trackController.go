@@ -242,6 +242,7 @@ func GetFavUserTracksByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, tracks)
 }
 
+
 func LikeTrack(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Assuming the user ID is stored in the context
 	trackID := c.Param("track_id")

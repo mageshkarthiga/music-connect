@@ -26,7 +26,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <!-- Handle track-selected event -->
 
-                      <TrackCard
+            <TrackCard
             v-for="track in user.tracks"
             :key="track.track_id"
             :track="track"
@@ -47,8 +47,8 @@
             @track-unliked="handleTrackUnliked"
             @track-selected="setSelectedTrackURI"
           /> -->
-
-
+        </div>
+        </div>
         <!-- Tracks Section -->
         <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg mb-10"
           v-if="user.tracks.length">
@@ -135,8 +135,9 @@
           </div>
         </div>
 
+        <!-- Recommended Music -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <div class="font-semibold text-xl mb-4">Recommended music </div>
+          <div class="font-semibold text-xl mb-4">Recommended music</div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
@@ -152,15 +153,14 @@
     <!-- Spotify Player -->
     <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
   </div>
-
 </template>
+
 <script>
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
@@ -168,7 +168,6 @@ import { incrementTrackPlayCount } from "@/service/TrackService";
 export default {
   components: {
     EventCard,
-    PlaylistCard,
     TrackCard,
     SpotifyPlayer,
     RecommendedTracks,
@@ -201,7 +200,6 @@ export default {
     }
   },
   methods: {
-
     async handleTrackLiked(trackId) {
       const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
       if (likedTrack) {
@@ -216,6 +214,7 @@ export default {
         life: 3000,
       });
     },
+
     async handleEventLiked(eventId) {
       const likedEvent = this.otherEvents.find(e => e.event_id === eventId);
       if (likedEvent) {
@@ -323,11 +322,10 @@ export default {
     setSelectedTrackURI(trackURI) {
       this.selectedTrackURI = trackURI;
     },
-
     // Filter Content based on selected category
     filterContent(category) {
       this.filter = category;
-    }
+    },
     incrementPlayCount(trackId) {
       incrementTrackPlayCount(trackId)
         .then(() => {

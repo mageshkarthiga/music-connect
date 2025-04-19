@@ -4,10 +4,11 @@ import (
 	"backend/controllers"
 	"backend/middleware"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/labstack/echo/v4"
 )
 
 func RegisterAuthRoutes(e *echo.Echo, projectID string) {
@@ -82,6 +83,17 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
 	e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
 
+	e.POST("/users/friends", middleware.AuthMiddleware(projectID)(controllers.AddFriend))
+	e.GET("/users/:id/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
+	// ---- friends ----
+
+	e.POST("/friend/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
+	e.POST("/friend/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
+	e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
+	e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
+	e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
 	// ---- tracks ----
 	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
 	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
@@ -100,6 +112,7 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
 	e.POST("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
 	e.GET("/users/:id/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
+	e.POST("/playlists/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksToPlaylist))
 
 	// ---- events ----
 	e.GET("/events", middleware.AuthMiddleware(projectID)(controllers.GetEvents))
