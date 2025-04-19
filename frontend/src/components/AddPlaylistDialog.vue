@@ -19,6 +19,7 @@
         />
       </div>
     </div>
+ 
 
     <!-- Track Selection -->
     <h6>Select Tracks: </h6>
@@ -37,7 +38,11 @@
       <div v-else>
         <p>No tracks available to display.</p>
       </div>
+      <div v-else>
+        <p>No tracks available to display.</p>
+      </div>
     </div>
+
 
     <!-- Buttons -->
     <template #footer>
@@ -64,6 +69,7 @@ import TrackCard from "@/components/TrackCard.vue";
 import userService from "@/service/UserService";
 import trackService from "@/service/TrackService";
 
+
 export default {
   components: {
     TrackCard,
@@ -71,7 +77,9 @@ export default {
   props: {
     showDialog: Boolean,
     onSave: Function,
+    onSave: Function,
     onClose: Function,
+    playlistToEdit: Object,
     playlistToEdit: Object,
   },
   data() {
@@ -80,7 +88,6 @@ export default {
       selectedTracks: [],
       tracks: [],
       userId: null,
-      trackImageUrl: "",
     };
   },
   methods: {
@@ -111,14 +118,14 @@ export default {
         this.selectedTracks.push(trackId);
       }
 
-      if (this.selectedTracks.length > 0) {
-        const firstSelectedTrack = this.tracks.find(track => track.track_id === this.selectedTracks[0]);
-        if (firstSelectedTrack) {
-          this.trackImageUrl = firstSelectedTrack.track_image_url;
-        }
-      } else {
-        this.trackImageUrl = "";
-      }
+      // if (this.selectedTracks.length > 0) {
+      //   const firstSelectedTrack = this.tracks.find(track => track.track_id === this.selectedTracks[0]);
+      //   if (firstSelectedTrack) {
+      //     this.trackImageUrl = firstSelectedTrack.track_image_url;
+      //   }
+      // } else {
+      //   this.trackImageUrl = "";
+      // }
     },
 
     async savePlaylist() {
@@ -160,6 +167,7 @@ export default {
     closeDialog() {
       if (this.onClose) {
         this.onClose();
+        this.onClose();
       }
     },
   },
@@ -168,19 +176,30 @@ export default {
     this.fetchTracks();
   },
 
+  computed: {
+  trackImageUrl() {
+    if (this.selectedTracks.length === 0) return "";
+    const first = this.tracks.find(t => t.track_id === this.selectedTracks[0]);
+    return first?.track_image_url || "";
+  },
+},
+
+
   watch: {
     playlistToEdit: {
       immediate: true,
       handler(playlist) {
         if (playlist) {
           this.playlistName = playlist.name;
-          this.trackImageUrl = playlist.image_url;
+          // this.trackImageUrl = playlist.image_url;
           this.selectedTracks = playlist.tracks.map(t => t.track_id);
         }
       }
     }
   },
 };
+
+
 </script>
 
 <style scoped>

@@ -83,6 +83,18 @@ e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(control
 e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
 e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
 
+e.POST("/users/friends",     middleware.AuthMiddleware(projectID)(controllers.AddFriend))
+e.GET("/users/:id/friends",  middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
+
+// ---- friends ----
+
+e.POST("/friend/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
+e.POST("/friend/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
+e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
+e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
+e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
 
 // ---- tracks ----
 e.GET("/tracks",             middleware.AuthMiddleware(projectID)(controllers.GetTracks))
@@ -100,6 +112,7 @@ e.DELETE("/likeTrack",       middleware.AuthMiddleware(projectID) (controllers.U
 e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
 e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
 e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
+e.POST("/playlists/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksToPlaylist))
 
 // ---- events ----
 e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))

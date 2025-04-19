@@ -46,11 +46,24 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
     e.GET("/friends", controllers.GetFriends)
 
 
+    e.POST("/users/friends", controllers.AddFriend)
+    e.GET("/users/:id/friends", controllers.GetFriends)
+
+    //Friend Routes
+
+    e.POST("/friend/:friend_id/request", controllers.SendFriendRequest)
+    e.POST("/friend/:friend_id/accept", controllers.AcceptFriendRequest)
+    e.POST("/friend/:friend_id/reject", controllers.RejectFriendRequest)
+    e.POST("/friend/:friend_id/remove", controllers.RemoveFriend)
+    e.GET("/friends", controllers.GetFriends)
+
+
 	// Track Routes
 
 	e.GET("/tracks", controllers.GetTracks)          // Fetch all tracks
 	e.GET("/tracks/:id", controllers.GetTrackByID)   // Fetch a track by ID (Updated function name)
 	e.POST("/tracks", controllers.CreateTrack)       // Create a new track
+    
 	e.PUT("/tracks/:id", controllers.UpdateTrack)    // Update an existing track by ID
 	e.DELETE("/tracks/:id", controllers.DeleteTrack) // Delete a track by ID
     // e.GET("/tracks/:id/playlist", controllers.GetPlaylistByTrackID) // Fetch playlist by track ID
@@ -77,6 +90,7 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.DELETE("/playlists/:id", controllers.DeletePlaylist) // Delete a playlist by ID
     e.PUT("/playlists/:id", controllers.UpdatePlaylistDetails)
     e.PUT("/playlists/:id/tracks", controllers.ReplacePlaylistTracks)
+    e.POST("/playlists/:id/tracks", controllers.AddTracksToPlaylist)
 
 
 	e.GET("/me/playlists", controllers.GetPlaylistsForUser)           // Fetch playlists for a specific user
