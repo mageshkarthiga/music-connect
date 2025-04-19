@@ -1,98 +1,113 @@
-# Music Connect
+# 🎵 Music Connect
 
-Music Connect is a web application that allows users to discover what people nearby are listening to, connect through messaging, and receive personalized event recommendations. The platform combines music discovery, social interaction, and event management into a seamless experience.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Frontend Setup](#frontend-setup)
-- [Backend Setup](#backend-setup)
-  - [Location Autofill Service](#location-autofill-service)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+**Music Connect** is a social music platform that allows users to discover what people nearby are listening to, connect through real-time messaging, match with music lovers, and receive personalised event and music recommendations. The platform combines music discovery, social interaction, and event management into a seamless, location-based experience.
 
 ---
 
-## Features
+## 📑 Table of Contents
 
-- **Music Discovery**: See what music people nearby are listening to.
-- **Messaging**: Connect with others through an integrated chat system.
-- **Event Recommendations**: Get personalized event suggestions based on your music preferences.
-- **Responsive Design**: Optimized for both desktop and mobile devices.
+- [✨ Features](#-features)
+- [🚀 Frontend Setup](#-frontend-setup)
+- [🔧 Backend Setup](#-backend-setup)
+  - [📍 Location Autofill Service](#-location-autofill-service)
+- [▶️ Usage](#-usage)
+- [🪪 License](#-license)
 
 ---
 
-## Frontend Setup
+## ✨ Features
 
-To set up the frontend locally:
+- 🤝 **Friend Matching & Messaging**  
+  Connect with users who share your music taste and chat with them through the in-app messaging system.
+
+- 🔍 **Music Discovery & Recommendations**  
+  Discover what nearby users are listening to and get personalised music suggestions based on your and your friends’ playlists.
+
+- 📍 **Nearby User Locator**  
+  Find and interact with users around your current location.
+
+- 🎶 **Listen, Like & Playlist Management**  
+  Play music, like tracks, and curate your own playlists with ease.
+
+- 🎫 **Event Suggestions**  
+  Receive personalised event recommendations based on your music taste and social activity.
+
+---
+
+## 🚀 Frontend Setup
+
+To run the frontend locally:
 
 1. Navigate to the project directory:
+
    ```bash
    cd frontend/src
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Start the development server:
+
    ```bash
    npm run dev
    ```
 
-4. Open your browser and navigate to:
+4. Open your browser and go to:
    ```
    http://localhost:5173/
    ```
 
 ---
 
-## Backend Setup
+## 🔧 Backend Setup
 
-To set up the backend:
+To run the backend services:
 
 1. Navigate to the backend directory:
+
    ```bash
    cd backend
    ```
 
-2. Follow the specific instructions for each backend service.
+2. Set up each backend service as per their individual setup guides (e.g. authentication, chat service, music recommender, etc.).
 
 ---
 
-### Location Autofill Service
+### 📍 Location Autofill Service
 
-The location autofill service is written in Go. To set it up:
+This service is written in Go and provides location autocomplete functionality:
 
-1. Navigate to the `map` directory:
+1. Go to the `map` service directory:
+
    ```bash
    cd map
    ```
 
 2. Install dependencies:
+
    ```bash
    go mod tidy
    ```
 
 3. Run the service:
    ```bash
-   go run filename.go
+   go run main.go
    ```
 
 ---
 
-## Usage
+## ▶️ Usage
 
-1. Start the frontend server using the steps in [Frontend Setup](#frontend-setup).
-2. Start the backend services using the steps in [Backend Setup](#backend-setup).
-3. Open the application in your browser and explore its features.
+1. Start the frontend server ([see steps](#frontend-setup)).
+2. Start all required backend services ([see steps](#backend-setup)).
+3. Open the app in your browser and dive into the music-powered social world!
 
 ---
 
-## License
+## 🪪 License
 
-This project is licensed under the [MIT License](LICENSE). See the `LICENSE` file for details.
+This project is licensed under the [MIT License](LICENSE). See the `LICENSE` file for more details.
