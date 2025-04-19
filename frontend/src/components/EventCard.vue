@@ -1,14 +1,24 @@
 <template>
   <div
-    class="min-w-[250px] max-w-[300px] flex-shrink-0 cursor-pointer"
+    class="min-w-[250px] max-w-[300px] flex-shrink-0 cursor-pointer relative"
     @click="openEventUrl"
   >
     <Card class="w-full h-full">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4 clickable-link">{{ event.event_name }}</div>
+          <div class="font-semibold text-xl mb-4">
+            {{ event.event_name }}
+          </div>
+          <button @click.stop="toggleLike">
+            <component
+              :is="'lucide-heart'"
+              class="w-5 h-5 transition-all"
+              :class="isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'"
+            />
+          </button>
         </div>
       </template>
+
       <template v-slot:content>
         <img
           :src="event.event_image_url"
@@ -24,14 +34,46 @@
 </template>
 
 <script>
+import { Heart } from "lucide-vue-next";
+import EventService from "@/service/EventService";
+
 export default {
+  components: {
+    'lucide-heart': Heart,
+  },
   props: {
     event: Object,
+    liked: Boolean,
+  },
+  data() {
+    return {
+      isLiked: this.liked,
+    };
+  },
+  watch: {
+    liked(newVal) {
+      this.isLiked = newVal;
+    }
   },
   methods: {
     openEventUrl() {
-      if (this.event?.event_url) {
+      if (this.event.event_url) {
         window.open(this.event.event_url, "_blank");
+      }
+    },
+    async toggleLike() {
+      try {
+        if (this.isLiked) {
+          await EventService.unlikeEvent(this.event.event_id);
+          this.isLiked = false;
+          this.$emit("event-unliked", this.event.event_id);
+        } else {
+          await EventService.likeEvent(this.event.event_id);
+          this.isLiked = true;
+          this.$emit("event-liked", this.event.event_id);
+        }
+      } catch (err) {
+        console.error("Failed to toggle like:", err);
       }
     },
   },

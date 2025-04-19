@@ -32,7 +32,9 @@ const TRACK_URL = `${API_BASE_URL}/tracks`; // Assuming this is the endpoint for
 // Function to fetch all tracks
 export const getTracks = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/tracks`);
+    const response = await axios.get(`${API_BASE_URL}/tracks`, {
+      withCredentials: true,
+    });
     return response.data as Track[]; // Assuming response contains a list of tracks
   } catch (error) {
     console.error("Error fetching tracks:", error);
@@ -96,6 +98,18 @@ export const getUserTracks = async (): Promise<Track[]> => {
     throw error;
   }
 };
+
+export const getFavUserTracks = async (): Promise<Track[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/me/favtracks`, {
+      withCredentials: true,
+    });
+    return response.data as Track[];
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    throw error;
+  }
+};
 // Function to fetch tracks for the authenticated user of another user
 export const getUserTracksById = async (userId: number): Promise<Track[]> => {
   try {
@@ -109,13 +123,30 @@ export const getUserTracksById = async (userId: number): Promise<Track[]> => {
   }
 };
 
+export const getFavUserTracksById = async (
+  userId: number
+): Promise<Track[]> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/users/${userId}/favtracks`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data as Track[];
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    throw error;
+  }
+};
+
 export const incrementTrackPlayCount = async (trackId: number) => {
   try {
     const response = await axios.put(
       `${TRACK_URL}/${trackId}/increment`,
       {}, // Sending an empty body required for POST/PUT requests
       {
-        withCredentials: true, 
+        withCredentials: true,
       }
     );
 

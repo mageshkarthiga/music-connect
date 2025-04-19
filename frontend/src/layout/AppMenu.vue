@@ -1,312 +1,3 @@
-<!-- <script setup>
-import { ref } from "vue";
-
-import AppMenuItem from "./AppMenuItem.vue";
-
-const model = ref([
-  {
-    label: 'Home',
-    items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
-  },
-  {
-    label: 'UI Components',
-    items: [
-      { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
-      { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
-      { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
-      { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
-      { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
-      { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
-      { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
-      { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
-      { label: 'Media', icon: 'pi pi-fw pi-image', to: '/uikit/media' },
-      { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/uikit/menu' },
-      { label: 'Message', icon: 'pi pi-fw pi-comment', to: '/uikit/message' },
-      { label: 'File', icon: 'pi pi-fw pi-file', to: '/uikit/file' },
-      { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/uikit/charts' },
-      { label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/uikit/timeline' },
-      { label: 'Misc', icon: 'pi pi-fw pi-circle', to: '/uikit/misc' }
-    ]
-  },
-  {
-    label: 'Pages',
-    icon: 'pi pi-fw pi-briefcase',
-    to: '/pages',
-    items: [
-      {
-        label: 'Landing',
-        icon: 'pi pi-fw pi-globe',
-        to: '/landing'
-      },
-      {
-        label: 'Auth',
-        icon: 'pi pi-fw pi-user',
-        items: [
-          {
-            label: 'Login',
-            icon: 'pi pi-fw pi-sign-in',
-            to: '/auth/login'
-          },
-          {
-            label: 'Error',
-            icon: 'pi pi-fw pi-times-circle',
-            to: '/auth/error'
-          },
-          {
-            label: 'Access Denied',
-            icon: 'pi pi-fw pi-lock',
-            to: '/auth/access'
-          }
-        ]
-      },
-      {
-        label: 'Crud',
-        icon: 'pi pi-fw pi-pencil',
-        to: '/pages/crud'
-      },
-      {
-        label: 'Not Found',
-        icon: 'pi pi-fw pi-exclamation-circle',
-        to: '/pages/notfound'
-      },
-      {
-        label: 'Music',
-        icon: 'pi pi-fw pi-play-circle',
-        to: '/pages/music'
-      },
-      {
-        label: 'Chat',
-        icon: 'pi pi-fw pi-comments',
-        to: '/pages/chat'
-      }
-    ]
-  },
-  {
-    label: 'Hierarchy',
-    items: [
-      {
-        label: 'Submenu 1',
-        icon: 'pi pi-fw pi-bookmark',
-        items: [
-          {
-            label: 'Submenu 1.1',
-            icon: 'pi pi-fw pi-bookmark',
-            items: [
-              { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
-              { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
-              { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
-            ]
-          },
-          {
-            label: 'Submenu 1.2',
-            icon: 'pi pi-fw pi-bookmark',
-            items: [{ label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark' }]
-          }
-        ]
-      },
-      {
-        label: 'Submenu 2',
-        icon: 'pi pi-fw pi-bookmark',
-        items: [
-          {
-            label: 'Submenu 2.1',
-            icon: 'pi pi-fw pi-bookmark',
-            items: [
-              { label: 'Submenu 2.1.1', icon: 'pi pi-fw pi-bookmark' },
-              { label: 'Submenu 2.1.2', icon: 'pi pi-fw pi-bookmark' }
-            ]
-          },
-          {
-            label: 'Submenu 2.2',
-            icon: 'pi pi-fw pi-bookmark',
-            items: [{ label: 'Submenu 2.2.1', icon: 'pi pi-fw pi-bookmark' }]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    label: 'Get Started',
-    items: [
-      {
-        label: 'Documentation',
-        icon: 'pi pi-fw pi-book',
-        to: '/documentation'
-      },
-      {
-        label: 'View Source',
-        icon: 'pi pi-fw pi-github',
-        url: 'https://github.com/primefaces/sakai-vue',
-        target: '_blank'
-      }
-    ]
-  },
-  {
-    label: "Home",
-    items: [{ label: "Dashboard", icon: "pi pi-fw pi-home", to: "/" }],
-  },
-  {
-    label: "UI Components",
-    items: [
-      {
-        label: "Form Layout",
-        icon: "pi pi-fw pi-id-card",
-        to: "/uikit/formlayout",
-      },
-      { label: "Input", icon: "pi pi-fw pi-check-square", to: "/uikit/input" },
-      {
-        label: "Button",
-        icon: "pi pi-fw pi-mobile",
-        to: "/uikit/button",
-        class: "rotated-icon",
-      },
-      { label: "Table", icon: "pi pi-fw pi-table", to: "/uikit/table" },
-      { label: "List", icon: "pi pi-fw pi-list", to: "/uikit/list" },
-      { label: "Tree", icon: "pi pi-fw pi-share-alt", to: "/uikit/tree" },
-      { label: "Panel", icon: "pi pi-fw pi-tablet", to: "/uikit/panel" },
-      { label: "Overlay", icon: "pi pi-fw pi-clone", to: "/uikit/overlay" },
-      { label: "Media", icon: "pi pi-fw pi-image", to: "/uikit/media" },
-      { label: "Menu", icon: "pi pi-fw pi-bars", to: "/uikit/menu" },
-      { label: "Message", icon: "pi pi-fw pi-comment", to: "/uikit/message" },
-      { label: "File", icon: "pi pi-fw pi-file", to: "/uikit/file" },
-      { label: "Chart", icon: "pi pi-fw pi-chart-bar", to: "/uikit/charts" },
-      {
-        label: "Timeline",
-        icon: "pi pi-fw pi-calendar",
-        to: "/uikit/timeline",
-      },
-      { label: "Misc", icon: "pi pi-fw pi-circle", to: "/uikit/misc" },
-      { label: "Map", icon: "pi pi-fw pi-map", to: "/uikit/map" },
-    ],
-  },
-  {
-    label: "Pages",
-    icon: "pi pi-fw pi-briefcase",
-    to: "/pages",
-    items: [
-      {
-        label: "Landing",
-        icon: "pi pi-fw pi-globe",
-        to: "/landing",
-      },
-      {
-        label: "Auth",
-        icon: "pi pi-fw pi-user",
-        items: [
-          {
-            label: "Login",
-            icon: "pi pi-fw pi-sign-in",
-            to: "/auth/login",
-          },
-          {
-            label: "Error",
-            icon: "pi pi-fw pi-times-circle",
-            to: "/auth/error",
-          },
-          {
-            label: "Access Denied",
-            icon: "pi pi-fw pi-lock",
-            to: "/auth/access",
-          },
-        ],
-      },
-      {
-        label: "Crud",
-        icon: "pi pi-fw pi-pencil",
-        to: "/pages/crud",
-      },
-      {
-        label: "Not Found",
-        icon: "pi pi-fw pi-exclamation-circle",
-        to: "/pages/notfound",
-      },
-      {
-        label: "Create Account",
-        icon: "pi pi-fw pi-user-plus",
-        to: "/createaccount",
-      },
-      {
-        label: "Profile",
-        icon: "pi pi-fw pi-user",
-        to: "/profile",
-      },
-    ],
-  },
-  {
-    label: "Hierarchy",
-    items: [
-      {
-        label: "Submenu 1",
-        icon: "pi pi-fw pi-bookmark",
-        items: [
-          {
-            label: "Submenu 1.1",
-            icon: "pi pi-fw pi-bookmark",
-            items: [
-              { label: "Submenu 1.1.1", icon: "pi pi-fw pi-bookmark" },
-              { label: "Submenu 1.1.2", icon: "pi pi-fw pi-bookmark" },
-              { label: "Submenu 1.1.3", icon: "pi pi-fw pi-bookmark" },
-            ],
-          },
-          {
-            label: "Submenu 1.2",
-            icon: "pi pi-fw pi-bookmark",
-            items: [{ label: "Submenu 1.2.1", icon: "pi pi-fw pi-bookmark" }],
-          },
-        ],
-      },
-      {
-        label: "Submenu 2",
-        icon: "pi pi-fw pi-bookmark",
-        items: [
-          {
-            label: "Submenu 2.1",
-            icon: "pi pi-fw pi-bookmark",
-            items: [
-              { label: "Submenu 2.1.1", icon: "pi pi-fw pi-bookmark" },
-              { label: "Submenu 2.1.2", icon: "pi pi-fw pi-bookmark" },
-            ],
-          },
-          {
-            label: "Submenu 2.2",
-            icon: "pi pi-fw pi-bookmark",
-            items: [{ label: "Submenu 2.2.1", icon: "pi pi-fw pi-bookmark" }],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Get Started",
-    items: [
-      {
-        label: "Documentation",
-        icon: "pi pi-fw pi-book",
-        to: "/documentation",
-      },
-      {
-        label: "View Source",
-        icon: "pi pi-fw pi-github",
-        url: "https://github.com/primefaces/sakai-vue",
-        target: "_blank",
-      },
-    ],
-  },
-]);
-</script>
-
-<template>
-  <ul class="layout-menu">
-    <template v-for="(item, i) in model" :key="item">
-      <app-menu-item v-if="!item.separator" :item="item" :index="i"></app-menu-item>
-      <li v-if="item.separator" class="menu-separator"></li>
-    </template>
-  </ul>
-</template>
-
-<style lang="scss" scoped></style> -->
-
-
 <template>
   <!-- Sidebar -->
   <div class="sidebar">
@@ -323,14 +14,22 @@ const model = ref([
       <div
         v-for="playlist in user.playlists"
         :key="playlist.playlist_id"
-        class="playlist-item"  
-        @click="navigateToPlaylist(playlist.playlist_id,playlist.playlist_name)"
+        class="playlist-item"
+        @click="navigateToPlaylist(playlist.playlist_id, playlist.playlist_name)"
       >
-        <img :src="playlist.playlist_image_url || `https://i.scdn.co/image/ab67616d0000b2735074bd0894cb1340b8d8a678`" alt="Playlist Image" class="playlist-image" />
-        <div class="playlist-info">
-          <span class="playlist-name">{{ playlist.playlist_name }}</span>
-          <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>
-        </div>
+        <Button
+          @click="openPlaylist(playlist.playlist_id)"
+          class="playlist-button"
+          label="Secondary"
+          severity="secondary"
+          text
+        >
+          <img :src="playlist.playlist_image_url || `https://i.scdn.co/image/ab67616d0000b2735074bd0894cb1340b8d8a678`" alt="Playlist Image" class="playlist-image" />
+          <div class="playlist-info">
+            <span class="playlist-name">{{ playlist.playlist_name }}</span>
+            <span class="playlist-username"> Playlist - {{ currentUser?.user_name }}</span>
+          </div>
+        </Button>
       </div>
     </div>
 
@@ -339,8 +38,13 @@ const model = ref([
     </div>
 
     <!-- Playlist Dialog -->
-    <AddPlaylistDialog v-if="showPlaylistDialog" @close="closeAddPlaylistDialog" @playlist-added="addNewPlaylist" />
-
+    <AddPlaylistDialog
+      v-if="showPlaylistDialog"
+      :showDialog="showPlaylistDialog"
+      @update:showDialog="showPlaylistDialog = $event"
+      @save="handleSave"
+      @close="closeAddPlaylistDialog"
+    />
   </div>
 </template>
 
@@ -403,26 +107,22 @@ export default {
       this.showPlaylistDialog = false;
     },
 
-    addNewPlaylist(newPlaylist) {
+    handleSave(newPlaylist) {
       this.user.playlists.push(newPlaylist);
-      this.$nextTick(() => {
-        this.closeAddPlaylistDialog();
-      });
+      this.closeAddPlaylistDialog();
     },
 
-
-    toggleTheme() {
-      this.darkTheme = !this.darkTheme;
-      localStorage.setItem("theme", this.darkTheme ? "dark" : "light");
+    openPlaylist(playlistId) {
+      this.$router.push({ name: "Playlist", query: { id: playlistId } });
     },
+
     navigateToPlaylist(playlist_id, playlist_name) {
       this.$router.push({
         name: "playlist",
-        params:
-        {
+        params: {
           playlist_id: playlist_id,
-          playlist_name: playlist_name
-        }
+          playlist_name: playlist_name,
+        },
       });
     },
   },
@@ -437,9 +137,11 @@ export default {
 .sidebar {
   padding: 1rem;
   width: 250px;
-  height: 100%;
+  height: auto;
+  max-height: 78vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -512,7 +214,7 @@ h4 {
 }
 
 .playlist-item:hover {
-  background-color: rgba(125, 125, 125, 0.1)
+  background-color: rgba(125, 125, 125, 0.1);
 }
 
 .dark .playlist-item:hover {
@@ -542,14 +244,14 @@ h4 {
 
 .playlist-username {
   font-size: 0.875rem;
-  color: rgba(125, 125, 125, 0.9)
+  color: rgba(125, 125, 125, 0.9);
 }
 
 .dark .playlist-name {
-  color: rgba(255, 255, 255, 0.7)
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .light .playlist-username {
-  color: rgb(0, 0, 0, 0.7)
+  color: rgb(0, 0, 0, 0.7);
 }
 </style>

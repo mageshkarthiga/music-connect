@@ -1,7 +1,7 @@
 <template>
     <AppTopbar />
     <div class="card mt-10">
-        <h2 class="music-title">{{ playlist_name }} Tracks 🎶🎧</h2>
+        <h2 class="music-title">{{ playlist_name }} </h2>
         <!-- Pass tracks as a prop to MusicTracks -->
         <MusicTracks :tracks="tracks" @track-selected="onTrackSelected" />
         <!-- SpotifyPlayer Component -->

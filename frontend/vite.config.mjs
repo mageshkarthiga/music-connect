@@ -16,9 +16,6 @@ export default defineConfig(({ mode }) => {
       noDiscovery: true,
       include: [
         '@supabase/supabase-js', // Existing optimization
-        'node:fs', // Example Node.js package for optimization
-        'node:path', // Example Node.js package
-        // Add other Node.js dependencies if needed
       ],
 
     },
@@ -35,6 +32,9 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       "process.env": env, // Ensure variables are accessible
+    },
+    build: {
+      target: 'esnext', // Ensure compatibility with top-level await and modern JS features
     },
   };
 });
