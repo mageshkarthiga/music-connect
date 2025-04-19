@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 // GetTracks fetches all tracks

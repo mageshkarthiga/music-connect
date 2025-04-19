@@ -1,144 +1,197 @@
 <script setup>
-import TabView from 'primevue/tabview'
 import { FilterMatchMode } from '@primevue/core/api';
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import UserService from '@/service/UserService';
 import EventService from '@/service/EventService';
 import axios from 'axios';
 
-const allUsers = ref(null);
-const allEvents = ref(null);
-const filters1 = ref({
-  global: { value: null }
-});
-const isLoading = ref(null);
+const allUsers = ref([]);
+const filteredUsers = ref([]);
+const allEvents = ref([]);
+const filters1 = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } }); // Initializing properly
+const isLoading = ref(true);
+const filterValue = ref('desc'); // Default to 'desc' (Highest to Lowest)
+const filterOptions = ref([
+  { label: 'Highest to Lowest Compatibility', value: 'desc' },
+  { label: 'Lowest to Highest Compatibility', value: 'asc' },
+]);
+
+const currentUserId = ref(null);
 
 onBeforeMount(async () => {
   try {
-    // 1. Get the current user
+    // Fetch current user
     const meResponse = await axios.get("http://localhost:8080/me", {
       withCredentials: true,
     });
-    const currentUserId = meResponse.data.firebase_uid;
+    currentUserId.value = meResponse.data.user_id;
 
-    // 2. Fetch all users
+    // Fetch all users
     const users = await UserService.getAllUsers();
+    const filteredUsersList = users.filter(user => user.user_id !== currentUserId.value);
 
-    // 3. Filter out the current user
-    allUsers.value = users.filter(user => user.firebase_uid !== currentUserId);
+    // Calculate similarity for each user
+    const usersWithSimilarity = await Promise.all(filteredUsersList.map(async (user) => {
+      try {
+        const simResponse = await axios.get("http://localhost:8080/calculateSimilarity", {
+          params: {
+            user_id1: currentUserId.value,
+            user_id2: user.user_id,
+          },
+        });
+        return {
+          ...user,
+          similarity: simResponse.data.similarity ?? 0,
+        };
+      } catch (error) {
+        console.error(`Failed to calculate similarity for user ${user.user_id}`, error);
+        return { ...user, similarity: 0 };
+      }
+    }));
 
-    // 4. Fetch all events (optional: wait for this separately or in parallel with above)
+    allUsers.value = usersWithSimilarity;
+    filteredUsers.value = [...usersWithSimilarity]; // Initialize filteredUsers with all users
+
+    // Trigger sorting by default to highest compatibility (desc)
+    onFilterSelect('desc'); // Sort from highest to lowest compatibility by default
+
+    // Fetch all events
     allEvents.value = await EventService.getAllEvents();
 
-    // 5. Init filters & stop loading
-    initFilters1();
     isLoading.value = false;
   } catch (error) {
-    console.error("Failed to fetch user data:", error);
+    console.error("Failed to fetch data:", error);
     isLoading.value = false;
   }
 });
 
-function initFilters1() {
-    filters1.value = {
-        global: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    };
-}
+// Handle sorting based on dropdown selection
+function onFilterSelect(value) {
+  filterValue.value = value;
 
+  // Sort users based on similarity score
+  if (value === 'desc') {
+    filteredUsers.value = [...allUsers.value].sort((a, b) => b.similarity - a.similarity);
+  } else if (value === 'asc') {
+    filteredUsers.value = [...allUsers.value].sort((a, b) => a.similarity - b.similarity);
+  }
+}
 </script>
 
 <template>
-    <div class="card">
-        <div class="font-semibold text-xl mb-4">Search for Users or Events</div>
-        <TabView>
-            <TabPanel header="Users">
-                <DataTable :value="allUsers" :paginator="true" :rows="10" dataKey="user_id" :rowHover="true"
-                    v-model:filters="filters1" filterDisplay="menu" :loading="isLoading"
-                    :globalFilterFields="['user_name']">
-                    <template #header>
-                        <IconField>
-                            <InputIcon>
-                                <i class="pi pi-search" />
-                            </InputIcon>
-                            <InputText v-model="filters1['global'].value" placeholder="Search for user"
-                                class="w-full" />
-                        </IconField>
-                    </template>
-                    <template #empty> No users found. </template>
-                    <template #loading> Loading user data. Please wait. </template>
-                    <Column header="Users" style="min-width: 14rem">
-                        <template #body="{ data }">
-                            <div class="flex items-center gap-2">
-                                <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle"
-                                    size="large" />
-                                <span>
-                                    <a :href="`/profile?user_id=${data.user_id}`" class="clickable-link">
-                                        {{ data.user_name }}
-                                    </a>
-                                </span>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column>
-                        <template #body="{ data }">
-                            <RouterLink :to="{ name: 'chat', params: { user_id: data.firebase_uid } }">
-                                <Button label="Chat" icon="pi pi-send" class="p-button-outlined p-button-sm"/>
-                            </RouterLink>
-                        </template>
-                    </Column>
-                </DataTable>
-            </TabPanel>
-            <TabPanel header="Events">
-                <DataTable :value="allEvents" :paginator="true" :rows="10" dataKey="event_id" :rowHover="true"
-                    :loading="isLoading" :globalFilterFields="['event_name']">
-                    <template #header>
-                        <IconField>
-                            <InputIcon>
-                                <i class="pi pi-search" />
-                            </InputIcon>
-                            <InputText v-model="filters1['global'].value" placeholder="Search for event"
-                                class="w-full" />
-                        </IconField>
-                    </template>
-                    <template #empty> No events found. </template>
-                    <template #loading> Loading event data. Please wait. </template>
-                    <Column header="Events" style="min-width: 14rem">
-                        <template #body="{ data }">
-                            <div class="flex items-center gap-2">
-                                <!-- <img :alt="data.event_image_url" :src="data.event_image_url" style="width: 32px" /> -->
-                                <Avatar :image="data.event_image_url" size="large" />
-                                <span>
-                                    <a :href="data.event_url" target="_blank" rel="noopener noreferrer"
-                                        class="clickable-link">
-                                        {{ data.event_name }}
-                                    </a>
-                                </span>
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </TabPanel>
-        </TabView>
-    </div>
+  <div class="card">
+
+    <Tabs>
+      <TabPanel header="Users">
+        <div class="flex justify-between items-center mb-2">
+
+        </div>
+        <DataTable
+          :value="filteredUsers"
+          :paginator="true"
+          :rows="10"
+          dataKey="user_id"
+          :filters="filters1"
+          filterDisplay="menu"
+          :loading="isLoading"
+          :globalFilterFields="['user_name']"
+        >
+          <template #header>
+
+            
+            <div class="w-full flex items-center justify-between mb-4">
+  <div class="font-semibold text-xl">Search for Users or Events</div>
+
+  <div class="flex items-center gap-2">
+    <i class="pi pi-search text-gray-500" />
+    <InputText
+      v-model="filters1.global.value"
+      placeholder="Search for user"
+      class="w-[18rem]"
+    />
+  </div>
+</div>
+
+
+
+
+
+          </template>
+          <template #empty>No users found.</template>
+          <template #loading>Loading user data. Please wait.</template>
+          <Column header="Users" style="min-width: 14rem">
+            <template #body="{ data }">
+              <div class="flex items-center gap-2">
+                <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
+                <span>
+                  <a :href="`/profile?user_id=${data.user_id}`" class="clickable-link">
+                    {{ data.user_name }}
+                  </a>
+                  <div class="text-xs text-gray-500">
+                    Match: {{ (data.similarity ?? 0).toFixed(2) }}
+                  </div>
+                </span>
+              </div>
+            </template>
+          </Column>
+          <Column>
+            <template #body="{ data }">
+              <RouterLink :to="{ name: 'chat', params: { user_id: data.firebase_uid } }">
+                <Button label="Chat" icon="pi pi-send" class="p-button-outlined p-button-sm" />
+              </RouterLink>
+            </template>
+          </Column>
+        </DataTable>
+      </TabPanel>
+
+      <TabPanel header="Events">
+        <DataTable
+          :value="allEvents"
+          :paginator="true"
+          :rows="10"
+          dataKey="event_id"
+          :loading="isLoading"
+          :globalFilterFields="['event_name']"
+        >
+          <template #header>
+            <span class="p-input-icon-left">
+              <i class="pi pi-search" />
+              <InputText
+                v-model="filters1.global.value"
+                placeholder="Search for event"
+                class="w-full"
+              />
+            </span>
+          </template>
+          <template #empty>No events found.</template>
+          <template #loading>Loading event data. Please wait.</template>
+          <Column header="Events" style="min-width: 14rem">
+            <template #body="{ data }">
+              <div class="flex items-center gap-2">
+                <Avatar :image="data.event_image_url" size="large" />
+                <span>
+                  <a :href="data.event_url" target="_blank" rel="noopener noreferrer" class="clickable-link">
+                    {{ data.event_name }}
+                  </a>
+                </span>
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </TabPanel>
+    </Tabs>
+  </div>
 </template>
 
-<style scoped lang="scss">
-:deep(.p-datatable-frozen-tbody) {
-    font-weight: bold;
-}
-
-:deep(.p-datatable-scrollable .p-frozen-column) {
-    font-weight: bold;
-}
-
+<style scoped>
 .clickable-link {
-    color: black;
-    cursor: pointer;
-    transition: color 0.2s ease-in-out;
+  color: black;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
 }
 
 .clickable-link:hover {
-    color: #10b981;
-    text-decoration: none;
+  color: #10b981;
+  text-decoration: none;
 }
 </style>
