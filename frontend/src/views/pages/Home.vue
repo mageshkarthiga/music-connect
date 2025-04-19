@@ -23,7 +23,7 @@
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
           <h2 class="text-xl font-semibold mb-3">Frequently Accessed Tracks</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 lg:grid-cols-3">
             <TrackCard
               v-for="track in user.tracks"
               :key="track.track_id"
@@ -35,6 +35,8 @@
             />
           </div>
         </div>
+
+        
 
         <!-- Discoverable Events -->
         <div v-if="(filter === 'all' || filter === 'events') && otherEvents.length">
