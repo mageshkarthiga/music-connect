@@ -39,8 +39,14 @@ onBeforeMount(async () => {
       return { ...user, status: status ? status.status : 'none' };
     });
 
-    allUsers.value = usersWithStatus;
-    filteredUsers.value = [...usersWithStatus];
+  // Fetch music similarity for each user
+  const usersWithSimilarity = await Promise.all(usersWithStatus.map(async user => {
+      const similarity = await getMusicSimilarity(user.user_id);
+      return { ...user, similarity };
+    }));
+
+    allUsers.value = usersWithSimilarity;
+    filteredUsers.value = [...usersWithSimilarity];
     onFilterSelect('desc');
 
     allEvents.value = await EventService.getAllEvents();
@@ -90,17 +96,65 @@ async function fetchFriendshipStatus(users) {
   }
 }
 
-
+async function getMusicSimilarity(userId) {
+  try {
+    const response = await axios.get(`http://localhost:8080/calculateSimilarity?user_id1=${currentUserId.value}&user_id2=${userId}`, { withCredentials: true });
+    if (response.status === 200) {
+      console.log(`Similarity for user ${userId}:`, response.data.similarity); // Log for debugging
+      return response.data.similarity;  // Ensure this matches the expected API response
+    } else {
+      console.error("Error fetching similarity:", response.statusText);
+      return 0;  // Default similarity score in case of error
+    }
+  } catch (error) {
+    console.error("Error fetching similarity:", error);
+    return 0;  // Default similarity score in case of error
+  }
+}
 
 function onFilterSelect(value) {
   filterValue.value = value;
 
   if (value === 'desc') {
-    filteredUsers.value = [...allUsers.value].sort((a, b) => b.similarity - a.similarity);
+    filteredUsers.value = [...allUsers.value].sort((a, b) => {
+      // First, compare by similarity score (descending)
+      if ((b.similarity ?? 0) !== (a.similarity ?? 0)) {
+        return (b.similarity ?? 0) - (a.similarity ?? 0);  // Sort by similarity (desc)
+      }
+
+      // If similarity is the same, compare by request timestamp (for 'requested' status)
+      if (a.status === 'requested' && b.status === 'requested') {
+        return new Date(b.request_timestamp) - new Date(a.request_timestamp);  // Sort by most recent request
+      }
+      
+      // If one user is 'requested' and the other is not, prioritize 'requested' ones
+      if (a.status === 'requested') return -1;
+      if (b.status === 'requested') return 1;
+
+      return 0; // No change if both are not 'requested'
+    });
   } else if (value === 'asc') {
-    filteredUsers.value = [...allUsers.value].sort((a, b) => a.similarity - b.similarity);
+    filteredUsers.value = [...allUsers.value].sort((a, b) => {
+      // First, compare by similarity score (ascending)
+      if ((a.similarity ?? 0) !== (b.similarity ?? 0)) {
+        return (a.similarity ?? 0) - (b.similarity ?? 0);  // Sort by similarity (asc)
+      }
+
+      // If similarity is the same, compare by request timestamp (for 'requested' status)
+      if (a.status === 'requested' && b.status === 'requested') {
+        return new Date(a.request_timestamp) - new Date(b.request_timestamp);  // Sort by earliest request
+      }
+      
+      // If one user is 'requested' and the other is not, prioritize 'requested' ones
+      if (a.status === 'requested') return -1;
+      if (b.status === 'requested') return 1;
+
+      return 0; // No change if both are not 'requested'
+    });
   }
 }
+
+
 
 async function addFriend(userId) {
   const user = allUsers.value.find(u => u.user_id === userId);
@@ -185,6 +239,9 @@ async function rejectRequest(userId) {
 
     <Tabs>
       <TabPanel header="Users">
+
+
+
         <DataTable
           :value="filteredUsers"
           :paginator="true"
@@ -195,39 +252,50 @@ async function rejectRequest(userId) {
           :loading="isLoading"
           :globalFilterFields="['user_name']"
         >
-          <template #header>
-            <div class="w-full flex items-center justify-between mb-4">
-              <div class="font-semibold text-xl">Search for Users or Events</div>
-              <div class="flex items-center gap-2">
-                <i class="pi pi-search text-gray-500" />
-                <InputText
-                  v-model="filters1.global.value"
-                  placeholder="Search for user"
-                  class="w-[18rem]"
-                />
-              </div>
-            </div>
-          </template>
+        <template #header>
+  <div class="w-full flex items-center justify-between mb-4 mt-8">
+    <!-- Header Text aligned to the left -->
+    <div class="font-semibold text-xl flex-1">Your Friends & Requests </div>
 
-          <template #loading>
-            <div class="rounded border p-6">
-              <ul class="m-0 p-0 list-none">
-                <li class="mb-4" v-for="i in 4" :key="i">
-                  <div class="flex">
-                    <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
-                    <div class="self-center" style="flex: 1">
-                      <Skeleton width="100%" class="mb-2"></Skeleton>
-                      <Skeleton width="75%"></Skeleton>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </template>
+    <!-- Filter Buttons aligned to the right -->
+    <div class="flex items-center gap-2 ml-auto">
+      <Button
+        label="Sort by Music Similarity"
+        icon="pi pi-sort-alt"
+        class="p-button-outlined p-button-secondary mr-2"
+        @click="onFilterSelect('desc')"
+      />
+      <Button
+        label="Sort by Incoming Requests"
+        icon="pi pi-sort"
+        class="p-button-outlined p-button-secondary"
+        @click="onFilterSelect('asc')"
+      />
+    </div>
 
-          <Column header="Users" style="min-width: 14rem">
+    <!-- Search Bar aligned to the top-right -->
+    <div class="absolute top-0 right-0 flex items-center gap-2">
+      <i class="pi pi-search text-gray-500" />
+      <InputText
+        v-model="filters1.global.value"
+        placeholder="Search for user"
+        class="w-[18rem]"
+            />
+            </div>
+        </div>
+        </template>
+
+          <div class="flex justify-end mb-4">
+
+        </div>
+
+          <Column header="Users" style="min-width: 25rem ">
             <template #body="{ data }">
               <div class="flex items-center gap-2">
+                <template v-if="isLoading">
+                  <Skeleton />
+                </template>
+                <template v-else>
                 <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
                 <span>
                   <a :href="`/profile?user_id=${data.user_id}`" class="clickable-link">
@@ -237,6 +305,7 @@ async function rejectRequest(userId) {
                     Match: {{ (data.similarity ?? 0).toFixed(2) }}
                   </div>
                 </span>
+                </template>
               </div>
             </template>
           </Column>
@@ -244,6 +313,10 @@ async function rejectRequest(userId) {
           <Column>
             <template #body="{ data }">
               <div class="flex items-center gap-2">
+                <template v-if="isLoading">
+                  <Skeleton />
+                </template>
+                <template v-else>
                 <Button
                   v-if="data.status === 'pending'"
                   label="Pending"
@@ -288,6 +361,7 @@ async function rejectRequest(userId) {
                   class="p-button-outlined p-button-sm"
                   @click.stop="addFriend(data.user_id)"
                 />
+            </template>
               </div>
             </template>
           </Column>
