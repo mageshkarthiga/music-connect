@@ -66,11 +66,9 @@
 <script>
 import PlaylistService from "@/service/PlaylistService";
 import TrackCard from "@/components/TrackCard.vue";
-import PlaylistService from "@/service/PlaylistService";
-import TrackCard from "@/components/TrackCard.vue";
 import userService from "@/service/UserService";
 import trackService from "@/service/TrackService";
-import trackService from "@/service/TrackService";
+
 
 export default {
   components: {

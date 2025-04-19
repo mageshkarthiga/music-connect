@@ -7,13 +7,6 @@
       <Button label="Events" severity="secondary" outlined @click="filterContent('events')" />
     </div>
 
-    <!-- Top Bar with Filter Buttons -->
-    <div class="p-4 flex space-x-4">
-      <Button label="All" severity="secondary" outlined @click="filterContent('all')" />
-      <Button label="Music" severity="secondary" outlined @click="filterContent('music')" />
-      <Button label="Events" severity="secondary" outlined @click="filterContent('events')" />
-    </div>
-
     <!-- Loading Spinner -->
     <div ref="loadingSpinner" v-if="loading" class="p-d-flex p-jc-center p-ai-center">
       <span>Loading...</span>
@@ -29,100 +22,21 @@
       <template v-if="hasContent">
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <h2 class="text-xl font-semibold mb-3"> Frequently Accessed Tracks</h2>
-        <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <h2 class="text-xl font-semibold mb-3"> Frequently Accessed Tracks</h2>
+          <h2 class="text-xl font-semibold mb-3">Frequently Accessed Tracks</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Handle track-selected event -->
-
-                      <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-selected="setSelectedTrackURI"
-          />
-
-          <!-- <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-liked="handleTrackLiked"
-            @track-unliked="handleTrackUnliked"
-            @track-selected="setSelectedTrackURI"
-          /> -->
-
-
-                      <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-selected="setSelectedTrackURI"
-          />
-
-          <!-- <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            :liked="likedTracks.includes(track.track_id)"
-            :selectedTracks="selectedTracks"
-            @track-liked="handleTrackLiked"
-            @track-unliked="handleTrackUnliked"
-            @track-selected="setSelectedTrackURI"
-          /> -->
-
+            <TrackCard
+              v-for="track in user.tracks"
+              :key="track.track_id"
+              :track="track"
+              :state="'redirect'"
+              :liked="likedTracks.includes(track.track_id)"
+              :selectedTracks="selectedTracks"
+              @track-selected="setSelectedTrackURI"
+            />
           </div>
         </div>
 
-        <br>
-
-        <!-- User's liked events -->
-        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-        <br>
-
-        <!-- User's liked events -->
-        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-          </div>
-        </div> -->
-
-        <br>
-        </div> -->
-
-        <br>
-
-        <!-- Discoverable events -->
-        <div v-if="(filter === 'all' || filter === 'events') && otherEvents.length">
-          <h2 class="text-xl font-semibold mb-3">Discover Events</h2>
-        <!-- Discoverable events -->
+        <!-- Discoverable Events -->
         <div v-if="(filter === 'all' || filter === 'events') && otherEvents.length">
           <h2 class="text-xl font-semibold mb-3">Discover Events</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">
@@ -134,21 +48,12 @@
               @event-unliked="handleEventUnliked"
               @event-liked="handleEventLiked"
             />
-            <EventCard
-              v-for="event in otherEvents"
-              :key="event.event_id"
-              :event="event"
-              :liked="false"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
           </div>
         </div>
 
+        <!-- Recommended Music -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <div class="font-semibold text-xl mb-4">Recommended music </div>
-        <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <div class="font-semibold text-xl mb-4">Recommended music </div>
+          <div class="font-semibold text-xl mb-4">Recommended music</div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
@@ -164,24 +69,20 @@
     <!-- Spotify Player -->
     <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
   </div>
-
 </template>
+
 <script>
 import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
-import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-import TrackCard from "@/components/TrackCard.vue";
-import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 
 export default {
   components: {
     EventCard,
-    PlaylistCard,
     TrackCard,
     SpotifyPlayer,
     RecommendedTracks,
@@ -195,7 +96,6 @@ export default {
       selectedTracks: [],
       errorMessage: "",
       selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
-      filter: 'all',  // Default filter value
       filter: 'all',  // Default filter value
     };
   },
@@ -215,7 +115,6 @@ export default {
     }
   },
   methods: {
-
     async handleTrackLiked(trackId) {
       const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
       if (likedTrack) {
@@ -230,6 +129,7 @@ export default {
         life: 3000,
       });
     },
+
     async handleEventLiked(eventId) {
       const likedEvent = this.otherEvents.find(e => e.event_id === eventId);
       if (likedEvent) {

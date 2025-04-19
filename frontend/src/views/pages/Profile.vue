@@ -1,91 +1,57 @@
 <template>
-  <div
-    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
-  >
-    <div v-if="loading" class="flex justify-center items-center text-lg p-8">
-  <div
-    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
-  >
+  <div class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
+    <!-- Loading Spinner -->
     <div v-if="loading" class="flex justify-center items-center text-lg p-8">
       <span>Loading…</span>
     </div>
 
-
-
-
-
+    <!-- Error Message -->
     <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
       {{ errorMessage }}
     </div>
 
-
-
-
-    <div v-else class="profile-details p-card p-p-4 p-shadow-4 m-4 p-8">
-
-      <img
-        :src="user?.profile_photo_url || '/public/profile.svg'"
-        alt="Profile Photo"
-        class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary"
-      />
+    <!-- Profile Details -->
+    <div v-else class="profile-details p-card p-p-4 p-shadow-4 mt-4 p-8">
+      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo" class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
       <br> 
-      
       <div class="p-d-flex p-flex-column">
-  <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
-  <p class="text-sm text-muted p-mt-1">
-    {{ user.email_address }} · {{ user.phone_number }} · {{ user.location }}
-  </p>
-</div>
-</div>
-
-
+        <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
+        <p class="text-sm text-muted p-mt-1">
+          {{ user.email_address }} · {{ user.phone_number }} · {{ user.location }}
+        </p>
+      </div>
+    </div>
 
     <br>
 
-      <template v-if="hasContent">
-        <section class="p-4" v-if="user.events.length">
-          <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
+    <!-- Content Sections -->
+    <template v-if="hasContent">
+      <!-- Liked Events -->
+      <section v-if="user.events.length" class="p-4">
+        <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <EventCard
+            v-for="event in user.events"
+            :key="event.event_id"
+            :event="event"
+            :liked="true"
+            @event-unliked="handleEventUnliked"
+            @event-liked="handleEventLiked"
+          />
+        </div>
+      </section>
 
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-          </div>
-        </section>
-
-        <!-- <section class="p-4" v-if="user.playlists.length">
-          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <PlaylistCard
-              v-for="p in user.playlists"
-              :key="p.playlist_id"
-              :playlist="p"
-            />
-          </div>
-        </section> -->
-
-        <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
+      <!-- Tracks -->
+      <section v-if="user.tracks.length" class="p-4">
+        <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
           <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
             <TrackCard :track="t" />
           </div>
         </div>
-
-        </section>
-
-        <!-- <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3">Artists</h2>
-          <SpotifyPlayer />
-        </section> -->
-      </template>
-    </div>
-
+      </section>
+    </template>
+  </div>
 </template>
 
 <script>

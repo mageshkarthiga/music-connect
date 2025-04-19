@@ -14,5 +14,4 @@ type User struct {
 
 	Friends []*User `json:"friends" gorm:"many2many:user_friends;joinForeignKey:UserID;joinReferences:FriendID"`
 
-	Friends []*User `json:"friends" gorm:"many2many:user_friends;joinForeignKey:UserID;joinReferences:FriendID"`
 }
