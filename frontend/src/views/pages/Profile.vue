@@ -6,84 +6,77 @@
       <span>Loading…</span>
     </div>
 
-    <div
-      v-else
-      class="bg-surface-card border border-surface-border rounded-lg shadow-md text-center flex flex-col items-center px-6 py-10 min-h-[300px] text-surface-900 dark:text-white"
-    >
+
+
+    <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
+      {{ errorMessage }}
+    </div>
+
+
+
+
+    <div v-else class="profile-details p-card p-p-4 p-shadow-4 m-4 p-8">
+
       <img
         :src="user?.profile_photo_url || '/public/profile.svg'"
         alt="Profile Photo"
         class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary"
       />
-      <h1 class="mt-4 text-xl font-semibold">
-        {{ user?.user_name || "Unknown User" }}
-      </h1>
+      <br> 
+      
+      <div class="p-d-flex p-flex-column">
+  <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
+  <p class="text-sm text-muted p-mt-1">
+    {{ user.email_address }} · {{ user.phone_number }} · {{ user.location }}
+  </p>
+</div>
+</div>
 
-      <div
-        v-if="errorMessage && !hasContent"
-        class="text-red-600 dark:text-red-400 mt-6"
-      >
-        <p>{{ errorMessage }}</p>
-        <p class="mt-2 text-surface-600 dark:text-surface-300">
-          No data found for this user.
-        </p>
-      </div>
 
-      <!-- Events Section -->
-      <section class="w-full p-4 text-left">
-        <h2 class="text-2xl font-semibold mb-3">Favourite Events</h2>
-        <div
-          v-if="user.events.length > 0 && user.events[0].event_id"
-          class="flex space-x-4 overflow-x-auto pb-4"
-        >
-          <EventCard v-for="e in user.events" :key="e.event_id" :event="e" />
-        </div>
-        <p v-else class="text-surface-600 dark:text-surface-300">
-          No events to show.
-        </p>
-      </section>
 
-      <!-- Playlists Section -->
-      <section class="w-full p-4 text-left">
-        <h2 class="text-2xl font-semibold mb-3">Playlists</h2>
-        <div
-          v-if="user.playlists.length"
-          class="flex space-x-4 overflow-x-auto pb-4"
-        >
-          <PlaylistCard
-            v-for="p in user.playlists"
-            :key="p.playlist_id"
-            :playlist="p"
-          />
-        </div>
-        <p v-else class="text-surface-600 dark:text-surface-300">
-          No playlists found.
-        </p>
-      </section>
+    <br>
 
-      <!-- Tracks Section -->
-      <section class="w-full p-4 text-left">
-        <h2 class="text-xl font-semibold mb-3">Favourite Tracks</h2>
+      <template v-if="hasContent">
+        <section class="p-4" v-if="user.events.length">
+          <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
 
-        <div
-          v-if="user.tracks.length"
-          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
-        >
-          <TrackCard
-            v-for="track in user.tracks"
-            :key="track.track_id"
-            :track="track"
-            :state="'redirect'"
-            @track-selected="setSelectedTrackURI"
-          />
-        </div>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <EventCard
+              v-for="event in user.events"
+              :key="event.event_id"
+              :event="event"
+              :liked="true"
+              @event-unliked="handleEventUnliked"
+              @event-liked="handleEventLiked"
+            />
+          </div>
+        </section>
 
-        <p v-else class="text-surface-600 dark:text-surface-300">
-          No tracks available.
-        </p>
-      </section>
+        <!-- <section class="p-4" v-if="user.playlists.length">
+          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <PlaylistCard
+              v-for="p in user.playlists"
+              :key="p.playlist_id"
+              :playlist="p"
+            />
+          </div>
+        </section> -->
+
+        <section class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3 text-left">Liked Tracks</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <TrackCard v-for="t in user.tracks" :key="t.track_id" :track="t" />
+          </div>
+        </section>
+
+        <!-- <section class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Artists</h2>
+          <SpotifyPlayer />
+        </section> -->
+      </template>
     </div>
-  </div>
+
 </template>
 
 <script>

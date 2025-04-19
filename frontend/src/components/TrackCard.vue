@@ -1,6 +1,6 @@
 <template>
   <div
-    class="track-card flex items-center rounded-lg p-8 min-w-[180px] max-w-md hover:bg-surface-400 dark:bg-surface-900 dark:hover:bg-surface-800 transition cursor-pointer light:bg-surface-800 light:hover:bg-surface-300"
+    class="track-card flex items-center gap-4 rounded-lg p-8 min-w-[280px] max-w-md hover:bg-surface-400 dark:bg-surface-900 dark:hover:bg-surface-800 transition cursor-pointer light:bg-surface-800 light:hover:bg-surface-300 relative"
     @click="handleClick"
   >
     <img
@@ -8,6 +8,7 @@
       alt="Track cover"
       class="w-12 h-12 object-cover rounded-md"
     />
+
     <div class="text ml-4">
       {{ track.track_title }}
     </div>
@@ -19,6 +20,18 @@
     >
       Selected
     </div>
+
+    <div
+  v-if="state === 'redirect'"
+  @click.stop="toggleLike"
+  class="absolute right-2 top-1/2 transform -translate-y-1/2"
+>
+  <!-- <i
+    class="pi"
+    :class="liked ? 'pi-heart-fill text-red-500' : 'pi-heart'"
+    style="font-size: 1.2rem;"
+  ></i> -->
+</div>
   </div>
 </template>
 
@@ -26,8 +39,9 @@
 export default {
   props: {
     track: { type: Object, required: true },
-    state: { type: String, required: true }, // The state to control behavior ('redirect' or 'select')
+    state: { type: String, required: true }, // 'redirect' or 'select'
     selectedTracks: { type: Array, required: true },
+    liked: { type: Boolean, default: false }, // whether the track is liked
   },
   data() {
     return {
@@ -42,7 +56,6 @@ export default {
   methods: {
     handleClick() {
       if (this.state === "redirect") {
-        // Emit the track URI to the parent component
         this.$emit("track-selected", this.track.track_uri);
       } else if (this.state === "select") {
         this.toggleTrackSelection();
@@ -56,38 +69,40 @@ export default {
         this.selectedTracks.push(this.track.track_id);
       }
     },
+    toggleLike() {
+      if (this.liked) {
+        this.$emit("track-unliked", this.track.track_id);
+      } else {
+        this.$emit("track-liked", this.track.track_id);
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
-/* Track card styles */
 .track-card {
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid rgba(184, 184, 184, 0.5); /* Light border for light mode */
+  border: 1px solid rgba(184, 184, 184, 0.5);
   cursor: pointer;
   transition: 0.2s;
 }
 
-/* Hover effect for light mode */
 .bg-surface-400:hover {
   background-color: rgba(245, 245, 245, 0.5);
 }
 
-/* Dark mode background and border */
 .dark .track-card {
-  background-color: #101318; /* Darker background for track cards in dark mode */
-  border: 1px solid #4a5568; /* Darker border for dark mode */
+  background-color: #101318;
+  border: 1px solid #4a5568;
 }
 
-/* Light mode specific card styles */
 .track-card.light {
-  background-color: #ffffff; /* Set light mode card background to #ffffff */
-  border: 1px solid #ddd; /* Light border */
+  background-color: #ffffff;
+  border: 1px solid #ddd;
 }
 
-/* Hover effect for dark mode */
 .dark .bg-surface-400:hover {
   background-color: rgba(
     184,
@@ -97,20 +112,17 @@ export default {
   ); /* Darker hover effect for dark mode */
 }
 
-/* Highlight the selected card */
 .track-card.selected {
   border: 2px solid #585858;
   background-color: #f0f9ff;
 }
 
-/* Image style */
 .track-image {
   width: 100%;
   height: auto;
   border-radius: 8px;
 }
 
-/* Track info style */
 .track-info {
   margin-top: 0.5rem;
 }

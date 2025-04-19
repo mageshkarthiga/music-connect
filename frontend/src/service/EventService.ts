@@ -99,20 +99,38 @@ export default {
     return response.data;
   },
 
-  //   async getEventsByUserId(userId: number): Promise<Event[]> {
-  //     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
-  //       withCredentials: true, // Send cookies automatically, like auth_token
-  //     });
+  async likeEvent(eventId) {
+   
+    return await axios.post(
+      `${API_BASE_URL}/likeEvent`,
+      { event_id: eventId }, // ✅ Must match expected format
+      {
+        withCredentials: true,
+      }
+    );
+  },
+  
 
-  //     return response.data;
+  async getLikedEvents(): Promise<Event[]> {
+ 
+    const response = await axios.get(`${API_BASE_URL}/me/likedEvents`, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
 
-  // }
+// EventService.js or inside your component
+async unlikeEvent(eventId) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/likeEvent`, {
+      withCredentials: true,
+      data: { event_id: eventId },  // Send the event_id in the request body
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to unlike event:", error);
+    throw error;
+  }
+}
 
-  //   async getUserByEventId(eventId: number, token: string) {
-  //     const response = await axios.get<Event>(`${EVENT_URL}/users/${eventId}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-  //     return response.data;
 };

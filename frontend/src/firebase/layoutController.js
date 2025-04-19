@@ -12,6 +12,13 @@ import { toRaw } from "vue";
 
 const COLLECTION_NAME = "layoutConfigs";
 
+async function init() {
+  await initLayoutFromFirestore();
+  watchLayoutChanges();
+}
+
+init();
+
 export async function initLayoutFromFirestore(userId) {
   if (!userId) return;
   try {

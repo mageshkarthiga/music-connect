@@ -71,32 +71,49 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.PUT("/users/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateUser))
 	e.DELETE("/users/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteUser))
 	e.GET("/users/firebase/:uid", middleware.AuthMiddleware(projectID)(controllers.GetUserByFirebaseUID))
+e.POST("/users/friends",     middleware.AuthMiddleware(projectID)(controllers.AddFriend))
+e.GET("/users/:id/friends",  middleware.AuthMiddleware(projectID)(controllers.GetFriends))
 
-	// ---- tracks ----
-	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
-	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
+
+// ---- friends ----
+
+e.POST("/friend/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
+e.POST("/friend/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
+e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
+e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
+e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
+
+
+// ---- tracks ----
+e.GET("/tracks",             middleware.AuthMiddleware(projectID)(controllers.GetTracks))
+e.GET("/me/tracks",          middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))
 	e.GET("/me/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavTracksForUser))
-	e.POST("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
+e.POST("/me/tracks",         middleware.AuthMiddleware(projectID)(controllers.AddTracksForUser))
 	
-	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
+e.GET("/users/:id/tracks",   middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
 	e.GET("/users/:id/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavUserTracksByID))
+e.GET("/likedTracks",        middleware.AuthMiddleware(projectID) (controllers.GetLikedTracks)  )
+e.POST("/likeTrack",         middleware.AuthMiddleware(projectID) (controllers.LikeTrack)  )
+e.DELETE("/likeTrack",       middleware.AuthMiddleware(projectID) (controllers.UnlikeTrack)  )
 
-	// ---- playlists ----
-	e.GET("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
-	e.POST("/me/playlists", middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
-	e.GET("/users/:id/playlists", middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
+// ---- playlists ----
+e.GET("/me/playlists",       middleware.AuthMiddleware(projectID)(controllers.GetPlaylistsForUser))
+e.POST("/me/playlists",      middleware.AuthMiddleware(projectID)(controllers.AddPlaylistForUser))
+e.GET("/users/:id/playlists",middleware.AuthMiddleware(projectID)(controllers.GetPlaylistByUserID))
 
-	// ---- events ----
-	e.GET("/events", middleware.AuthMiddleware(projectID)(controllers.GetEvents))
-	e.POST("/events", middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
-	e.PUT("/events/:id", middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
-	e.DELETE("/events/:id", middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
-	e.GET("/me/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
+// ---- events ----
+e.GET("/events",             middleware.AuthMiddleware(projectID)(controllers.GetEvents))
+e.POST("/events",            middleware.AuthMiddleware(projectID)(controllers.CreateEvent))
+e.PUT("/events/:id",         middleware.AuthMiddleware(projectID)(controllers.UpdateEvent))
+e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.DeleteEvent))
+e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
 	e.GET("/me/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsForUser))
-	e.GET("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
+e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
 	e.GET("/users/:id/favevents", middleware.AuthMiddleware(projectID)(controllers.GetFavEventsByUserID))
-	e.GET("/events/venues", middleware.AuthMiddleware(projectID)(controllers.GetEventVenues))
-	e.POST("/users/:id/events", middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
+e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
+e.GET("/me/likedEvents",     middleware.AuthMiddleware(projectID)(controllers.GetLikedEvents))
+e.POST("/likeEvent",         middleware.AuthMiddleware(projectID)(controllers.LikeEvent))
+e.DELETE("/likeEvent",      middleware.AuthMiddleware(projectID)(controllers.UnlikeEvent))
 
 	// ---- recommendations ----
 	e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))

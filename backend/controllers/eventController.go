@@ -6,6 +6,7 @@ import (
     "github.com/labstack/echo/v4"
     "net/http"
     "log"
+
 )
 
 // GetEvents fetches all events
@@ -224,6 +225,84 @@ func GetEventsByUserID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, events)
+}
+
+func GetLikedEvents(c echo.Context) error {
+    // Get userID from the context set by middleware using "uid"
+    uid, ok := c.Get("uid").(uint)
+    if !ok {
+        return c.JSON(http.StatusUnauthorized, "Missing or invalid user ID in context")
+    }
+
+    // Get events from user_events table
+    var events []models.Event
+    if err := config.DB.
+        Joins("JOIN user_events ue ON ue.event_id = events.event_id").
+        Where("ue.user_id = ?", uid). // Use `uid` directly here
+        Find(&events).Error; err != nil {
+        log.Printf("Error fetching events for user %d: %v", uid, err)
+        return c.JSON(http.StatusInternalServerError, "Failed to fetch events")
+    }
+
+    return c.JSON(http.StatusOK, events)
+}
+
+func LikeEvent(c echo.Context) error {
+    uid, ok := c.Get("uid").(uint)
+    if !ok {
+        return c.JSON(http.StatusUnauthorized, "User ID is required")
+    }
+
+    var req struct {
+        EventID uint `json:"event_id"`
+    }
+
+    if err := c.Bind(&req); err != nil {
+        return c.JSON(http.StatusBadRequest, "Invalid request body")
+    }
+
+    var existingLike models.UserEvent
+    if err := config.DB.
+        Where("user_id = ? AND event_id = ?", uid, req.EventID).
+        First(&existingLike).Error; err == nil {
+        return c.JSON(http.StatusBadRequest, "Event already liked")
+    }
+
+    newLike := models.UserEvent{
+        UserID:  uid,
+        EventID: req.EventID,
+    }
+
+    if err := config.DB.Create(&newLike).Error; err != nil {
+        log.Printf("Error liking event %d by user %d: %v", req.EventID, uid, err)
+        return c.JSON(http.StatusInternalServerError, "Failed to like event")
+    }
+
+    return c.JSON(http.StatusOK, "Event liked successfully")
+}
+
+func UnlikeEvent(c echo.Context) error {
+    uid, ok := c.Get("uid").(uint)
+    if !ok {
+        return c.JSON(http.StatusUnauthorized, "User ID is required")
+    }
+
+    var req struct {
+        EventID uint `json:"event_id"`
+    }
+
+    if err := c.Bind(&req); err != nil {
+        return c.JSON(http.StatusBadRequest, "Invalid request body")
+    }
+
+    if err := config.DB.
+        Where("user_id = ? AND event_id = ?", uid, req.EventID).
+        Delete(&models.UserEvent{}).Error; err != nil {
+        log.Printf("Error unliking event %d by user %d: %v", req.EventID, uid, err)
+        return c.JSON(http.StatusInternalServerError, "Failed to unlike event")
+    }
+
+    return c.JSON(http.StatusOK, "Event unliked successfully")
 }
 
 func GetFavEventsByUserID(c echo.Context) error {
