@@ -21,7 +21,7 @@ function goToChat() {
   router.push("/pages/chat"); 
 }
 function goToMap() {
-  router.push("/uikit/map");
+  router.push("/pages/map");
 }
 function logout() {
   signOut(auth)

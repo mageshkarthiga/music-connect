@@ -83,7 +83,7 @@ export default {
   },
 
   async likeEvent(eventId) {
-    const token = Cookies.get("accessToken");
+   
     return await axios.post(
       `${API_BASE_URL}/likeEvent`,
       { event_id: eventId }, // ✅ Must match expected format
@@ -95,7 +95,7 @@ export default {
   
 
   async getLikedEvents(): Promise<Event[]> {
-    const token = Cookies.get("token");
+ 
     const response = await axios.get(`${API_BASE_URL}/me/likedEvents`, {
       withCredentials: true,
     });

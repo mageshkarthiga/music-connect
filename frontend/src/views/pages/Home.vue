@@ -102,9 +102,7 @@
     <!-- Spotify Player -->
     <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
   </div>
-    <!-- Spotify Player -->
-    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
-  </div>
+
 </template>
 <script>
 import axios from "axios";

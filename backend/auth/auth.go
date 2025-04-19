@@ -106,7 +106,7 @@ e.DELETE("/events/:id",      middleware.AuthMiddleware(projectID)(controllers.De
 e.GET("/me/events",          middleware.AuthMiddleware(projectID)(controllers.GetEventsForUser))
 e.GET("/users/:id/events",   middleware.AuthMiddleware(projectID)(controllers.GetEventsByUserID))
 e.POST("/users/:id/events",  middleware.AuthMiddleware(projectID)(controllers.AddEventForUser))
-.GET("/me/likedEvents",     middleware.AuthMiddleware(projectID)(controllers.GetLikedEvents))
+e.GET("/me/likedEvents",     middleware.AuthMiddleware(projectID)(controllers.GetLikedEvents))
 e.POST("/likeEvent",         middleware.AuthMiddleware(projectID)(controllers.LikeEvent))
 e.DELETE("/likeEvent",      middleware.AuthMiddleware(projectID)(controllers.UnlikeEvent))
 
