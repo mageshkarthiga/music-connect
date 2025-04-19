@@ -57,7 +57,7 @@ export const acceptFriendRequest  = async (friendId: number): Promise<void> => {
             }
         );
     } catch (error) {
-        console.error("Error approving friend request:", error);
+        console.error("Error accepting friend request:", error);
         throw error;
     }
 }

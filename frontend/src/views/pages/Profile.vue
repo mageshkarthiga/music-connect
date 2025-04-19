@@ -11,7 +11,7 @@
     </div>
 
     <!-- Profile Details -->
-    <div v-else class="profile-details p-p-4 p-shadow-4 mt-4 p-8">
+    <div v-else class="profile-details p-shadow-4 mt-4 p-8">
       <img :src="user?.profile_photo_url || '/profile.svg'" alt="Profile Photo"
         class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
       <br>
