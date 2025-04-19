@@ -1,15 +1,17 @@
 <template>
     <Card class="user-card">
-        <div class="user-card-content">
-            <img :src="user.profilePhotoUrl || defaultProfilePic" alt="Profile Picture" class="profile-pic" />
-            <div class="user-info">
-                <h3 class="user-name">{{ user.name }}</h3>
+        <template #content>
+            <div class="user-card-content">
+                <Avatar :image="user.profile_photo_url || defaultProfilePic" shape="circle" size="large" />
+                <div class="user-info">
+                    <h3 class="user-name clickable-link" v-on:click="redirectToProfile">{{ user.user_name }}</h3>
+                </div>
             </div>
-        </div>
-        <div class="actions">
-            <Button label="Accept" icon="pi pi-check" class="p-button-success" @click="onAccept" />
-            <Button label="Reject" icon="pi pi-times" class="p-button-danger" @click="onReject" />
-        </div>
+            <div class="actions">
+                <Button label="Accept" icon="pi pi-check" class="p-button-success" @click="onAccept" />
+                <Button label="Reject" icon="pi pi-times" class="p-button-danger" @click="onReject" />
+            </div>
+        </template>
     </Card>
 </template>
 
@@ -34,6 +36,10 @@ export default {
         onReject() {
             this.$emit("reject", this.user);
         },
+        redirectToProfile() {
+            const profileUrl = this.$router.resolve({ name: "profile", query: { user_id: this.user.user_id } }).href;
+            window.open(profileUrl, "_blank");
+        }
     },
 };
 </script>
@@ -75,5 +81,16 @@ export default {
 .actions {
     display: flex;
     gap: 0.5rem;
+}
+
+.clickable-link {
+    color: black;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.clickable-link:hover {
+    color: #10b981;
+    text-decoration: none;
 }
 </style>

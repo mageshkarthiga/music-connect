@@ -21,6 +21,18 @@ export interface Friend {
     users: User[]; 
 }
 
+export const getFriends = async (): Promise<Friend> => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/friends`, {
+            withCredentials: true,
+        });
+        return response.data as Friend;
+    } catch (error) {
+        console.error("Error fetching friends:", error);
+        throw error;
+    }
+};
+
 export const getPendingFriendRequests = async (): Promise<Friend> => {
     try {
         const response = await axios.get(`${API_BASE_URL}/friends/pending`,
@@ -34,3 +46,32 @@ export const getPendingFriendRequests = async (): Promise<Friend> => {
         throw error;
     }
 };
+
+export const acceptFriendRequest  = async (friendId: number): Promise<void> => {
+    try {
+        await axios.post(
+            `${API_BASE_URL}/friends/${friendId}/accept`,
+            {},
+            {
+                withCredentials: true,
+            }
+        );
+    } catch (error) {
+        console.error("Error approving friend request:", error);
+        throw error;
+    }
+}
+export const rejectFriendRequest = async (friendId: number): Promise<void> => {
+    try {
+        await axios.post(
+            `${API_BASE_URL}/friends/${friendId}/reject`,
+            {},
+            {
+                withCredentials: true,
+            }
+        );
+    } catch (error) {
+        console.error("Error rejecting friend request:", error);
+        throw error;
+    }
+}
