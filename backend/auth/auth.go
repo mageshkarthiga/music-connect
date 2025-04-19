@@ -93,7 +93,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
 	e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
 	e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
-
+	e.GET("/friendship/:friend_id/status", middleware.AuthMiddleware(projectID)(controllers.GetFriendshipStatus))
+	e.GET("/friend-requests", middleware.AuthMiddleware(projectID)(controllers.GetFriendRequests))
+	
 	// ---- tracks ----
 	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))
 	e.GET("/me/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracksForUser))

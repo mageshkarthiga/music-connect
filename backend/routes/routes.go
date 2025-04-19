@@ -56,6 +56,8 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
     e.POST("/friend/:friend_id/reject", controllers.RejectFriendRequest)
     e.POST("/friend/:friend_id/remove", controllers.RemoveFriend)
     e.GET("/friends", controllers.GetFriends)
+	e.GET("/friendship/:friend_id/status", controllers.GetFriendshipStatus)
+	e.GET("/friend-requests", controllers.GetFriendRequests)
 
 
 	// Track Routes
