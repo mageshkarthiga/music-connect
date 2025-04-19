@@ -64,7 +64,7 @@ export default {
         <i class="pi pi-bars"></i>
       </button>
       <router-link to="/pages/home" class="layout-topbar-logo">
-        <Avatar image="/public/logo.png" size="large" />
+        <Avatar image="/logo.png" size="large" />
         <span class="font-bold text-xl">Music Connect</span>
       </router-link>
     </div>
