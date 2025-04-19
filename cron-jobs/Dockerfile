@@ -19,6 +19,6 @@ WORKDIR /root
 COPY --from=builder /app/app .
 COPY .env .  
 
-EXPOSE 3002
+EXPOSE 8080
 
 ENTRYPOINT ["./app"]

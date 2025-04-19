@@ -179,6 +179,6 @@ func handleScrapeCallback(w http.ResponseWriter, r *http.Request) {
 
 func CallbackServer() {
 	http.HandleFunc("/ticketmaster-scrape-callback", handleScrapeCallback)
-	log.Println("Server listening on port 3002")
-	log.Fatal(http.ListenAndServe(":3002", nil))
+	log.Printf("Server listening on port %s", PORT)
+	log.Fatal(http.ListenAndServe(":" + PORT, nil))
 }
