@@ -110,7 +110,7 @@
 
         <!-- Recommended Music -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <div class="font-semibold text-xl mb-4">Recommended music</div>
+          <div class="font-semibold text-xl mb-4">Recommended music </div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
@@ -134,6 +134,7 @@ import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";

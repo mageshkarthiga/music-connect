@@ -34,14 +34,6 @@ export interface PlaylistTrack {
   playlist_id: number;
   track_id: number;
 }
-
-// Helper function
-function getCookie(name: string): string | undefined {
-    const cookies = document.cookie.split('=').map(cookie => cookie.trim()); // Remove any leading/trailing spaces
-    console.log("Cookies:", cookies[1]);
-    return cookies[1];
-  }
-  
   
 
 // PlaylistService
