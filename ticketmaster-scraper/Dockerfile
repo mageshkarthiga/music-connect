@@ -25,7 +25,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose port (for Flask or FastAPI etc.)
-EXPOSE 3001
+EXPOSE 8080
 
 # Default command to run your app
 CMD ["python", "app.py"]

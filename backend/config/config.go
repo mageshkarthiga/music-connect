@@ -21,7 +21,6 @@ func InitDB() error {
 			fmt.Println("Error loading .env file:", err)
 		}
 	}
-
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
 		return fmt.Errorf("DB_PASSWORD environment variable is not set")

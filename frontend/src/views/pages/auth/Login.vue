@@ -8,7 +8,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   getAdditionalUserInfo,
-  getIdToken
+  getIdToken,
 } from "firebase/auth";
 import AuthService from "@/service/AuthService";
 
@@ -20,26 +20,21 @@ const authError = ref("");
 const mode = ref("login");
 const router = useRouter();
 
-
 const login = async () => {
   authError.value = "";
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value);
-    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-    
-    console.log("User logged in:", userCredential.user);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
 
     const user = userCredential.user;
     const accessToken = await getIdToken(user);
+    await AuthService.authenticateUser(accessToken);
 
-    // console.log("Access Token:", accessToken);
-
-    // Authenticate user with the access token
-    const response = await AuthService.authenticateUser(accessToken);
-    console.log("User authenticated:", response);
-
-
-    router.push("/");
+    router.push("/pages/home");
   } catch (error) {
     console.error("Login error:", error);
     switch (error.code) {
@@ -76,9 +71,15 @@ const signUp = async () => {
   authError.value = "";
   try {
     await createUserWithEmailAndPassword(auth, email.value, password.value);
-    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
     console.log("User signed up:", userCredential.user);
-
+    const user = userCredential.user;
+    const accessToken = await getIdToken(user);
+    await AuthService.authenticateUser(accessToken);
 
     router.push("/createaccount");
   } catch (error) {
@@ -139,6 +140,9 @@ const signInWithGoogle = async () => {
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     const additionalUserInfo = getAdditionalUserInfo(userCredential);
+    const user = userCredential.user;
+    const accessToken = await getIdToken(user);
+    await AuthService.authenticateUser(accessToken);
     console.log("Google Sign-In successful:", userCredential.user);
 
     if (additionalUserInfo?.isNewUser) {

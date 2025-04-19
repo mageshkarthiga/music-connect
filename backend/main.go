@@ -1,17 +1,16 @@
 package main
 
 import (
-	"backend/config"
-	"backend/middleware" // Make sure this is the correct path
 	"backend/auth"
+	"backend/config"
+	"backend/middleware" 
+	"backend/models"
 	"backend/routes"
 	"backend/services/spotify"
-	"backend/models"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
-
-
+	"backend/services/chat"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
@@ -38,15 +37,28 @@ func main() {
 		log.Println("✅ Database connection initialized!")
 	}
 
-	//run migrations
-
-	if err := config.DB.AutoMigrate( &models.Event{}, &models.UserEvent{}, &models.Playlist{}, &models.Track{}, &models.PlaylistTrack{}, &models.TrackArtist{}); err != nil {
+	// Run migrations
+	if err := config.DB.AutoMigrate(
+		&models.Event{},
+		&models.UserEvent{},
+		&models.Playlist{},
+		&models.Track{},
+		&models.PlaylistTrack{},
+		&models.TrackArtist{},
+	); err != nil {
 		log.Fatal("❌ Failed to run migrations: ", err)
 	} else {
 		log.Println("✅ Migrations completed successfully!")
 	}
 
-	// Authenticate with Spotify
+	// Initialize WebSocket server
+	wsServer := chat.NewWsServer()
+	go wsServer.Run() // Start the WebSocket server in a separate goroutine
+
+	// Initialize Firebase
+	chat.InitFirebase()
+
+	// Initialize Spotify services
 	services.SpotifyAuth()
 	token, err := services.GetSpotifyTokenRaw()
 	if err != nil {
@@ -60,15 +72,15 @@ func main() {
 
 	// CORS middleware
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "x-xsrf-token"},
 		AllowCredentials: true,
 	}))
 	log.Println("✅ CORS middleware applied")
 
 	// Register routes
-	routes.RegisterRoutes(e)
+	routes.RegisterRoutes(e, wsServer)
 	log.Println("✅ Routes registered")
 
 	// Health check

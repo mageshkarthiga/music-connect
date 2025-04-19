@@ -1,156 +1,124 @@
-<script>
-import { defineComponent, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import UserService from "@/service/UserService";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-
-export default defineComponent({
-  name: "Profile",
-  setup() {
-    const route = useRoute();
-    const user = ref(null);
-    const loading = ref(true);
-
-    onMounted(async () => {
-      const userId = Number(route.query.user_id);
-      if (!isNaN(userId)) {
-        try {
-          user.value = await UserService.getUser(userId);
-        } catch (error) {
-          console.error("Error fetching user:", error);
-        } finally {
-          loading.value = false;
-        }
-      } else {
-        const auth = getAuth();
-        onAuthStateChanged(auth, async (firebaseUser) => {
-          if (firebaseUser) {
-            try {
-              user.value = await UserService.getUserByFirebaseUID(
-                firebaseUser.uid
-              );
-            } catch (error) {
-              console.error("Error fetching user by Firebase UID:", error);
-            } finally {
-              loading.value = false;
-            }
-          } else {
-            console.warn("No Firebase user signed in.");
-            loading.value = false;
-          }
-        });
-      }
-    });
-
-    return {
-      user,
-      loading,
-    };
-  },
-});
-</script>
-
 <template>
-  <!-- Inline styling can be awkward, but it's requested here. -->
   <div
-    class="profile-page"
-    style="max-width: 1000px; margin: 2rem auto; text-align: center"
-  >
-    <div
-      v-if="loading"
-      class="loading"
-      style="font-size: 1.2rem; padding: 2rem"
-    >
-      <p>Loading...</p>
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
+    <!-- Loading Spinner -->
+    <div v-if="loading" class="flex justify-center items-center py-10">
+      <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="5" animationDuration=".7s" />
     </div>
-    <div v-else-if="user" class="profile-details p-card p-p-4 p-shadow-4">
-      <img
-        :src="user.profilePhotoUrl"
-        alt="Profile Photo"
-        class="profile-photo"
-        style="
-          width: 120px;
-          height: 120px;
-          object-fit: cover;
-          border-radius: 50%;
-          border: 3px solid var(--primary-color);
-        "
-      />
-      <h1 class="p-mt-3">{{ user.userName }}</h1>
-      <p><strong>Email:</strong> {{ user.emailAddress }}</p>
-      <p><strong>Phone:</strong> {{ user.phoneNumber }}</p>
-      <p><strong>Location:</strong> {{ user.location }}</p>
-    </div>
-    <div v-else class="error p-error" style="font-size: 1.2rem; padding: 2rem">
-      <p>User not found.</p>
+    <!-- Error Message -->
+    <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
+      {{ errorMessage }}
     </div>
 
-    <Fluid>
-      <div class="flex gap-4 mb-4 md:flex">
-        <div class="md:w-1/2">
-          <div class="card flex flex-col w-full">
-            <div class="font-semibold text-xl mb-4">Skeleton</div>
-            <div class="rounded-border border border-surface p-6">
-              <div class="flex mb-4">
-                <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
-                <div>
-                  <Skeleton width="10rem" class="mb-2"></Skeleton>
-                  <Skeleton width="5rem" class="mb-2"></Skeleton>
-                  <Skeleton height=".5rem"></Skeleton>
-                </div>
-              </div>
-              <Skeleton width="100%" height="150px"></Skeleton>
-              <div class="flex justify-between mt-4">
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="md:w-1/2">
-          <div class="card flex flex-col w-full">
-            <div class="font-semibold text-xl mb-4">Skeleton</div>
-            <div class="rounded-border border border-surface p-6">
-              <div class="flex mb-4">
-                <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
-                <div>
-                  <Skeleton width="10rem" class="mb-2"></Skeleton>
-                  <Skeleton width="5rem" class="mb-2"></Skeleton>
-                  <Skeleton height=".5rem"></Skeleton>
-                </div>
-              </div>
-              <Skeleton width="100%" height="150px"></Skeleton>
-              <div class="flex justify-between mt-4">
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Profile Details -->
+    <div v-else class="profile-details p-card p-p-4 p-shadow-4 mt-4 p-8">
+      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo"
+        class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
+      <br>
+      <div class="p-d-flex p-flex-column">
+        <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
+        <p class="text-sm text-muted p-mt-1">
+          {{ user.email_address }} · {{ user.phone_number }} · {{ user.location }}
+        </p>
       </div>
+    </div>
 
-      <div class="flex gap-4 md:flex">
-        <div class="md:w-1/2">
-          <div class="card flex flex-col w-full">
-            <div class="font-semibold text-xl mb-4">Skeleton</div>
-            <div class="rounded-border border border-surface p-6">
-              <div class="flex mb-4">
-                <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
-                <div>
-                  <Skeleton width="10rem" class="mb-2"></Skeleton>
-                  <Skeleton width="5rem" class="mb-2"></Skeleton>
-                  <Skeleton height=".5rem"></Skeleton>
-                </div>
-              </div>
-              <Skeleton width="100%" height="150px"></Skeleton>
-              <div class="flex justify-between mt-4">
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-                <Skeleton width="4rem" height="2rem"></Skeleton>
-              </div>
-            </div>
+    <br>
+
+    <!-- Content Sections -->
+    <template v-if="hasContent">
+      <!-- Liked Events -->
+      <section v-if="user.events.length" class="p-4">
+        <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <EventCard v-for="event in user.events" :key="event.event_id" :event="event" :liked="true"
+            @event-unliked="handleEventUnliked" @event-liked="handleEventLiked" />
+        </div>
+      </section>
+
+      <!-- Tracks -->
+      <section v-if="user.tracks.length" class="p-4">
+        <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
+            <TrackCard :track="t" />
           </div>
         </div>
-      </div>
-    </Fluid>
+      </section>
+    </template>
   </div>
 </template>
+
+<script>
+import EventCard from "@/components/EventCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
+import TrackCard from "@/components/TrackCard.vue";
+import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
+
+import UserService from "@/service/UserService";
+import EventService from "@/service/EventService";
+import PlaylistService from "@/service/PlaylistService";
+import {
+  getUserTracksById,
+  getUserTracks,
+  getFavUserTracksById,
+  getFavUserTracks,
+} from "@/service/TrackService";
+
+export default {
+  name: "Profile",
+  components: { EventCard, PlaylistCard, TrackCard, SpotifyPlayer },
+
+  data: () => ({
+    loading: true,
+    user: { events: [], playlists: [], tracks: [] },
+    errorMessage: "",
+  }),
+
+  computed: {
+    hasContent() {
+      const { events, playlists, tracks } = this.user;
+      return events.length || playlists.length || tracks.length;
+    },
+  },
+
+  methods: {
+    async fetchData() {
+      this.loading = true;
+      const userId = Number(this.$route.query.user_id);
+
+      try {
+        if (!Number.isNaN(userId)) {
+          // explicit user
+          const [u, events, playlists, tracks] = await Promise.all([
+            UserService.getUserByUserId(userId),
+            EventService.getFavEventsByUserId(userId),
+            PlaylistService.getPlaylistsByUserId(userId),
+            getFavUserTracksById(userId),
+          ]);
+          this.user = { ...u, events, playlists, tracks };
+        } else {
+          // current logged‑in user
+          const [u, events, playlists, tracks] = await Promise.all([
+            UserService.getUser({ withCredentials: true }), // /me endpoint inside UserService
+            EventService.getFavEventsForCurrentUser(),
+            PlaylistService.getPlaylistsForUser(),
+            getFavUserTracks(),
+          ]);
+          this.user = { ...u, events, playlists, tracks };
+        }
+      } catch (err) {
+        console.error("profile fetch error:", err);
+        this.errorMessage =
+          err?.response?.data?.message ?? "Failed to fetch profile.";
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+
+  mounted() {
+    this.fetchData();
+  },
+};
+</script>

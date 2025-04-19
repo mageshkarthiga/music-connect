@@ -3,7 +3,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
-import Cookies from "js-cookie"; // Import js-cookie to access cookies
 
 export interface Event {
   id?: number;
@@ -45,7 +44,16 @@ export default {
   },
 
   async getAllEvents() {
-    const response = await axios.get<Event[]>(EVENT_URL);
+    const response = await axios.get<Event[]>(EVENT_URL, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
+
+  async getAllEventVenues() {
+    const response = await axios.get<Event[]>(`${EVENT_URL}/venues`, {
+      withCredentials: true,
+    });
     return response.data;
   },
 
@@ -64,29 +72,65 @@ export default {
 
     return response.data;
   },
+  async getFavEventsForCurrentUser(): Promise<Event[]> {
+    const response = await axios.get<Event[]>(`${API_BASE_URL}/me/favevents`, {
+      withCredentials: true, // Ensures cookies (like Firebase auth token) are sent
+    });
 
+    return response.data;
+  },
+  async getEventsByUserId(userId: number): Promise<Event> {
+    const response = await axios.get<Event>(
+      `${API_BASE_URL}/users/${userId}/events`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  },
 
-//   async getEventsByUserId(userId: number): Promise<Event[]> {
-//     const response = await axios.get<Event[]>(`${API_BASE_URL}/users/${userId}/events`, {
-//       withCredentials: true, // Send cookies automatically, like auth_token
-//     });
+  async getFavEventsByUserId(userId: number): Promise<Event> {
+    const response = await axios.get<Event>(
+      `${API_BASE_URL}/users/${userId}/favevents`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  },
 
+  async likeEvent(eventId) {
+   
+    return await axios.post(
+      `${API_BASE_URL}/likeEvent`,
+      { event_id: eventId }, // ✅ Must match expected format
+      {
+        withCredentials: true,
+      }
+    );
+  },
+  
 
-  
-//     return response.data;
-  
-// }
+  async getLikedEvents(): Promise<Event[]> {
+ 
+    const response = await axios.get(`${API_BASE_URL}/me/likedEvents`, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
 
-  
-  
+// EventService.js or inside your component
+async unlikeEvent(eventId) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/likeEvent`, {
+      withCredentials: true,
+      data: { event_id: eventId },  // Send the event_id in the request body
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to unlike event:", error);
+    throw error;
+  }
+}
 
-//   async getUserByEventId(eventId: number, token: string) {
-//     const response = await axios.get<Event>(`${EVENT_URL}/users/${eventId}`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return response.data;
-  
-  
 };

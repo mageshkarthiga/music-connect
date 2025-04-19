@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"log"
+	"strconv"
 	"fmt"
 )
 
@@ -24,16 +25,17 @@ func GetPlaylists(c echo.Context) error {
 
 // GetPlaylistByID fetches a single playlist by ID
 func GetPlaylistByID(c echo.Context) error {
-	id := c.Param("id")
-	var playlist models.Playlist
-	if err := config.DB.First(&playlist, id).Error; err != nil {
-		log.Printf("Error fetching playlist with ID %s: %v", id, err)
-		return c.JSON(http.StatusNotFound, "Playlist not found")
-	}
-	return c.JSON(http.StatusOK, playlist)
+    id := c.Param("id")
+    var playlist models.Playlist
+    if err := config.DB.Preload("Tracks").Find(&playlist, "playlist_id = ?", id).Error; err != nil {
+        log.Printf("Error fetching playlist with ID %s: %v", id, err)
+        return c.JSON(http.StatusNotFound, "Playlist not found")
+    }
+    return c.JSON(http.StatusOK, playlist)
 }
 
-// CreatePlaylist creates a new playlist with the user's existing tracks
+
+
 // CreatePlaylist creates a new playlist with the user's existing tracks
 func CreatePlaylist(c echo.Context) error {
 	var playlistRequest struct {
@@ -135,33 +137,166 @@ func GetPlaylistsForUser(c echo.Context) error {
 }
 
 
-// AddPlaylistForUser adds a playlist for a specific user
+// AddPlaylistForUser adds a playlist for the current authenticated user
 func AddPlaylistForUser(c echo.Context) error {
-	// Get userId from the URL parameter (it should be a string)
-	userId := c.Param("userId")
-	// Convert userId to uint
-	var userIDUint uint
-	_, err := fmt.Sscanf(userId, "%d", &userIDUint)
-	if err != nil {
-		log.Printf("Error converting userId to uint: %v", err)
-		return c.JSON(http.StatusBadRequest, "Invalid user ID format")
-	}
+    // Get the current user from the context (assuming the user is authenticated)
+    var playlist models.Playlist
+    if err := c.Bind(&playlist); err != nil {
+        log.Printf("Error binding playlist data: %v", err)
+        return c.JSON(http.StatusBadRequest, "Invalid input data")
+    }
 
-	var playlist models.Playlist
-	if err := c.Bind(&playlist); err != nil {
-		log.Printf("Error binding playlist data for user %s: %v", userId, err)
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+    // Log the received playlist data for debugging
+    log.Printf("Received playlist data: %+v", playlist)
 
-	// Assign userIDUint (now uint) to the playlist's UserID field
-	playlist.UserID = userIDUint
+    // Save the playlist to the database
+    if err := config.DB.Create(&playlist).Error; err != nil {
+        log.Printf("Error creating playlist: %v", err)
+        return c.JSON(http.StatusInternalServerError, "Failed to create playlist")
+    }
 
-	// Save the playlist
-	if err := config.DB.Create(&playlist).Error; err != nil {
-		log.Printf("Error creating playlist for user %s: %v", userId, err)
-		return c.JSON(http.StatusInternalServerError, "Failed to create playlist for user")
-	}
-
-	return c.JSON(http.StatusCreated, playlist)
+    return c.JSON(http.StatusCreated, playlist)
 }
 
+
+
+// GetPlaylistByUserID returns a specific user‑owned playlist with its tracks.
+func GetPlaylistByUserID(c echo.Context) error {
+	uid := c.Param("id")
+
+	var playlists []models.Playlist
+	if err := config.DB.
+		Where("user_id = ?", uid).
+		Preload("Tracks").
+		Find(&playlists).Error; err != nil {
+		log.Printf("Error fetching playlists for user %s: %v", uid, err)
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch playlists")
+	}
+
+	return c.JSON(http.StatusOK, playlists)
+}
+
+//Add tracks to a playlist
+
+// Define a struct for the request body
+type AddTracksRequest struct {
+	TrackIDs []uint `json:"track_ids"`
+}
+
+func AddTracksToPlaylist(c echo.Context) error {
+	// Get the playlist ID from the route parameter
+	playlistID := c.Param("id")
+	log.Println("Extracted playlist ID:", playlistID)
+
+	// Convert the playlist ID to uint (if necessary)
+	playlistIDInt, err := strconv.Atoi(playlistID)
+	if err != nil {
+		log.Printf("Error parsing playlist ID: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid playlist ID")
+	}
+
+	// Bind the request body to the struct
+	var requestBody AddTracksRequest
+	if err := c.Bind(&requestBody); err != nil {
+		log.Printf("Error binding track IDs: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request format")
+	}
+
+	// Check if the playlist exists in the database
+	var playlist models.Playlist
+	if err := config.DB.First(&playlist, playlistIDInt).Error; err != nil {
+		log.Printf("Error fetching playlist: %v", err)
+		return c.JSON(http.StatusNotFound, "Playlist not found")
+	}
+
+	fmt.Printf("Playlist found: %+v\n", playlist)
+
+	// Add each track to the playlist_tracks table
+	for _, trackID := range requestBody.TrackIDs {
+		// Insert into playlist_tracks table
+		if err := config.DB.Create(&models.PlaylistTrack{
+			PlaylistID: uint(playlistIDInt), // Correctly use PlaylistID as uint
+			TrackID:    trackID,
+		}).Error; err != nil {
+			log.Printf("Error adding track %d to playlist %d: %v", trackID, playlistIDInt, err)
+			return c.JSON(http.StatusInternalServerError, "Failed to add tracks")
+		}
+	}
+
+	// Return success message
+	return c.JSON(http.StatusOK, "Tracks added successfully")
+}
+
+// GetTracksByPlaylistID fetches the tracks associated with a specific playlist
+func GetTracksByPlaylistID(c echo.Context) error {
+    playlistID := c.Param("id")
+	
+    var playlist models.Playlist
+    // Fetch the playlist and preload its tracks
+    if err := config.DB.Preload("Tracks").First(&playlist, playlistID).Error; err != nil {
+        log.Printf("Error fetching playlist with ID %s: %v", playlistID, err)
+        return c.JSON(http.StatusNotFound, "Playlist not found")
+    }
+
+    // Return the tracks associated with the playlist
+    return c.JSON(http.StatusOK, playlist.Tracks)
+}
+
+func UpdatePlaylistDetails(c echo.Context) error {
+	playlistID := c.Param("id")
+	var playlist models.Playlist
+
+	// Fetch the existing playlist
+	if err := config.DB.First(&playlist, playlistID).Error; err != nil {
+		log.Printf("Error fetching playlist with ID %s: %v", playlistID, err)
+		return c.JSON(http.StatusNotFound, "Playlist not found")
+	}
+
+	// Bind the request data to the playlist
+	if err := c.Bind(&playlist); err != nil {
+		log.Printf("Error binding playlist data: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid input data")
+	}
+
+	// Save the updated playlist
+	if err := config.DB.Save(&playlist).Error; err != nil {
+		log.Printf("Error updating playlist: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to update playlist")
+	}
+
+	return c.JSON(http.StatusOK, playlist)
+}
+
+func ReplacePlaylistTracks(c echo.Context) error {
+	playlistID := c.Param("id")
+	var requestBody AddTracksRequest
+
+	// Bind the request body to the struct
+	if err := c.Bind(&requestBody); err != nil {
+		log.Printf("Error binding track IDs: %v", err)
+		return c.JSON(http.StatusBadRequest, "Invalid request format")
+	}
+
+	// Check if the playlist exists in the database
+	var playlist models.Playlist
+	if err := config.DB.First(&playlist, playlistID).Error; err != nil {
+		log.Printf("Error fetching playlist: %v", err)
+		return c.JSON(http.StatusNotFound, "Playlist not found")
+	}
+
+	// Clear existing tracks from the playlist
+	if err := config.DB.Model(&playlist).Association("Tracks").Clear(); err != nil {
+		log.Printf("Error clearing existing tracks: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to clear existing tracks")
+	}
+
+	// Add each new track to the playlist
+	for _, trackID := range requestBody.TrackIDs {
+		if err := config.DB.Model(&playlist).Association("Tracks").Append(&models.Track{TrackID: trackID}); err != nil {
+			log.Printf("Error adding track %d to playlist %s: %v", trackID, playlistID, err)
+			return c.JSON(http.StatusInternalServerError, "Failed to add tracks")
+		}
+	}
+
+	return c.JSON(http.StatusOK, "Tracks replaced successfully")
+}

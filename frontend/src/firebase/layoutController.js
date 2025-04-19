@@ -12,6 +12,13 @@ import { toRaw } from "vue";
 
 const COLLECTION_NAME = "layoutConfigs";
 
+async function init() {
+  await initLayoutFromFirestore();
+  watchLayoutChanges();
+}
+
+init();
+
 export async function initLayoutFromFirestore(userId) {
   if (!userId) return;
   try {
@@ -46,6 +53,7 @@ export function watchLayoutChanges(userId) {
   watch(
     () => layoutConfig,
     async (newVal) => {
+      if (!userId) return;
       try {
         await updateDocument(COLLECTION_NAME, userId, {
           layoutConfig: { ...newVal },
@@ -61,9 +69,9 @@ export function watchLayoutChanges(userId) {
     () => layoutState,
     async (newVal) => {
       const rawLayoutState = toRaw(newVal); // Get the raw object
-  
-      console.log('Raw layoutState:', rawLayoutState);
-  
+
+      console.log("Raw layoutState:", rawLayoutState);
+
       try {
         if (rawLayoutState) {
           await updateDocument(COLLECTION_NAME, userId, {
@@ -76,6 +84,4 @@ export function watchLayoutChanges(userId) {
     },
     { deep: true }
   );
-  
-  
 }

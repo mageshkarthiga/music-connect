@@ -1,7 +1,8 @@
-import axios from 'axios';
+import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
-import { auth } from '@/firebase/firebase';
+import { auth } from "@/firebase/firebase";
+import { getUserTracksById } from "./TrackService";
 
 const USER_URL = `${API_BASE_URL}`;
 
@@ -17,7 +18,7 @@ export interface User {
 export default {
   async createUser(user: User & { firebaseUID: string }) {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
       .insert([
         {
           user_name: user.userName,
@@ -29,23 +30,26 @@ export default {
         },
       ])
       .single(); // Use `.single()` to get a single response
-  
+
     if (error) {
       console.error("Error creating user:", error.message);
       throw error; // or return null/error
     }
-  
+
     return data; // Return the inserted user data
   },
 
-
-  async getUser(id: number) {
-    const response = await axios.get<User>(`${USER_URL}/${id}`);
+  async getUser() {
+    const response = await axios.get<User>(`${USER_URL}/me`, {
+      withCredentials: true,
+    });
     return response.data;
   },
 
-  async getAllUsers() {
-    const response = await axios.get<User[]>(USER_URL);
+  async getAllUsers(): Promise<User[]> {
+    const response = await axios.get<User[]>(`${USER_URL}/users`, {
+      withCredentials: true,
+    });
     return response.data;
   },
 
@@ -58,28 +62,14 @@ export default {
     await axios.delete(`${USER_URL}/${id}`);
   },
 
-    async getUserByFirebaseUID(firebaseUID: string, accessToken: string): Promise<User> {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/firebase/${firebaseUID}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,  
-          },
-        });
-  
-        const data = response.data;
-  
-        return {
-          id: data.user_id,
-          userName: data.user_name,
-          emailAddress: data.email_address,
-          phoneNumber: data.phone_number,
-          location: data.location,
-          profilePhotoUrl: data.profile_photo_url,
-        };
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        throw error;  
-      }},
+  async getUserByFirebaseUID(firebaseUID: string): Promise<User> {
+    const response = await axios.get(`${USER_URL}/firebase/${firebaseUID} `, {
+      withCredentials: true,
+    });
+    const data = response.data;
+
+    return data;
+  },
 
   async fetchSecureData(idToken: string) {
     try {
@@ -93,5 +83,13 @@ export default {
       console.error("Error fetching secure data", error);
       throw error;
     }
+  },
+
+  async getUserByUserId(userId: number): Promise<User> {
+    const response = await axios.get(`${USER_URL}/users/${userId}`, {
+      withCredentials: true,
+    });
+
+    return response.data;
   },
 };

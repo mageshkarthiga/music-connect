@@ -48,7 +48,6 @@ const router = createRouter({
           name: "panel",
           component: () => import("@/views/uikit/PanelsDoc.vue"),
         },
-
         {
           path: "/uikit/overlay",
           name: "overlay",
@@ -89,15 +88,11 @@ const router = createRouter({
           name: "timeline",
           component: () => import("@/views/uikit/TimelineDoc.vue"),
         },
+
         {
-          path: "/uikit/map",
+          path: "/pages/map",
           name: "map",
-          component: () => import("@/views/uikit/Map.vue"),
-        },
-        {
-          path: "/pages/empty",
-          name: "empty",
-          component: () => import("@/views/pages/Empty.vue"),
+          component: () => import("@/views/pages/Map.vue"),
         },
         {
           path: "/pages/crud",
@@ -105,10 +100,20 @@ const router = createRouter({
           component: () => import("@/views/pages/Crud.vue"),
         },
         {
+          path: "/pages/map",
+          name: "map",
+          component: () => import("@/views/pages/Map.vue"),
+        },
+        {
           path: "/pages/home",
           name: "home",
           component: () => import("@/views/pages/Home.vue"),
-
+        },
+        {
+          path: "/pages/playlist/:playlist_id/:playlist_name?",
+          name: "playlist",
+          component: () => import("@/views/pages/Playlist.vue"),
+          props: true,
         },
         {
           path: "/documentation",
@@ -119,6 +124,26 @@ const router = createRouter({
           path: "/profile",
           name: "profile",
           component: () => import("@/views/pages/Profile.vue"),
+        },
+        {
+          path: "/pages/search",
+          name: "search",
+          component: () => import("@/views/pages/Search.vue"),
+        },
+        {
+          path: '/playlist',
+          name: 'Playlist',
+          component: () => import('@/views/pages/Playlist.vue'), // Adjust path as needed
+        },
+        {
+          path: "/pages/music",
+          name: "music",
+          component: () => import("@/views/pages/Playlist.vue"),
+        },
+        {
+          path: "/pages/map",
+          name: "map",
+          component: () => import("@/views/pages/Map.vue"),
         },
       ],
     },
@@ -132,7 +157,6 @@ const router = createRouter({
       name: "notfound",
       component: () => import("@/views/pages/NotFound.vue"),
     },
-
     {
       path: "/auth/login",
       name: "login",
@@ -149,14 +173,14 @@ const router = createRouter({
       component: () => import("@/views/pages/auth/Error.vue"),
     },
     {
-      path: "/pages/spotify",
-      name: "spotify",
-      component: () => import("@/views/pages/Music.vue"),
-    },
-    {
       path: "/createaccount",
       name: "createaccount",
       component: () => import("@/views/pages/CreateAccount.vue"),
+    },
+    {
+      path: "/pages/chat/:user_id?",
+      name: "chat",
+      component: () => import("@/views/pages/Chat.vue"),
     },
   ],
 });
