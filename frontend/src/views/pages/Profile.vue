@@ -65,7 +65,6 @@
 import EventCard from "@/components/EventCard.vue";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import UserCard from "@/components/UserCard.vue";
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
@@ -84,7 +83,7 @@ import {
 
 export default {
   name: "Profile",
-  components: { EventCard, PlaylistCard, TrackCard, SpotifyPlayer, UserCard },
+  components: { EventCard, PlaylistCard, TrackCard, UserCard },
 
   data: () => ({
     loading: true,
