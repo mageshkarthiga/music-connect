@@ -69,7 +69,6 @@ import TrackCard from "@/components/TrackCard.vue";
 import userService from "@/service/UserService";
 import trackService from "@/service/TrackService";
 
-
 export default {
   components: {
     TrackCard,

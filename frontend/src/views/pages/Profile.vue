@@ -1,18 +1,27 @@
 <template>
-  <div class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
-    <!-- Loading Spinner -->
+  <div
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
+  >
     <div v-if="loading" class="flex justify-center items-center text-lg p-8">
       <span>Loading…</span>
     </div>
 
-    <!-- Error Message -->
+
+
     <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
       {{ errorMessage }}
     </div>
 
-    <!-- Profile Details -->
-    <div v-else class="profile-details p-card p-p-4 p-shadow-4 mt-4 p-8">
-      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo" class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
+
+
+
+    <div v-else class="profile-details p-card p-p-4 p-shadow-4 p-8">
+
+      <img
+        :src="user?.profile_photo_url || '/public/profile.svg'"
+        alt="Profile Photo"
+        class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary"
+      />
       <br> 
       <div class="p-d-flex p-flex-column">
         <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
@@ -41,17 +50,31 @@
         </div>
       </section>
 
-      <!-- Tracks -->
-      <section v-if="user.tracks.length" class="p-4">
-        <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-          <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
-            <TrackCard :track="t" />
+        <!-- <section class="p-4" v-if="user.playlists.length">
+          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+            <PlaylistCard
+              v-for="p in user.playlists"
+              :key="p.playlist_id"
+              :playlist="p"
+            />
           </div>
-        </div>
-      </section>
-    </template>
-  </div>
+        </section> -->
+
+        <section class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3 text-left">Liked Tracks</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <TrackCard v-for="t in user.tracks" :key="t.track_id" :track="t" />
+          </div>
+        </section>
+
+        <!-- <section class="p-4" v-if="user.tracks.length">
+          <h2 class="text-xl font-semibold mb-3">Artists</h2>
+          <SpotifyPlayer />
+        </section> -->
+      </template>
+    </div>
+
 </template>
 
 <script>
