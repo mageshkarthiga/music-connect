@@ -32,7 +32,7 @@
             <!-- Track Card Loop -->
             <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
               @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
-              class="bg-white p-4 rounded-lg shadow-md hover:scale-105 hover:shadow-xl">
+              class="bg-white p-4 rounded-lg">
               <div class="flex items-center justify-between">
                 <!-- Track Info -->
                 <div class="flex items-center space-x-3">
