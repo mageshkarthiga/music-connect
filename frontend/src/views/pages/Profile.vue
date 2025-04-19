@@ -1,11 +1,8 @@
-<!-- Profile.vue -->
 <template>
-  <div class="profile-page" style="max-width: 1000px; margin: 2rem auto">
-    <div
-      v-if="loading"
-      class="p-d-flex p-jc-center p-ai-center"
-      style="font-size: 1.2rem; padding: 2rem"
-    >
+  <div
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
+  >
+    <div v-if="loading" class="flex justify-center items-center text-lg p-8">
       <span>Loading…</span>
     </div>
 
@@ -21,17 +18,9 @@
     <div v-else class="profile-details p-card p-p-4 p-shadow-4 m-4 p-8">
 
       <img
-        :src="user.profile_photo_url || '/public/profile.svg'"
+        :src="user?.profile_photo_url || '/public/profile.svg'"
         alt="Profile Photo"
-        style="
-          width: 120px;
-          height: 120px;
-          object-fit: cover;
-          border-radius: 50%;
-          border: 3px solid var(--primary-color);
-          display: block;
-          margin: 0 auto;
-        "
+        class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary"
       />
       <br> 
       
@@ -99,7 +88,12 @@ import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
 import PlaylistService from "@/service/PlaylistService";
-import { getUserTracksById, getUserTracks } from "@/service/TrackService";
+import {
+  getUserTracksById,
+  getUserTracks,
+  getFavUserTracksById,
+  getFavUserTracks,
+} from "@/service/TrackService";
 
 export default {
   name: "Profile",
@@ -128,18 +122,18 @@ export default {
           // explicit user
           const [u, events, playlists, tracks] = await Promise.all([
             UserService.getUserByUserId(userId),
-            EventService.getEventsByUserId(userId),
+            EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
-            getUserTracksById(userId),
+            getFavUserTracksById(userId),
           ]);
           this.user = { ...u, events, playlists, tracks };
         } else {
           // current logged‑in user
           const [u, events, playlists, tracks] = await Promise.all([
             UserService.getUser({ withCredentials: true }), // /me endpoint inside UserService
-            EventService.getEventsForCurrentUser(),
+            EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
-            getUserTracks(),
+            getFavUserTracks(),
           ]);
           this.user = { ...u, events, playlists, tracks };
         }

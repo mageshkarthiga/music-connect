@@ -98,6 +98,18 @@ export const getUserTracks = async (): Promise<Track[]> => {
     throw error;
   }
 };
+
+export const getFavUserTracks = async (): Promise<Track[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/me/favtracks`, {
+      withCredentials: true,
+    });
+    return response.data as Track[];
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    throw error;
+  }
+};
 // Function to fetch tracks for the authenticated user of another user
 export const getUserTracksById = async (userId: number): Promise<Track[]> => {
   try {
@@ -111,12 +123,19 @@ export const getUserTracksById = async (userId: number): Promise<Track[]> => {
   }
 };
 
-export default {
-  getTracks,
-  getTrackById,
-  addTrackForUser,
-  updateTrackForUser,
-  deleteTrackForUser,
-  getUserTracks,
-  getUserTracksById,
+export const getFavUserTracksById = async (
+  userId: number
+): Promise<Track[]> => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/users/${userId}/favtracks`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data as Track[];
+  } catch (error) {
+    console.error("Error fetching user tracks:", error);
+    throw error;
+  }
 };

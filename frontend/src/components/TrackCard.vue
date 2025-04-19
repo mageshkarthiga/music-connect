@@ -12,9 +12,12 @@
     <div class="text ml-4">
       {{ track.track_title }}
     </div>
-
-    <!-- Selected status in select state -->
-    <div v-if="state === 'select'" v-show="isSelected" class="text-sm text-blue-500">
+    <!-- Display selected status if in select state -->
+    <div
+      v-if="state === 'select'"
+      v-show="isSelected"
+      class="text-sm text-blue-500"
+    >
       Selected
     </div>
 
@@ -101,7 +104,12 @@ export default {
 }
 
 .dark .bg-surface-400:hover {
-  background-color: rgba(184, 184, 184, 0.5);
+  background-color: rgba(
+    184,
+    184,
+    184,
+    0.5
+  ); /* Darker hover effect for dark mode */
 }
 
 .track-card.selected {

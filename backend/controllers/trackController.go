@@ -185,6 +185,61 @@ func GetUserTracksByID(c echo.Context) error {
     return c.JSON(http.StatusOK, tracks)
 }
 
+func GetFavTracksForUser(c echo.Context) error {
+	userID := c.Get("uid").(uint)
+
+	var prefs []models.MusicPreference
+	if err := config.DB.
+		Where("user_id = ? AND is_liked = true", userID).
+		Find(&prefs).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch liked preferences")
+	}
+
+	if len(prefs) == 0 {
+		return c.JSON(http.StatusOK, []models.Track{})
+	}
+
+	trackIDs := make([]uint, len(prefs))
+	for i, p := range prefs {
+		trackIDs[i] = p.TrackID
+	}
+
+	var tracks []models.Track
+	if err := config.DB.Where("track_id IN ?", trackIDs).Find(&tracks).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks")
+	}
+
+	return c.JSON(http.StatusOK, tracks)
+}
+
+func GetFavUserTracksByID(c echo.Context) error {
+	uid := c.Param("id")
+
+	var prefs []models.MusicPreference
+	if err := config.DB.
+		Where("user_id = ? AND is_liked = true", uid).
+		Find(&prefs).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch liked preferences")
+	}
+
+	if len(prefs) == 0 {
+		return c.JSON(http.StatusOK, []models.Track{})
+	}
+
+	trackIDs := make([]uint, len(prefs))
+	for i, p := range prefs {
+		trackIDs[i] = p.TrackID
+	}
+
+	var tracks []models.Track
+	if err := config.DB.Where("track_id IN ?", trackIDs).Find(&tracks).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks")
+	}
+
+	return c.JSON(http.StatusOK, tracks)
+}
+
+
 
 func LikeTrack(c echo.Context) error {
 	userID := c.Get("uid").(uint)  // Assuming the user ID is stored in the context
