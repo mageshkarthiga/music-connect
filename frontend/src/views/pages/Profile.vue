@@ -3,8 +3,14 @@
     class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
   >
     <div v-if="loading" class="flex justify-center items-center text-lg p-8">
+  <div
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white"
+  >
+    <div v-if="loading" class="flex justify-center items-center text-lg p-8">
       <span>Loading…</span>
     </div>
+
+
 
 
 
@@ -64,10 +70,13 @@
         </section> -->
 
         <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3 text-left">Liked Tracks</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <TrackCard v-for="t in user.tracks" :key="t.track_id" :track="t" />
+          <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+          <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
+            <TrackCard :track="t" />
           </div>
+        </div>
+
         </section>
 
         <!-- <section class="p-4" v-if="user.tracks.length">

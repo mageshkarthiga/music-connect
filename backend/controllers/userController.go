@@ -152,3 +152,39 @@ func AddFriend(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Friend added successfully")
 }
 
+
+// AddFriend creates a friendship between two users
+func AddFriend(c echo.Context) error {
+	var payload struct {
+		UserID   uint `json:"user_id"`
+		FriendID uint `json:"friend_id"`
+	}
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request")
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Friends").First(&user, payload.UserID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "User not found")
+	}
+
+	var friend models.User
+	if err := config.DB.First(&friend, payload.FriendID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, "Friend not found")
+	}
+
+	// Prevent duplicate friendships
+	for _, existing := range user.Friends {
+		if existing.UserID == friend.UserID {
+			return c.JSON(http.StatusBadRequest, "Already friends")
+		}
+	}
+
+	// Append friend
+	if err := config.DB.Model(&user).Association("Friends").Append(&friend); err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to add friend")
+	}
+
+	return c.JSON(http.StatusOK, "Friend added successfully")
+}

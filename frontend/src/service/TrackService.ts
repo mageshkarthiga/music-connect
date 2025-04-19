@@ -110,6 +110,7 @@ export const getFavUserTracks = async (): Promise<Track[]> => {
     throw error;
   }
 };
+
 // Function to fetch tracks for the authenticated user of another user
 export const getUserTracksById = async (userId: number): Promise<Track[]> => {
   try {
@@ -122,6 +123,7 @@ export const getUserTracksById = async (userId: number): Promise<Track[]> => {
     throw error;
   }
 };
+
 
 export const getFavUserTracksById = async (
   userId: number
@@ -139,3 +141,13 @@ export const getFavUserTracksById = async (
     throw error;
   }
 };
+
+export default {
+  getTracks,
+  getTrackById,
+  addTrackForUser,
+  updateTrackForUser,
+  deleteTrackForUser,
+  getUserTracks,
+  getUserTracksById,};
+  

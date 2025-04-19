@@ -2,6 +2,7 @@ import axios from "axios";
 import { API_BASE_URL } from "@/service/apiConfig";
 
 // Define types for playlists and tracks
+// Define types for playlists and tracks
 export interface Playlist {
   playlist_id: number;
   playlist_name: string;
@@ -141,14 +142,10 @@ const PlaylistService = {
     const trackData = { track_ids: trackIds };
 
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/me/playlists/${playlistId}/tracks`,
+      const response = await axios.post(
+        `${API_BASE_URL}/playlists/${playlistId}/tracks`,
         trackData,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-xsrf-token': getCookie('XSRF-TOKEN'),
-          },
           withCredentials: true,
         }
       );

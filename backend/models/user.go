@@ -13,4 +13,6 @@ type User struct {
 	Tracks    []*Track    `json:"tracks" gorm:"many2many:music_preferences;joinForeignKey:UserID;joinReferences:TrackID"`
 
 	Friends []*User `json:"friends" gorm:"many2many:user_friends;joinForeignKey:UserID;joinReferences:FriendID"`
+
+	Friends []*User `json:"friends" gorm:"many2many:user_friends;joinForeignKey:UserID;joinReferences:FriendID"`
 }

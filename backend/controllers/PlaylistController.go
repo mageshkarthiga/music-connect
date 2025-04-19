@@ -8,6 +8,8 @@ import (
 	"log"
 	"strconv"
 	"fmt"
+	"strconv"
+	"fmt"
 )
 
 // GetPlaylists fetches all playlists
