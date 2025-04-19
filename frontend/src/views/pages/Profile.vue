@@ -8,6 +8,8 @@
 
 
 
+
+
     <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
       {{ errorMessage }}
     </div>
@@ -62,10 +64,13 @@
         </section> -->
 
         <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3 text-left">Liked Tracks</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <TrackCard v-for="t in user.tracks" :key="t.track_id" :track="t" />
+          <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
+          <div class="flex space-x-4 overflow-x-auto pb-4">
+          <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
+            <TrackCard :track="t" />
           </div>
+        </div>
+
         </section>
 
         <!-- <section class="p-4" v-if="user.tracks.length">
