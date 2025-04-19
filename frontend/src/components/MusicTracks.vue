@@ -19,7 +19,7 @@
                             icon="pi pi-play"
                             severity="success"
                             rounded
-                            @click="$emit('track-selected', track.track_uri)"
+                            @click="() => { $emit('track-selected', track.track_uri); incrementPlayCount(track.track_id); }"
                         />
                     </div>
                 </template>
@@ -29,6 +29,8 @@
 </template>
 
 <script>
+import { incrementTrackPlayCount } from '@/service/TrackService';
+
 export default {
     name: "MusicTracks",
     props: {
@@ -65,6 +67,15 @@ export default {
         onPageChange(event) {
             this.first = event.first;
             this.updatePaginatedTracks();
+        },
+        incrementPlayCount(trackId) {
+            incrementTrackPlayCount(trackId)
+                .then(() => {
+                    console.log(`Play count incremented for track ID: ${trackId}`);
+                })
+                .catch((error) => {
+                    console.error(`Error incrementing play count for track ID: ${trackId}`, error);
+                });
         },
     },
 };

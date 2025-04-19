@@ -1,10 +1,10 @@
 <template>
-  <div class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
+  <div
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
     <!-- Loading Spinner -->
-    <div v-if="loading" class="flex justify-center items-center text-lg p-8">
-      <span>Loading…</span>
+    <div v-if="loading" class="flex justify-center items-center py-10">
+      <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="5" animationDuration=".7s" />
     </div>
-
     <!-- Error Message -->
     <div v-else-if="errorMessage" class="p-error p-4 text-red-500">
       {{ errorMessage }}
@@ -12,8 +12,9 @@
 
     <!-- Profile Details -->
     <div v-else class="profile-details p-card p-p-4 p-shadow-4 mt-4 p-8">
-      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo" class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
-      <br> 
+      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo"
+        class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
+      <br>
       <div class="p-d-flex p-flex-column">
         <h2 class="text-xl font-bold">{{ user.user_name }}</h2>
         <p class="text-sm text-muted p-mt-1">
@@ -30,14 +31,8 @@
       <section v-if="user.events.length" class="p-4">
         <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
-          <EventCard
-            v-for="event in user.events"
-            :key="event.event_id"
-            :event="event"
-            :liked="true"
-            @event-unliked="handleEventUnliked"
-            @event-liked="handleEventLiked"
-          />
+          <EventCard v-for="event in user.events" :key="event.event_id" :event="event" :liked="true"
+            @event-unliked="handleEventUnliked" @event-liked="handleEventLiked" />
         </div>
       </section>
 

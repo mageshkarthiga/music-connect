@@ -88,6 +88,12 @@ const router = createRouter({
           name: "timeline",
           component: () => import("@/views/uikit/TimelineDoc.vue"),
         },
+
+        {
+          path: "/pages/map",
+          name: "map",
+          component: () => import("@/views/pages/Map.vue"),
+        },
         {
           path: "/pages/crud",
           name: "crud",

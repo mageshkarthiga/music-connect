@@ -59,7 +59,6 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
 
 	// Track Routes
-
 	e.GET("/tracks", controllers.GetTracks)          // Fetch all tracks
 	e.GET("/tracks/:id", controllers.GetTrackByID)   // Fetch a track by ID (Updated function name)
 	e.POST("/tracks", controllers.CreateTrack)       // Create a new track
