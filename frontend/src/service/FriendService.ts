@@ -75,3 +75,18 @@ export const rejectFriendRequest = async (friendId: number): Promise<void> => {
         throw error;
     }
 }
+
+export const removeFriend = async (friendId: number): Promise<void> => {
+    try {
+        await axios.post(
+            `${API_BASE_URL}/friends/${friendId}/remove`,
+            {},
+            {
+                withCredentials: true,
+            }
+        );
+    } catch (error) {
+        console.error("Error removing friend:", error);
+        throw error;
+    }
+}

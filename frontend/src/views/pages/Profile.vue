@@ -1,6 +1,6 @@
 <template>
   <div
-    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white">
+    class="max-w-screen-md mx-auto my-8 bg-surface-0 dark:bg-surface-900 rounded-lg shadow-lg text-surface-900 dark:text-white p-3">
     <!-- Loading Spinner -->
     <div v-if="loading" class="flex justify-center items-center py-10">
       <ProgressSpinner style="width: 50px; height: 50px;" strokeWidth="5" animationDuration=".7s" />
@@ -32,14 +32,19 @@
         <h2 class="text-xl font-semibold mb-3 text-left">Pending Friend Requests</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
           <div v-for="u in user.friendRequests.users" :key="u.user_id" class="min-w-[280px] max-w-md">
-            <UserCard :user="u" @accept="handleAccept(u.user_id)" @reject="handleReject(u.user_id)" />
+            <UserCard :user="u" @accept="handleAccept(u.user_id)" @reject="handleReject(u.user_id)" :accept="true" :reject="true"/>
           </div>
         </div>
       </section>
-      <section class="p-4">
+      <section v-if="user.friends.length" class="p-4">
         <h2 class="text-xl font-semibold mb-3 text-left">Friends</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-4">
+          <div v-for="u in user.friends" :key="u.user_id" class="min-w-[280px] max-w-md">
+            <UserCard :user="u" :remove="true" @remove="handleRemove(u.user_id)"/>
+          </div>
+        </div>
+        <Divider />
       </section>
-      <Divider />
       <!-- Liked Events -->
       <section v-if="user.events.length" class="p-4">
         <h2 class="text-xl font-semibold mb-3 text-left">Liked Events</h2>
@@ -76,9 +81,11 @@ import {
   getFavUserTracks,
 } from "@/service/TrackService";
 import {
+  getFriends,
   getPendingFriendRequests,
   acceptFriendRequest,
-  rejectFriendRequest
+  rejectFriendRequest, 
+  removeFriend
 } from "@/service/FriendService";
 
 export default {
@@ -87,14 +94,14 @@ export default {
 
   data: () => ({
     loading: true,
-    user: { events: [], playlists: [], tracks: [], friendRequests: [] },
+    user: { events: [], playlists: [], tracks: [], friends: [], friendRequests: [] },
     errorMessage: "",
   }),
 
   computed: {
     hasContent() {
-      const { events, playlists, tracks, friendRequests } = this.user;
-      return events.length || playlists.length || tracks.length;
+      const { events, playlists, tracks } = this.user;
+      return events.length || playlists.length || tracks.length ;
     },
   },
 
@@ -106,23 +113,25 @@ export default {
       try {
         if (!Number.isNaN(userId)) {
           // Fetch data for an explicit user (not the logged-in user)
-          const [u, events, playlists, tracks,friends] = await Promise.all([
+          const [u, events, playlists, tracks, friends] = await Promise.all([
             UserService.getUserByUserId(userId),
             EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
             getFavUserTracksById(userId),
+            getFriends()
           ]);
           this.user = { ...u, events, playlists, tracks, friendRequests: null }; // No friendRequests for other users
         } else {
           // Fetch data for the logged-in user
-          const [u, events, playlists, tracks, friendRequests] = await Promise.all([
-            UserService.getUser({ withCredentials: true }), 
+          const [u, events, playlists, tracks, friends, friendRequests] = await Promise.all([
+            UserService.getUser({ withCredentials: true }),
             EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
             getFavUserTracks(),
+            getFriends(),
             getPendingFriendRequests(),
           ]);
-          this.user = { ...u, events, playlists, tracks, friendRequests }; // Include friendRequests for logged-in user
+          this.user = { ...u, events, playlists, tracks, friends, friendRequests };
         }
       } catch (err) {
         console.error("profile fetch error:", err);
@@ -138,6 +147,7 @@ export default {
           this.user.friendRequests.users = this.user.friendRequests.users.filter(
             (u) => u.user_id !== userId
           );
+          this.user.friends.push(this.user.friendRequests.users.find((u) => u.user_id === userId));
           this.$toast.add({
             severity: "success",
             summary: "Success",
@@ -171,6 +181,25 @@ export default {
             severity: "error",
             summary: "Error",
             detail: "Failed to reject friend request.",
+          });
+        });
+    },
+    handleRemove(userId) {
+      removeFriend(userId)
+        .then(() => {
+          this.user.friends = this.user.friends.filter((u) => u.user_id !== userId);
+          this.$toast.add({
+            severity: "info",
+            summary: "Success",
+            detail: "Friend removed.",
+          });
+        })
+        .catch((err) => {
+          console.error("Error removing friend:", err);
+          this.$toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to remove friend.",
           });
         });
     },

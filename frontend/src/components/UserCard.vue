@@ -5,11 +5,13 @@
                 <Avatar :image="user.profile_photo_url || defaultProfilePic" shape="circle" size="large" />
                 <div class="user-info">
                     <h3 class="user-name clickable-link" v-on:click="redirectToProfile">{{ user.user_name }}</h3>
+                    <p>&nbsp;{{ user.email_address }}</p>
                 </div>
             </div>
             <div class="actions">
-                <Button label="Accept" icon="pi pi-check" class="p-button-success" @click="onAccept" />
-                <Button label="Reject" icon="pi pi-times" class="p-button-danger" @click="onReject" />
+                <Button v-if="accept" label="Accept" icon="pi pi-user-plus" @click="onAccept" severity="success"/>
+                <Button v-if="reject" label="Reject" icon="pi pi-times" @click="onReject" severity="danger"/>
+                <Button v-if="remove" label="Remove" icon="pi pi-user-minus"  @click="onRemove" severity="danger" />
             </div>
         </template>
     </Card>
@@ -23,10 +25,22 @@ export default {
             type: Object,
             required: true,
         },
+        accept: {
+            type: Boolean,
+            default: false,
+        },
+        reject: {
+            type: Boolean,
+            default: false,
+        },
+        remove: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         return {
-            defaultProfilePic: "/profile.svg", // Fallback profile picture
+            defaultProfilePic: "/profile.svg", 
         };
     },
     methods: {
@@ -35,6 +49,9 @@ export default {
         },
         onReject() {
             this.$emit("reject", this.user);
+        },
+        onRemove() {
+            this.$emit("remove", this.user);
         },
         redirectToProfile() {
             const profileUrl = this.$router.resolve({ name: "profile", query: { user_id: this.user.user_id } }).href;
@@ -60,14 +77,6 @@ export default {
     margin-bottom: 1rem;
 }
 
-.profile-pic {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 1rem;
-}
-
 .user-info {
     flex-grow: 1;
 }
@@ -80,7 +89,10 @@ export default {
 
 .actions {
     display: flex;
-    gap: 0.5rem;
+    justify-content: center; 
+    align-items: center; 
+    gap: 0.5rem; 
+    width: 100%; 
 }
 
 .clickable-link {
