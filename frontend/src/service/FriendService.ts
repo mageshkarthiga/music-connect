@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { API_BASE_URL } from "@/service/apiConfig";
 
 // Define the User interface
@@ -15,11 +16,37 @@ export interface User {
     friends?: any; 
 }
 
+
+export interface Friendship {
+    userId: number;
+    friendId: number;
+    status: string; // e.g., "pending", "accepted"
+    createdAt: string; // ISO date string
+}
+
+
 // Define the Friend interface
 export interface Friend {
     count: number; 
     users: User[]; 
 }
+
+// Function to send a friend request
+export const sendFriendRequest = async (friendId: number) => {
+    try {
+        const response = await axios.post(`${FRIENDSHIP_URL}/${friendId}/request`, {
+            withCredentials: true,
+        });
+
+        console.log("Friend request sent successfully:", response.data);
+        return response.data; // Assuming the API returns the created friendship data
+
+    } catch (error) {
+        console.error("Error sending friend request:", error);
+        throw error;
+    }
+};
+
 
 export const getFriends = async (): Promise<Friend> => {
     try {
@@ -90,3 +117,16 @@ export const removeFriend = async (friendId: number): Promise<void> => {
         throw error;
     }
 }
+
+
+
+export default {
+   
+    sendFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    removeFriend,
+    getFriends,
+    getPendingFriendRequests,
+};
+

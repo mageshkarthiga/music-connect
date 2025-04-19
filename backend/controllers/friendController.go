@@ -159,6 +159,7 @@ func GetFriends(c echo.Context) error {
 	return c.JSON(http.StatusOK, friends)
 }
 
+
 // GetPendingFriendRequests retrieves a list of pending friend requests for the current user
 func GetPendingFriendRequests(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Get the current user ID
@@ -181,3 +182,34 @@ func GetPendingFriendRequests(c echo.Context) error {
 		"users": pendingRequests,
 	})
 }
+
+// Get status of friendship between two users
+func GetFriendshipStatus(c echo.Context) error {
+	userID := c.Get("uid").(uint) // Get the current user ID
+
+	// Convert friend_id from string to uint
+	friendIDStr := c.Param("friend_id")
+	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid friend ID")
+	}
+
+	var friendship models.Friendship
+	// Query to find the friendship based on both user_id and friend_id
+	if err := config.DB.Where("user_id = ? AND friend_id = ?", userID, friendID).First(&friendship).Error; err != nil {
+		// Check for the reverse case (where user_id and friend_id are swapped)
+		if err := config.DB.Where("user_id = ? AND friend_id = ?", friendID, userID).First(&friendship).Error; err != nil {
+			return c.JSON(http.StatusNotFound, "Friendship not found")
+		}
+	}
+
+	// Return the friendship status
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status":    friendship.Status,
+		"created_at": friendship.CreatedAt,
+		"user_id":   friendship.UserID,
+		"friend_id": friendship.FriendID,
+	})
+}
+
+
