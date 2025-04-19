@@ -1,22 +1,39 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
+from webdriver_manager.chrome import ChromeDriverManager
 import requests
 import time
+import os
 
-BASE_URL = "https://ticketmaster.sg"
+BASE_URL = "https://ticketmaster.sg/"
 
 def get_driver():
+    print("Initializing WebDriver...")
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36")
 
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=chrome_options)
+    # Check if running in Docker or locally
+    environment = os.getenv("ENVIRONMENT", "local")
+    print(f"Running in {environment} environment")
+
+    if environment == "docker":
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+        chrome_options.binary_location = "/usr/bin/chromium"
+        # Use paths for Docker
+        chrome_options.binary_location = "/usr/bin/chromium"
+        service = Service(executable_path="/usr/bin/chromedriver")
+    else:
+        service = Service(ChromeDriverManager().install())
+
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    print("WebDriver initialized successfully.")
+
+    return driver
 
 def get_event_links(driver):
     driver.get(BASE_URL)
