@@ -6,7 +6,7 @@
             <ul>
                 <li v-for="user in users" :key="user.user_id" @click="joinRoom(user)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
-                    <Avatar :image="user.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
+                    <Avatar :image="user.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
                     {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
                 </li>
             </ul>

@@ -69,7 +69,7 @@ function initFilters1() {
                     <Column header="Users" style="min-width: 14rem">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
-                                <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle"
+                                <Avatar :image="data.profile_photo_url || '/profile.svg'" shape="circle"
                                     size="large" />
                                 <span>
                                     <a :href="`/profile?user_id=${data.user_id}`" class="clickable-link">

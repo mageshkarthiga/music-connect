@@ -3,7 +3,7 @@
     <Card class="w-full h-full">
       <template v-slot:title>
         <div class="flex items-center justify-between mb-0">
-          <div class="font-semibold text-xl mb-4 line-clamp-3 min-h-[50px]">
+          <div class="font-semibold text-xl mb-4 line-clamp-3 min-h-[50px] clickable-link">
             {{ event.event_name }}
           </div>
           <button @click.stop="toggleLike" class="hover:scale-110 transition-transform duration-200">

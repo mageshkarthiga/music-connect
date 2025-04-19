@@ -12,7 +12,7 @@
 
     <!-- Profile Details -->
     <div v-else class="profile-details p-card p-p-4 p-shadow-4 mt-4 p-8">
-      <img :src="user?.profile_photo_url || '/public/profile.svg'" alt="Profile Photo"
+      <img :src="user?.profile_photo_url || '/profile.svg'" alt="Profile Photo"
         class="w-[120px] h-[120px] object-cover rounded-full border-4 border-primary" />
       <br>
       <div class="p-d-flex p-flex-column">
@@ -23,6 +23,16 @@
       </div>
     </div>
 
+    <br>
+    <!-- Pending Friend Requests -->
+    <div class="p-4">
+      <h2 class="text-xl font-semibold mb-3 text-left">Pending Friend Requests</h2>
+      <div class="flex space-x-4 overflow-x-auto pb-4">
+        <div v-for="u in user.pendingFriendRequests" :key="u.user_id" class="min-w-[280px] max-w-md">
+          <UserCard :user="u" :isPending="true" @accept="handleAccept" @reject="handleReject" />
+        </div>
+      </div>
+    </div>
     <br>
 
     <!-- Content Sections -->
@@ -54,7 +64,8 @@ import EventCard from "@/components/EventCard.vue";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
-
+import UserCard from "@/components/UserCard.vue";
+import { getPendingFriendRequests } from "@/service/FriendService"
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
 import PlaylistService from "@/service/PlaylistService";
@@ -71,7 +82,7 @@ export default {
 
   data: () => ({
     loading: true,
-    user: { events: [], playlists: [], tracks: [] },
+    user: { events: [], playlists: [], tracks: [], friendRequests:[] },
     errorMessage: "",
   }),
 
@@ -90,13 +101,14 @@ export default {
       try {
         if (!Number.isNaN(userId)) {
           // explicit user
-          const [u, events, playlists, tracks] = await Promise.all([
+          const [u, events, playlists, tracks, friendRequests] = await Promise.all([
             UserService.getUserByUserId(userId),
             EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
             getFavUserTracksById(userId),
+            getPendingFriendRequests(userId),
           ]);
-          this.user = { ...u, events, playlists, tracks };
+          this.user = { ...u, events, playlists, tracks, friendRequests };
         } else {
           // current logged‑in user
           const [u, events, playlists, tracks] = await Promise.all([
@@ -104,8 +116,10 @@ export default {
             EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
             getFavUserTracks(),
+            getPendingFriendRequests(),
           ]);
-          this.user = { ...u, events, playlists, tracks };
+          this.user = { ...u, events, playlists, tracks, friendRequests };
+          console.log("user", this.user);
         }
       } catch (err) {
         console.error("profile fetch error:", err);
