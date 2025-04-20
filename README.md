@@ -204,7 +204,15 @@ To setup:
 
 1. Start the frontend server ([see steps](#frontend-setup)).
 2. Start all required backend services ([see steps](#backend-setup)).
-3. Open the app in your browser and dive into the music-powered social world!
+3. Open the app in your browser.
+4. To use the application as a test user, you may login using the following credentials:
+
+```text
+Email: testing1@gmail.com
+Password: P@ssword123
+```
+
+5. Have fun diving into a music-powered social world!
 
 ---
 
