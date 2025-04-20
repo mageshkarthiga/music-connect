@@ -35,7 +35,7 @@ export default {
   props: {
     track: { type: Object, required: true },
     state: { type: String, required: true },
-    liked: { type: Boolean, default: false }, // Default to true
+    liked: { type: Boolean, default: true }, // Default to true
       isSelected: { type: Boolean, default: false }
     
   },
@@ -80,6 +80,8 @@ export default {
       // Emit the like/unlike event
       this.$emit(updateStatus ? "track-liked" : "track-unliked", trackId);
     },
+
+    
   },
 };
 </script>
