@@ -76,17 +76,6 @@ func AuthMiddleware(projectID string) echo.MiddlewareFunc {
 				return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 			}
 
-			// // Validate issuer
-			// expectedIss := fmt.Sprintf("https://securetoken.google.com/%s", projectID)
-			// if iss, ok := claims["iss"].(string); !ok || iss != expectedIss {
-			// 	return c.JSON(http.StatusUnauthorized, "Invalid issuer")
-			// }
-
-			// Optional: Validate audience
-			// if aud, ok := claims["aud"].(string); !ok || aud != projectID {
-			// 	return c.JSON(http.StatusUnauthorized, "Invalid audience")
-			// }
-
 			// Extract user_id (uid)
 			uid, ok := claims["user_id"].(string)
 			if !ok {
