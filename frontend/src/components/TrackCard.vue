@@ -28,6 +28,7 @@
 </template>
 
 <script>
+import { API_BASE_URL } from "@/service/apiConfig";
 import axios from "axios";
 
 export default {
@@ -50,13 +51,13 @@ export default {
       // Toggle like/unlike logic
       if (updateStatus) {
         // If liking the track
-        axios.put(`https://music-connect-555448022527.us-central1.run.app/likeTrack/${trackId}`, { is_liked: true }, {
+        axios.put(`${API_BASE_URL}//likeTrack/${trackId}`, { is_liked: true }, {
           withCredentials: true,
         });
         this.$emit("track-liked", trackId);
       } else {
         // If unliking the track
-        axios.put(`https://music-connect-555448022527.us-central1.run.app/unlikeTrack/${trackId}`, { is_liked: false }, {
+        axios.put(`${API_BASE_URL}//unlikeTrack/${trackId}`, { is_liked: false }, {
           withCredentials: true,
         });
         this.$emit("track-unliked", trackId);

@@ -27,7 +27,7 @@ const router = useRouter();
 
 onBeforeMount(async () => {
   try {
-    const meResponse = await axios.get("https://music-connect-555448022527.us-central1.run.app/me", 
+    const meResponse = await axios.get(`${API_BASE_URL}/me`, 
     { withCredentials: true });
     currentUserId.value = meResponse.data.user_id;
 
@@ -65,7 +65,7 @@ async function fetchFriendshipStatus(users) {
   try {
     const statusPromises = users.map(async (user) => {
       try {
-        const statusRes = await axios.get(`https://music-connect-555448022527.us-central1.run.app/friendship/${user.user_id}/status`, { withCredentials: true });
+        const statusRes = await axios.get(`${API_BASE_URL}/friendship/${user.user_id}/status`, { withCredentials: true });
         if (statusRes.status === 200) {
           const userStatus = statusRes.data.status;
 
@@ -102,7 +102,7 @@ async function fetchFriendshipStatus(users) {
 
 async function getMusicSimilarity(userId) {
   try {
-    const response = await axios.get(`https://music-connect-555448022527.us-central1.run.app/calculateSimilarity?user_id1=${currentUserId.value}&user_id2=${userId}`, { withCredentials: true });
+    const response = await axios.get(`${API_BASE_URL}/calculateSimilarity?user_id1=${currentUserId.value}&user_id2=${userId}`, { withCredentials: true });
     if (response.status === 200) {
       console.log(`Similarity for user ${userId}:`, response.data.similarity); // Log for debugging
       return response.data.similarity;  // Ensure this matches the expected API response
@@ -172,7 +172,7 @@ async function addFriend(userId) {
   }
 
   try {
-    await axios.post(`https://music-connect-555448022527.us-central1.run.app/friends/${userId}/request`, {}, { withCredentials: true });
+    await axios.post(`${API_BASE_URL}/friends/${userId}/request`, {}, { withCredentials: true });
     if (user) {
       user.status = 'pending';
     }
@@ -201,7 +201,7 @@ async function addFriend(userId) {
 async function acceptRequest(userId) {
   const user = allUsers.value.find(u => u.user_id === userId);
   try {
-    await axios.post(`https://music-connect-555448022527.us-central1.run.app/friends/${userId}/accept`, {}, { withCredentials: true });
+    await axios.post(`${API_BASE_URL}/friends/${userId}/accept`, {}, { withCredentials: true });
     if (user) {
       user.status = 'accepted';
     }
@@ -219,7 +219,7 @@ async function acceptRequest(userId) {
 async function rejectRequest(userId) {
   const user = allUsers.value.find(u => u.user_id === userId);
   try {
-    await axios.post(`https://music-connect-555448022527.us-central1.run.app/friends/${userId}/reject`, {}, { withCredentials: true });
+    await axios.post(`${API_BASE_URL}/friends/${userId}/reject`, {}, { withCredentials: true });
     if (user) {
       user.status = 'none'; // Reset status to "none"
     }

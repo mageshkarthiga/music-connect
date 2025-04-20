@@ -1,6 +1,5 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig"; // Make sure this points to your backend API
-import { supabase } from "../service/supabaseClient"; // Assuming you're using Supabase
 
 export interface Artist {
   ArtistID: number;

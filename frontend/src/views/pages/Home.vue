@@ -101,14 +101,14 @@
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
-    </div>
 
-    <!-- No Content -->
-    <template v-else>
-      <div class="p-4">
-        <p>No events, playlists, or tracks found.</p>
-      </div>
-    </template>
+      <!-- No Content -->
+      <template v-else>
+        <div class="p-4">
+          <p>No events, playlists, or tracks found.</p>
+        </div>
+      </template>
+    </div>
 
     <!-- Spotify Player -->
     <SpotifyPlayer />
@@ -124,7 +124,7 @@ import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
 import { useSpotifyStore } from "@/store/SpotifyStore";
-import API_BASE_URL from "@/service/apiConfig.ts";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
   components: {
@@ -145,7 +145,7 @@ export default {
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
-      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+      API_BASE_URL,
     };
   },
 
@@ -299,7 +299,7 @@ export default {
 
     async getLikedTracks() {
       try {
-        const response = await axios.get(`https://music-connect-555448022527.us-central1.run.app/likedTracks`, {
+        const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
           withCredentials: true,
         });
 

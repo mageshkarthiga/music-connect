@@ -1,12 +1,10 @@
 import axios from 'axios';
 import { API_BASE_URL } from "./apiConfig";
 
-const USER_URL = `${API_BASE_URL}`;
-
 export default {
     async authenticateUser(accessToken: string) {
         try {
-            const response = await axios.post(`${USER_URL}/auth/login`, {}, {
+            const response = await axios.post(`${API_BASE_URL}/auth/login`, {}, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`, // Set the Authorization header with Bearer token
                 },

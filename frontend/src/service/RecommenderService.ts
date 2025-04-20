@@ -1,6 +1,5 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
-import { supabase } from "../service/supabaseClient";
 
 export interface MusicRecommender {
     track_id: number;

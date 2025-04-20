@@ -1,8 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { supabase } from "../service/supabaseClient";
-import { auth } from "@/firebase/firebase";
-import { getUserTracksById } from "./TrackService";
 
 export interface User {
   id?: number;
