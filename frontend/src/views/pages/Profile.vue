@@ -55,21 +55,6 @@
       </section>
 
       <!-- Tracks -->
-      <section v-if="user.tracks.length" class="p-4">
-        <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
-        <div class="flex space-x-4 overflow-x-auto pb-4">
-
-        <!-- <section class="p-4" v-if="user.playlists.length">
-          <h2 class="text-xl font-semibold mb-3">Playlists</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <PlaylistCard
-              v-for="p in user.playlists"
-              :key="p.playlist_id"
-              :playlist="p"
-            />
-          </div>
-        </section> -->
-
         <section class="p-4" v-if="user.tracks.length">
           <h2 class="text-xl font-semibold mb-3 p-5">Tracks</h2>
           <div class="flex space-x-4 overflow-x-auto pb-4">

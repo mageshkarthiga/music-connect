@@ -75,16 +75,15 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 
 	// ---- friends ----
 
-	e.POST("/friend/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
-	e.POST("/friend/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
-	e.POST("/friend/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
-	e.POST("/friend/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
+	e.POST("/friends/:friend_id/request", middleware.AuthMiddleware(projectID)(controllers.SendFriendRequest))
+	e.POST("/friends/:friend_id/accept", middleware.AuthMiddleware(projectID)(controllers.AcceptFriendRequest))
+	e.POST("/friends/:friend_id/reject", middleware.AuthMiddleware(projectID)(controllers.RejectFriendRequest))
+	e.POST("/friends/:friend_id/remove", middleware.AuthMiddleware(projectID)(controllers.RemoveFriend))
 	e.GET("/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
 	e.GET("/friendship/:friend_id/status", middleware.AuthMiddleware(projectID)(controllers.GetFriendshipStatus))
-  e.GET("/friends/pending", middleware.AuthMiddleware(projectID)(controllers.GetPendingFriendRequests))
+	e.GET("/friends/pending", middleware.AuthMiddleware(projectID)(controllers.GetPendingFriendRequests))
 	e.POST("/users/friends", middleware.AuthMiddleware(projectID)(controllers.AddFriend))
 	e.GET("/users/:id/friends", middleware.AuthMiddleware(projectID)(controllers.GetFriends))
-
 
 	// ---- tracks ----
 	e.GET("/tracks", middleware.AuthMiddleware(projectID)(controllers.GetTracks))

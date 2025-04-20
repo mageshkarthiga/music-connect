@@ -1,5 +1,4 @@
 import axios from "axios";
-
 import { API_BASE_URL } from "@/service/apiConfig";
 
 // Define the User interface
@@ -31,6 +30,8 @@ export interface Friend {
     users: User[]; 
 }
 
+const FRIENDSHIP_URL = `${API_BASE_URL}/friends`;
+
 // Function to send a friend request
 export const sendFriendRequest = async (friendId: number) => {
     try {
@@ -50,7 +51,7 @@ export const sendFriendRequest = async (friendId: number) => {
 
 export const getFriends = async (): Promise<Friend> => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/friends`, {
+        const response = await axios.get(`${FRIENDSHIP_URL}`, {
             withCredentials: true,
         });
         return response.data as Friend;
@@ -62,7 +63,7 @@ export const getFriends = async (): Promise<Friend> => {
 
 export const getPendingFriendRequests = async (): Promise<Friend> => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/friends/pending`,
+        const response = await axios.get(`${FRIENDSHIP_URL}/pending`,
             {
                 withCredentials: true,
             }
@@ -77,7 +78,7 @@ export const getPendingFriendRequests = async (): Promise<Friend> => {
 export const acceptFriendRequest  = async (friendId: number): Promise<void> => {
     try {
         await axios.post(
-            `${API_BASE_URL}/friends/${friendId}/accept`,
+            `${FRIENDSHIP_URL}/${friendId}/accept`,
             {},
             {
                 withCredentials: true,
@@ -91,7 +92,7 @@ export const acceptFriendRequest  = async (friendId: number): Promise<void> => {
 export const rejectFriendRequest = async (friendId: number): Promise<void> => {
     try {
         await axios.post(
-            `${API_BASE_URL}/friends/${friendId}/reject`,
+            `${FRIENDSHIP_URL}/${friendId}/reject`,
             {},
             {
                 withCredentials: true,
@@ -106,7 +107,7 @@ export const rejectFriendRequest = async (friendId: number): Promise<void> => {
 export const removeFriend = async (friendId: number): Promise<void> => {
     try {
         await axios.post(
-            `${API_BASE_URL}/friends/${friendId}/remove`,
+            `${FRIENDSHIP_URL}/${friendId}/remove`,
             {},
             {
                 withCredentials: true,
@@ -121,7 +122,6 @@ export const removeFriend = async (friendId: number): Promise<void> => {
 
 
 export default {
-   
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
