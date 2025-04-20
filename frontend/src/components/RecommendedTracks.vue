@@ -107,7 +107,7 @@ export default {
                     <div class="flex gap-2">
                         <!-- Play Button -->
                         <Button icon="pi pi-play" type="button" class="p-button-text"
-                            @click="handleClick(data.track_id)"></Button>
+                            @click="handleClick(data.track_uri)"></Button>
 
                         <!-- Like/Unlike Button -->
                         <Button 

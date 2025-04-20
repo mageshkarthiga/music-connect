@@ -45,9 +45,8 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-                @track-selected="setSelectedTrackURI" @click="handleTrackClick(track.track_id) "
+                @track-selected="setSelectedTrackURI"
                 :selectedTracks="selectedTracks"
-                :liked="likedTrackIds.includes(track.track_id)"
                 class="bg-white p-4 rounded-lg">
                 <div class="flex items-center justify-between">
                   <!-- Track Info -->
@@ -169,9 +168,7 @@ export default {
   methods: {
 
     handleTrackClick(trackId) {
-
       this.incrementPlayCount(trackId);
-
       if (this.isLiked(trackId)) {
         this.handleTrackUnliked(trackId);
       } else {
@@ -312,12 +309,6 @@ export default {
 
         this.likedTracks = likedTracks;
         this.likedTrackIds = likedTracks.map(track => track.track_id);
-
-
-        console.log("Status:", response.status); // should be 200
-        console.log("Data:", response.data);     // check exact structure
-
-        console.log
       } catch (err) {
         this.handleError(err, "liked tracks");
       }
@@ -344,7 +335,6 @@ export default {
         this.loading = false;
       }
     },
-
     setSelectedTrackURI(trackURI) {
       const spotifyStore = useSpotifyStore();
       spotifyStore.spotifyUri = trackURI;
@@ -362,6 +352,9 @@ export default {
         .catch((error) => {
           console.error(`Error incrementing play count for track ID: ${trackId}`, error);
         });
+    },
+    isLiked(trackId) {
+      return this.likedTrackIds.includes(trackId);
     },
   },
 

@@ -49,9 +49,6 @@
             <div v-for="t in user.tracks" :key="t.track_id" class="min-w-[280px] max-w-md">
               <TrackCard 
                 :track="t"
-                :liked="likedTracks?.includes(t.track_id)"
-                @track-unliked="handleTrackUnliked(t)"
-                @track-liked="handleTrackLiked(t)"
                 :state="'redirect'"
               />
             </div>
