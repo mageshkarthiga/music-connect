@@ -64,7 +64,7 @@ func main() {
 
 	// CORS middleware
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080", "https://music-connect-555448022527.us-central1.run.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "x-xsrf-token"},
 		AllowCredentials: true,
