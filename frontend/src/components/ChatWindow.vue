@@ -59,6 +59,7 @@ import UserService from "@/service/UserService";
 import friendService from "@/service/FriendService";
 import axios from "axios";
 import FriendService from "@/service/FriendService";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
     name: "ChatWindow",
@@ -140,7 +141,7 @@ export default {
         },
         async fetchFriends() {
             try {
-                const response = await axios.get("https://music-connect-555448022527.us-central1.run.app/friends", {
+                const response = await axios.get(`${API_BASE_URL}/friends`, {
                     withCredentials: true,
                 });
                 this.friends = response.data;
