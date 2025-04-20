@@ -148,7 +148,7 @@ export const getFavUserTracksById = async (
 // Like a track by calling the backend API
 export const likeTrack = async (trackId: number) => {
   try {
-    const response = await axios.post(
+    const response = await axios.put(
       `http://localhost:8080/likeTrack/${trackId}`, // Assuming this is the endpoint to like the track
       {}, // You can send any data if needed, like { is_liked: true }
       { withCredentials: true } // Include credentials (cookies) if necessary
@@ -171,8 +171,9 @@ export const likeTrack = async (trackId: number) => {
 // Unlike a track by calling the backend API
 export const unlikeTrack = async (trackId: number) => {
   try {
-    const response = await axios.delete(
-      `http://localhost:8080/likeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
+    const response = await axios.put(
+      `http://localhost:8080/unlikeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
+      {},
       { withCredentials: true } // Include credentials (cookies) if necessary
     );
 
@@ -217,6 +218,7 @@ const TrackService = {
   getFavUserTracksById,
   likeTrack,
   unlikeTrack,
+  likedTracks,
 };
 
 export default TrackService;

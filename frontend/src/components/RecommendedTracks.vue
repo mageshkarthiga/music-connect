@@ -1,5 +1,6 @@
 <script>
 import { getRecommendedTracks } from '@/service/RecommenderService';
+import trackService from '@/service/TrackService'; // Import track service to handle API calls for liking and unliking tracks
 
 export default {
     name: 'RecommendedTracks',
@@ -7,6 +8,7 @@ export default {
         return {
             tracks: null,
             selectedTrackUri: null,
+            likedTracks: new Set(), // to store liked track IDs
         };
     },
     methods: {
@@ -21,6 +23,27 @@ export default {
         handleClick(trackUri) {
             this.selectedTrackUri = trackUri;
             this.$emit('track-selected', trackUri);
+        },
+        async likeTrackHandler(trackId) {
+            try {
+                // Like the track locally and on the server
+                this.likedTracks.add(trackId);
+                await trackService.likeTrack(trackId); // API call to like the track
+            } catch (error) {
+                console.error('Error liking track:', error);
+            }
+        },
+        async unlikeTrackHandler(trackId) {
+            try {
+                // Unlike the track locally and on the server
+                this.likedTracks.delete(trackId); // Correct method to remove the track from the set
+                await trackService.unlikeTrack(trackId); // API call to unlike the track
+            } catch (error) {
+                console.error('Error unliking track:', error);
+            }
+        },
+        isLiked(trackId) {
+            return this.likedTracks.has(trackId);
         },
     },
     mounted() {
@@ -49,10 +72,28 @@ export default {
             </Column>
             <Column style="width: 10%" header="">
                 <template #body="{ data }">
-                    <Button icon="pi pi-play" type="button" class="p-button-text"
-                        @click="handleClick(data.track_uri)"></Button>
+                    <div class="flex gap-2">
+                        <!-- Play Button -->
+                        <Button icon="pi pi-play" type="button" class="p-button-text"
+                            @click="handleClick(data.track_id)"></Button>
+
+                        <!-- Like/Unlike Button -->
+                        <Button 
+                            :icon="isLiked(data.track_id) ? 'pi pi-heart-fill' : 'pi pi-heart'" 
+                            type="button" 
+                            class="p-button-text" 
+                            @click="isLiked(data.track_id) ? unlikeTrackHandler(data.track_id) : likeTrackHandler(data.track_id)">
+                        </Button>
+                    </div>
                 </template>
             </Column>
         </DataTable>
     </div>
 </template>
+
+<style scoped>
+/* Optional: Add some custom styles for the like button if needed */
+.pi-heart-fill {
+    color: red;
+}
+</style>
