@@ -220,6 +220,3 @@ func GetFriendshipStatus(c echo.Context) error {
 }
 
 
-	// 3. Not found in either direction
-	return c.JSON(http.StatusNotFound, "Friendship not found")
-}

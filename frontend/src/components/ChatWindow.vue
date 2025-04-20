@@ -3,17 +3,20 @@
         <!-- Friend List -->
         <!-- Friend List -->
         <div class="user-list">
-            <h3>Friends</h3>
-            <ul>
-                <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
-                    :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
-                    <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
-                    {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
-                </li>
-            </ul>
-            <div v-else>
-                <p>No friends available. Connect with friends to start chatting!✨</p>
-            </div>
+      <h3>Friends</h3>
+
+      <ul v-if="friends.length > 0">
+        <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
+            :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
+          <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
+          {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
+        </li>
+      </ul>
+
+      <div v-else>
+        <p>No friends available. Connect with friends to start chatting!✨</p>
+      </div>
+    </div>
         </div>
 
         <!-- Chat Rooms -->
@@ -47,7 +50,7 @@
 
         <!-- Loading -->
         <div v-if="loading" class="loading-overlay"></div>
-    </div>
+
 </template>
 
 
@@ -86,7 +89,6 @@ export default {
     },
     async mounted() {
         await this.getCurrentUser();
-        await this.fetchChatUsers();
         await this.fetchFriends();
 
         if (this.selectedUserId) {
@@ -138,7 +140,7 @@ export default {
         },
         async fetchFriends() {
             try {
-                const response = await axios.get("http://localhost:8080/friends", {
+                const response = await axios.get("https://music-connect-555448022527.us-central1.run.app/friends", {
                     withCredentials: true,
                 });
                 this.friends = response.data;

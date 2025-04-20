@@ -50,13 +50,13 @@ export default {
       // Toggle like/unlike logic
       if (updateStatus) {
         // If liking the track
-        axios.put(`http://localhost:8080/likeTrack/${trackId}`, { is_liked: true }, {
+        axios.put(`https://music-connect-555448022527.us-central1.run.app/likeTrack/${trackId}`, { is_liked: true }, {
           withCredentials: true,
         });
         this.$emit("track-liked", trackId);
       } else {
         // If unliking the track
-        axios.put(`http://localhost:8080/unlikeTrack/${trackId}`, { is_liked: false }, {
+        axios.put(`https://music-connect-555448022527.us-central1.run.app/unlikeTrack/${trackId}`, { is_liked: false }, {
           withCredentials: true,
         });
         this.$emit("track-unliked", trackId);

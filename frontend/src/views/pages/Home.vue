@@ -124,6 +124,7 @@ import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
 import { useSpotifyStore } from "@/store/SpotifyStore";
+import API_BASE_URL from "@/service/apiConfig.ts";
 
 export default {
   components: {
@@ -298,14 +299,25 @@ export default {
 
     async getLikedTracks() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
+        const response = await axios.get(`https://music-connect-555448022527.us-central1.run.app/likedTracks`, {
           withCredentials: true,
         });
 
-        this.likedTracks = response.data;
-        this.likedTrackIds = response.data.map(track => track.track_id);
+        // this.likedTracks = response.data;
+        // this.likedTrackIds = response.data.likedTracks.map(track => track.track_id);
 
-        console.log("Liked Tracks:", this.likedTracks);
+        const likedTracks = Array.isArray(response.data)
+          ? response.data
+          : response.data?.likedTracks ?? [];
+
+        this.likedTracks = likedTracks;
+        this.likedTrackIds = likedTracks.map(track => track.track_id);
+
+
+        console.log("Status:", response.status); // should be 200
+        console.log("Data:", response.data);     // check exact structure
+
+        console.log
       } catch (err) {
         this.handleError(err, "liked tracks");
       }
