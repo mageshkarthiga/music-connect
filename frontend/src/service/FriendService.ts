@@ -10,9 +10,9 @@ export interface User {
     userName: string;
     profilePhotoUrl: string;
     firebaseUid: string;
-    events?: any; 
-    tracks?: any; 
-    friends?: any; 
+    events?: any;
+    tracks?: any;
+    friends?: any;
 }
 
 
@@ -26,8 +26,8 @@ export interface Friendship {
 
 // Define the Friend interface
 export interface Friend {
-    count: number; 
-    users: User[]; 
+    count: number;
+    users: User[];
 }
 
 const FRIENDSHIP_URL = `${API_BASE_URL}/friends`;
@@ -35,9 +35,12 @@ const FRIENDSHIP_URL = `${API_BASE_URL}/friends`;
 // Function to send a friend request
 export const sendFriendRequest = async (friendId: number) => {
     try {
-        const response = await axios.post(`${FRIENDSHIP_URL}/${friendId}/request`, {
-            withCredentials: true,
-        });
+        const response = await axios.post(`${FRIENDSHIP_URL}/${friendId}/request`,
+            {},
+            {
+                withCredentials: true,
+            }
+        );
 
         console.log("Friend request sent successfully:", response.data);
         return response.data; // Assuming the API returns the created friendship data
@@ -75,7 +78,7 @@ export const getPendingFriendRequests = async (): Promise<Friend> => {
     }
 };
 
-export const acceptFriendRequest  = async (friendId: number): Promise<void> => {
+export const acceptFriendRequest = async (friendId: number): Promise<void> => {
     try {
         await axios.post(
             `${FRIENDSHIP_URL}/${friendId}/accept`,
