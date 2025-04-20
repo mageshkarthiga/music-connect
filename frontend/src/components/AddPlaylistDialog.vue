@@ -212,4 +212,17 @@ export default {
   justify-content: center; /* Centers the tracks horizontally */
   align-items: center; /* Centers the tracks vertically */
 }
+
+.track-list p {
+  color: black;
+}
+
+.track-list.dark {
+  background-color: #121212;
+  color: white;
+}
+
+.track-list.dark p {
+  color: white;
+}
 </style>
