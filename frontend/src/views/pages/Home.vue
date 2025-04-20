@@ -117,11 +117,9 @@
 
 <script>
 import axios from "axios";
-import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
@@ -146,6 +144,7 @@ export default {
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
+      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
     };
   },
 
@@ -255,7 +254,7 @@ export default {
 
     async getEvents() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/events`, {
+        const response = await axios.get(`${this.API_BASE_URL}/events`, {
           withCredentials: true,
         });
         this.events = response.data;
@@ -266,10 +265,10 @@ export default {
 
     async getEventsByUserId() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/events`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
-        this.user.events = response.data;
+        this.user.events = Array.isArray(response.data) ? response.data : [];
       } catch (err) {
         this.handleError(err, "events");
       }
@@ -277,7 +276,7 @@ export default {
 
     async getPlaylistsForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
         this.user.playlists = response.data;
@@ -288,7 +287,7 @@ export default {
 
     async getTracksForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/tracks/top`, {
+        const response = await axios.get(`${this.API_BASE_URL}/tracks/top`, {
           withCredentials: true,
         });
         this.user.tracks = response.data;

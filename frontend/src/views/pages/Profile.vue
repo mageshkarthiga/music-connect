@@ -207,7 +207,7 @@ export default {
             EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
             getFavUserTracksById(userId),
-            getFriends()
+            FriendService.getFriends()
           ]);
           this.user = { ...u, events, playlists, tracks, friendRequests: null };
           this.likedTracks = tracks.map(t => t.track_id); // Mark all fetched tracks as liked
@@ -218,8 +218,8 @@ export default {
             EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
             getFavUserTracks(),
-            getFriends(),
-            getPendingFriendRequests(),
+            FriendService.getFriends(),
+            FriendService.getPendingFriendRequests(),
           ]);
           this.user = { ...u, events, playlists, tracks, friends, friendRequests };
           this.likedTracks = tracks.map(t => t.track_id); // Mark all fetched tracks as liked
@@ -235,7 +235,7 @@ export default {
     },
 
     handleAccept(userId) {
-      acceptFriendRequest(userId)
+      FriendService.acceptFriendRequest(userId)
         .then(() => {
           const acceptedUser = this.user.friendRequests.users.find((u) => u.user_id === userId);
           this.user.friendRequests.users = this.user.friendRequests.users.filter(
@@ -259,7 +259,7 @@ export default {
     },
 
     handleReject(userId) {
-      rejectFriendRequest(userId)
+      FriendService.rejectFriendRequest(userId)
         .then(() => {
           this.user.friendRequests.users = this.user.friendRequests.users.filter(
             (u) => u.user_id !== userId
@@ -281,7 +281,7 @@ export default {
     },
 
     handleRemove(userId) {
-      removeFriend(userId)
+      FriendService.removeFriend(userId)
         .then(() => {
           this.user.friends = this.user.friends.filter((u) => u.user_id !== userId);
           this.$toast.add({

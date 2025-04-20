@@ -3,10 +3,10 @@ package controllers
 import (
 	"backend/models"
 	"backend/config"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"log"
 
 	"github.com/labstack/echo/v4"
 )
@@ -30,9 +30,14 @@ func CreateUserProfile(userID uint) (models.UserProfile, error) {
 		return models.UserProfile{}, fmt.Errorf("error fetching playlist tracks: %w", err)
 	}
 
-	// If no data is found, return an error
+	// If no data is found, return an empty profile (not an error)
 	if len(musicPreferences) == 0 && len(playlistTracks) == 0 {
-		return models.UserProfile{}, errors.New("no profile data found for user")
+		return models.UserProfile{
+			ID:             userID,
+			LikedTracks:    make(map[uint]int),
+			PlayedTracks:   make(map[uint]int),
+			PlaylistTracks: make(map[uint]int),
+		}, nil // Return empty profile with no data
 	}
 
 	// Construct the user profile from the fetched data
@@ -70,23 +75,31 @@ func CosineSimilarity(userProfile1, userProfile2 models.UserProfile) (float64, e
 
 // CalculateUserSimilarity calculates the similarity between two users by fetching their profiles
 func CalculateUserSimilarity(userID1, userID2 uint) (float64, error) {
+	log.Printf("Creating profile for user %d", userID1)
 	userProfile1, err := CreateUserProfile(userID1)
 	if err != nil {
+		log.Printf("Error in CreateUserProfile (user %d): %v", userID1, err)
 		return 0, err
 	}
 
+	log.Printf("Creating profile for user %d", userID2)
 	userProfile2, err := CreateUserProfile(userID2)
 	if err != nil {
+		log.Printf("Error in CreateUserProfile (user %d): %v", userID2, err)
 		return 0, err
 	}
 
+	log.Printf("Calculating cosine similarity")
 	similarity, err := CosineSimilarity(userProfile1, userProfile2)
 	if err != nil {
+		log.Printf("Error in CosineSimilarity: %v", err)
 		return 0, err
 	}
 
+	log.Printf("Similarity calculated: %f", similarity)
 	return similarity, nil
 }
+
 
 // GetUserProfileHandler handles the HTTP request to fetch a user's profile
 func GetUserProfileHandler(c echo.Context) error {

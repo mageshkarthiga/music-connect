@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"backend/services/chat"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
@@ -51,13 +50,6 @@ func main() {
 		log.Println("✅ Migrations completed successfully!")
 	}
 
-	// Initialize WebSocket server
-	wsServer := chat.NewWsServer()
-	go wsServer.Run() // Start the WebSocket server in a separate goroutine
-
-	// Initialize Firebase
-	chat.InitFirebase()
-
 	// Initialize Spotify services
 	services.SpotifyAuth()
 	token, err := services.GetSpotifyTokenRaw()
@@ -72,7 +64,7 @@ func main() {
 
 	// CORS middleware
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080", "https://music-connect-555448022527.us-central1.run.app", "https://music-connect-72z24b322-jia-xuans-projects.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "x-xsrf-token"},
 		AllowCredentials: true,
@@ -80,7 +72,7 @@ func main() {
 	log.Println("✅ CORS middleware applied")
 
 	// Register routes
-	routes.RegisterRoutes(e, wsServer)
+	routes.RegisterRoutes(e)
 	log.Println("✅ Routes registered")
 
 	// Health check

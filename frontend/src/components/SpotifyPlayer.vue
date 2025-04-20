@@ -16,11 +16,12 @@ export default {
         return {
             iframeSrc: "",
             accessToken: "",
+            API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
         };
     },
     async mounted() {
         const spotifyStore = useSpotifyStore();
-        const response = await axios.get("http://localhost:8080/spotify/token");
+        const response = await axios.get(`${this.API_BASE_URL}/spotify/token`);
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent(spotifyStore.spotifyUri);
 

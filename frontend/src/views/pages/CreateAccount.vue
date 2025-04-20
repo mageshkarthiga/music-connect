@@ -95,6 +95,7 @@ const handleSubmit = async () => {
 
   if (!username.value) errors.push("Username is missing.");
   if (!phoneNumber.value) errors.push("Phone number is missing.");
+  if (phoneNumber.value && !+phoneNumber.value) errors.push("Phone number is not valid.");
   if (!selectedLocation.value) errors.push("Location is not selected.");
 
   if (errors.length) {
@@ -107,19 +108,9 @@ const handleSubmit = async () => {
   try {
     if (profilePhoto.value) {
       photoURL = await uploadProfilePhoto(profilePhoto.value);
-      console.log("Profile photo uploaded successfully.");
-      console.log("Photo URL:", photoURL);
     }
 
     const response = await userService.createUser({
-      userName: username.value,
-      phoneNumber: phoneNumber.value,
-      location: selectedLocation.value,
-      emailAddress: email,
-      profilePhotoUrl: photoURL,
-      firebaseUID: fb_id,
-    });
-    console.log({
       userName: username.value,
       phoneNumber: phoneNumber.value,
       location: selectedLocation.value,
@@ -132,7 +123,7 @@ const handleSubmit = async () => {
     ("CREATE USER FAILED");
   }
 
-  router.push("/");
+  router.push("/pages/home");
 };
 </script>
 

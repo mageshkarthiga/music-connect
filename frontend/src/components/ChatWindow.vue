@@ -1,6 +1,7 @@
 <template>
     <div class="chat-container">
         <!-- Friend List -->
+        <!-- Friend List -->
         <div class="user-list">
             <h3>Friends</h3>
             <ul>
@@ -10,6 +11,9 @@
                     {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
                 </li>
             </ul>
+            <div v-else>
+                <p>No friends available. Connect with friends to start chatting!✨</p>
+            </div>
         </div>
 
         <!-- Chat Rooms -->
@@ -51,6 +55,7 @@
 import UserService from "@/service/UserService";
 import friendService from "@/service/FriendService";
 import axios from "axios";
+import FriendService from "@/service/FriendService";
 
 export default {
     name: "ChatWindow",
@@ -75,7 +80,8 @@ export default {
             currentRoom: null,
             loading: false,
             chatBodies: {},
-            errorMessage: ""
+            errorMessage: "",
+            CHAT_URL: process.env.VUE_APP_CHAT_URL,
         };
     },
     async mounted() {
@@ -154,31 +160,14 @@ export default {
                 return "Unknown User";
             }
         },
-        async fetchChatUsers() {
+        async fetchFriends() {
             try {
-                const response = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/users/${this.currentUser.user_id}/chat-history`, {
-                    withCredentials: true,
-                });
-                const userIds = response.data;
-                console.log("Fetched user IDs:", this.selectedUserId);
-
-                const userDetailsPromises = userIds.filter(userID => userID).map(async (userID) => {
-                    try {
-                        const userResponse = await UserService.getUserByFirebaseUID(userID);
-                        return userResponse;
-                    } catch (error) {
-                        console.error(`Error fetching details for user ID ${userID}:`, error);
-                        return null;
-                    }
-                });
-
-                const users = await Promise.all(userDetailsPromises);
-                this.users = users.filter(user => user !== null);
-
-                console.log("Fetched chat users:", this.users);
+                const response = await FriendService.getFriends();
+                this.friends = response;
+                console.log("Fetched friends:", this.friends);
             } catch (error) {
-                console.error("Error fetching chat history:", error);
-                this.errorMessage = "Failed to load chat users. Please try again later.";
+                console.error("Error fetching friends:", error);
+                this.errorMessage = "Failed to load friends. Please try again later.";
             }
         },
         handleNewMessage(event) {
@@ -292,7 +281,7 @@ export default {
                 const response = await this.getOtherUsers(otherUserID);
                 newRoom.otherUserName = response;
 
-                const messagesResponse = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/rooms/${roomName}/messages`, { withCredentials: true });
+                const messagesResponse = await axios.get(`${this.CHAT_URL}/rooms/${roomName}/messages`, { withCredentials: true });
                 if (messagesResponse.data.length > 0) {
                     newRoom.messages = messagesResponse.data.map(msg => ({
                         message: msg.message,
@@ -308,7 +297,7 @@ export default {
                 this.errorMessage = "Failed to load chat history. Please try again later.";
             }
 
-            const ws = new WebSocket(`wss://music-connect-chat-555448022527.us-central1.run.app/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
+            const ws = new WebSocket(this.getWebSocketURL(this.currentUser.user_id, roomName));
 
             ws.onopen = () => {
                 console.log(`WebSocket connection established for room: ${roomName}`);
@@ -373,6 +362,20 @@ export default {
         isChatScrolledToBottom(roomName) {
             const el = this.chatBodies[roomName];
             return el && el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+        },
+        getWebSocketURL(userId, roomName) {
+            const isLocalhost = false;
+            const protocol = isLocalhost ? 'ws' : 'wss';
+            const host = isLocalhost ? 'localhost:8080' : this.CHAT_URL.replace(/^https?:\/\//, '');
+
+            return `${protocol}://${host}/ws?userid=${userId}&room=${roomName}`;
+        },
+        getOtherUserId(roomName) {
+            const ids = roomName.split('-');
+            return ids.find(id => id !== this.currentUser.user_id);
+        },
+        getFriendById(userId) {
+            return this.friends.find(friend => friend.firebase_uid === userId);
         }
     },
 };
@@ -490,17 +493,28 @@ export default {
 }
 
 .chat-card {
-    margin-top: 50px;
+    margin-top: 60px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .chat-header {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px 8px 0 0;
+}
+
+.chat-header-avatar {
+    flex-shrink: 0;
+}
+
+.chat-header-name {
     font-size: 1.5rem;
     font-weight: 600;
-    padding: 0.5rem 0;
-    background-color: var(--secondary-bg-light);
-    border-radius: 8px 8px 0 0;
+    margin: 0;
+    color: #343a40;
 }
 
 .chat-body {
@@ -510,6 +524,12 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem;
+}
+
+.separator {
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    margin: 0 0 1rem 0;
 }
 
 .message-wrapper {

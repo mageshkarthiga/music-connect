@@ -122,9 +122,4 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 
 	// ---- recommendations ----
 	e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
-
-	// ---- chat ----
-	e.GET("/rooms/:roomName/messages", middleware.AuthMiddleware(projectID)(controllers.GetMessagesForRoom))
-	e.GET("/users/:userID/chat-history", middleware.AuthMiddleware(projectID)(controllers.GetUsersWithChatHistory))
-
 }

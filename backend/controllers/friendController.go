@@ -159,7 +159,6 @@ func GetFriends(c echo.Context) error {
 	return c.JSON(http.StatusOK, friends)
 }
 
-
 // GetPendingFriendRequests retrieves a list of pending friend requests for the current user
 func GetPendingFriendRequests(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Get the current user ID
@@ -186,6 +185,7 @@ func GetPendingFriendRequests(c echo.Context) error {
 func GetFriendshipStatus(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Get the current user ID
 
+	// Convert friend_id from string to uint64
 	// Convert friend_id from string to uint64
 	friendIDStr := c.Param("friend_id")
 	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
@@ -220,4 +220,6 @@ func GetFriendshipStatus(c echo.Context) error {
 }
 
 
-
+	// 3. Not found in either direction
+	return c.JSON(http.StatusNotFound, "Friendship not found")
+}

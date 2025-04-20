@@ -52,7 +52,6 @@ func GetTracks(c echo.Context) error {
 	return c.JSON(http.StatusOK, tracks)
 }
 
-
 // GetTrackByID fetches a single track by ID
 func GetTrackByID(c echo.Context) error {
 	id := c.Param("id")
@@ -326,8 +325,7 @@ func UnlikeTrack(c echo.Context) error {
 	if err := config.DB.Save(&pref).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to unlike track")
 	}
-
-	return c.JSON(http.StatusOK, "Track unliked successfully")
+	return c.JSON(http.StatusCreated, "Track unliked successfully")
 }
 
 

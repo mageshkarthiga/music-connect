@@ -50,7 +50,6 @@
 
 <script>
 import axios from "axios";
-import { API_BASE_URL } from "@/service/apiConfig";
 import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
 
 export default {
@@ -64,12 +63,13 @@ export default {
       errorMessage: "",
       darkTheme: localStorage.getItem("theme") === "dark",
       showPlaylistDialog: false,
+      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
     };
   },
   methods: {
     async getCurrentUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me`, {
           withCredentials: true,
         });
         this.currentUser = response.data;
@@ -80,7 +80,7 @@ export default {
 
     async getPlaylistsForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
 
