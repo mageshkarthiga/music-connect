@@ -102,7 +102,12 @@ To set up the chat service:
    go mod tidy
    ```
 
-3. Run the service:
+3. Create a .env file in the root of this folder and set the `PORT` enviornment variable to `8002`:
+   ```txt
+   PORT=8002
+   ```
+
+4. Run the service:
 
    ```go
    go run main.go

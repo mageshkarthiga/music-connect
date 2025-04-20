@@ -255,22 +255,25 @@ func GetFavUserTracksByID(c echo.Context) error {
 func LikeTrack(c echo.Context) error {
 	userID := c.Get("uid").(uint)
 
-	var req struct {
-		TrackID uint `json:"track_id"`
+	// Get track_id from URL parameters and convert it to uint
+	trackIDStr := c.Param("track_id")
+	trackID, err := strconv.ParseUint(trackIDStr, 10, 32) // Convert string to uint
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid track ID")
 	}
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid request payload")
-	}
+
+	// Convert trackID to uint (32-bit)
+	trackIDUint := uint(trackID)
 
 	// Check if the track exists
 	var track models.Track
-	if err := config.DB.First(&track, req.TrackID).Error; err != nil {
+	if err := config.DB.First(&track, trackIDUint).Error; err != nil {
 		return c.JSON(http.StatusNotFound, "Track not found")
 	}
 
 	// Try to find existing preference
 	var pref models.MusicPreference
-	err := config.DB.Where("user_id = ? AND track_id = ?", userID, req.TrackID).First(&pref).Error
+	err = config.DB.Where("user_id = ? AND track_id = ?", userID, trackIDUint).First(&pref).Error
 
 	if err == nil {
 		// Update is_liked to true
@@ -284,7 +287,7 @@ func LikeTrack(c echo.Context) error {
 	// Create new preference
 	newPref := models.MusicPreference{
 		UserID:  userID,
-		TrackID: req.TrackID,
+		TrackID: trackIDUint,
 		IsLiked: true,
 	}
 	if err := config.DB.Create(&newPref).Error; err != nil {
@@ -297,30 +300,41 @@ func LikeTrack(c echo.Context) error {
 func UnlikeTrack(c echo.Context) error {
 	userID := c.Get("uid").(uint)
 
-	var req struct {
-		TrackID uint `json:"track_id"`
-	}
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid request payload")
+	// Get track_id from URL parameters and convert it to uint
+	trackIDStr := c.Param("track_id")
+	trackID, err := strconv.ParseUint(trackIDStr, 10, 32) // Convert string to uint
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid track ID")
 	}
 
+	// Convert trackID to uint (32-bit)
+	trackIDUint := uint(trackID)
+
+	// Check if the like record exists for the user and track
 	var pref models.MusicPreference
-	err := config.DB.Where("user_id = ? AND track_id = ?", userID, req.TrackID).First(&pref).Error
+	err = config.DB.Where("user_id = ? AND track_id = ?", userID, trackIDUint).First(&pref).Error
 
 	if err == gorm.ErrRecordNotFound {
 		return c.JSON(http.StatusNotFound, "Like record not found")
 	} else if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch preference")
 	}
+
+	// Set is_liked to false
+	pref.IsLiked = false
+	if err := config.DB.Save(&pref).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to unlike track")
+	}
 	return c.JSON(http.StatusCreated, "Track unliked successfully")
 }
+
 
 func GetLikedTracks(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Assuming the user ID is stored in the context
 
 	// Fetch all liked tracks for the user
 	var likedTracks []models.MusicPreference
-	if err := config.DB.Where("user_id = ? AND preference_type = ?", userID, "like").Find(&likedTracks).Error; err != nil {
+	if err := config.DB.Where("user_id = ? AND is_liked = ?", userID, true).Find(&likedTracks).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch liked tracks")
 	}
 
