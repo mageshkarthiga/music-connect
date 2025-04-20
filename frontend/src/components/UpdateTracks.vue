@@ -28,7 +28,6 @@
   <script>
 
   import axios from "axios";
-  import { API_BASE_URL } from "@/service/apiConfig";
   
   export default {
     components: {
@@ -52,12 +51,13 @@
       return {
         tracks: [],
         selectedTracks: [],
+        API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
       };
     },
     methods: {
       async fetchTracks() {
         try {
-          const response = await axios.get(`${API_BASE_URL}/tracks`, {
+          const response = await axios.get(`${this.API_BASE_URL}/tracks`, {
             withCredentials: true,
           });
           this.tracks = response.data;
@@ -73,7 +73,7 @@
       async saveTracks() {
         try {
           const trackIds = this.selectedTracks.map(track => track.track_id);
-          await axios.post(`${API_BASE_URL}/playlists/${this.playlistId}/update-tracks`, { trackIds }, {
+          await axios.post(`${this.API_BASE_URL}/playlists/${this.playlistId}/update-tracks`, { trackIds }, {
             withCredentials: true,
           });
   

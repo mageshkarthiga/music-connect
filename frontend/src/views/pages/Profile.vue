@@ -36,7 +36,7 @@
           </div>
         </div>
       </section>
-      <section v-if="user.friends.length" class="p-4">
+      <section v-if="user.friends" class="p-4">
         <h2 class="text-xl font-semibold mb-3 text-left">Friends</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
           <div v-for="u in user.friends" :key="u.user_id" class="min-w-[280px] max-w-md">
@@ -63,13 +63,7 @@
             <TrackCard :track="t" />
           </div>
         </div>
-
         </section>
-
-        <!-- <section class="p-4" v-if="user.tracks.length">
-          <h2 class="text-xl font-semibold mb-3">Artists</h2>
-          <SpotifyPlayer />
-        </section> -->
       </template>
     </div>
 
@@ -89,13 +83,7 @@ import {
   getFavUserTracksById,
   getFavUserTracks,
 } from "@/service/TrackService";
-import {
-  getFriends,
-  getPendingFriendRequests,
-  acceptFriendRequest,
-  rejectFriendRequest, 
-  removeFriend
-} from "@/service/FriendService";
+import FriendService from "@/service/FriendService";
 
 export default {
   name: "Profile",
@@ -127,7 +115,7 @@ export default {
             EventService.getFavEventsByUserId(userId),
             PlaylistService.getPlaylistsByUserId(userId),
             getFavUserTracksById(userId),
-            getFriends()
+            FriendService.getFriends()
           ]);
           this.user = { ...u, events, playlists, tracks, friendRequests: null }; // No friendRequests for other users
         } else {
@@ -137,8 +125,8 @@ export default {
             EventService.getFavEventsForCurrentUser(),
             PlaylistService.getPlaylistsForUser(),
             getFavUserTracks(),
-            getFriends(),
-            getPendingFriendRequests(),
+            FriendService.getFriends(),
+            FriendService.getPendingFriendRequests(),
           ]);
           this.user = { ...u, events, playlists, tracks, friends, friendRequests };
         }
@@ -151,7 +139,7 @@ export default {
       }
     },
     handleAccept(userId) {
-      acceptFriendRequest(userId)
+      FriendService.acceptFriendRequest(userId)
         .then(() => {
           this.user.friendRequests.users = this.user.friendRequests.users.filter(
             (u) => u.user_id !== userId
@@ -173,7 +161,7 @@ export default {
         });
     },
     handleReject(userId) {
-      rejectFriendRequest(userId)
+      FriendService.rejectFriendRequest(userId)
         .then(() => {
           this.user.friendRequests.users = this.user.friendRequests.users.filter(
             (u) => u.user_id !== userId
@@ -194,7 +182,7 @@ export default {
         });
     },
     handleRemove(userId) {
-      removeFriend(userId)
+      FriendService.removeFriend(userId)
         .then(() => {
           this.user.friends = this.user.friends.filter((u) => u.user_id !== userId);
           this.$toast.add({

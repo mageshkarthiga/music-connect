@@ -4,8 +4,6 @@ import { supabase } from "../service/supabaseClient";
 import { auth } from "@/firebase/firebase";
 import { getUserTracksById } from "./TrackService";
 
-const USER_URL = `${API_BASE_URL}`;
-
 export interface User {
   id?: number;
   userName: string;
@@ -40,30 +38,30 @@ export default {
   },
 
   async getUser() {
-    const response = await axios.get<User>(`${USER_URL}/me`, {
+    const response = await axios.get<User>(`${API_BASE_URL}/me`, {
       withCredentials: true,
     });
     return response.data;
   },
 
   async getAllUsers(): Promise<User[]> {
-    const response = await axios.get<User[]>(`${USER_URL}/users`, {
+    const response = await axios.get<User[]>(`${API_BASE_URL}/users`, {
       withCredentials: true,
     });
     return response.data;
   },
 
   async updateUser(id: number, updates: Partial<User>) {
-    const response = await axios.put<User>(`${USER_URL}/${id}`, updates);
+    const response = await axios.put<User>(`${API_BASE_URL}/${id}`, updates);
     return response.data;
   },
 
   async deleteUser(id: number) {
-    await axios.delete(`${USER_URL}/${id}`);
+    await axios.delete(`${API_BASE_URL}/${id}`);
   },
 
   async getUserByFirebaseUID(firebaseUID: string): Promise<User> {
-    const response = await axios.get(`${USER_URL}/firebase/${firebaseUID} `, {
+    const response = await axios.get(`${API_BASE_URL}/users/firebase/${firebaseUID} `, {
       withCredentials: true,
     });
     const data = response.data;
@@ -73,7 +71,7 @@ export default {
 
   async fetchSecureData(idToken: string) {
     try {
-      const response = await axios.get(`${USER_URL}/secure`, {
+      const response = await axios.get(`${API_BASE_URL}/secure`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -86,7 +84,7 @@ export default {
   },
 
   async getUserByUserId(userId: number): Promise<User> {
-    const response = await axios.get(`${USER_URL}/users/${userId}`, {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}`, {
       withCredentials: true,
     });
 
