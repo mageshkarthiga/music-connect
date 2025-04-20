@@ -6,12 +6,6 @@ import (
 	"strconv"
 )
 
-type UserProfile struct {
-    ID             uint
-    LikedTracks    map[uint]int // TrackID -> Play count (only for liked tracks)
-    PlayedTracks   map[uint]int // TrackID -> Play count
-    PlaylistTracks map[uint]int // TrackID -> Playlist count
-}
 
 func CosineSimilarity(userProfile1, userProfile2 UserProfile) (float64, error) {
 	// Helper function to aggregate track data with custom weights

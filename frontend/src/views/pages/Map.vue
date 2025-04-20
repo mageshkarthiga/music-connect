@@ -6,7 +6,6 @@
         Go to Search
       </RouterLink>
     </div>
-
     <div ref="map" class="map-container" v-show="mapLoaded"></div>
   </div>
 </template>
@@ -17,11 +16,12 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { getAllUserLocations } from "@/firebase/locationController";
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
+import { getFriends } from "@/service/FriendService";
 import { API_BASE_URL } from "@/service/apiConfig";
 
 const map = ref(null);
 const mapLoaded = ref(false);
-const userLocations = ref([]);
+const friendMarkers = ref([]);
 const eventLandmarks = ref([]);
 let mapInstance = null;
 let hasMapInitialised = false;
@@ -39,13 +39,14 @@ function createMarkerImage(src, isSelf = false, isEvent = false) {
     img.style.borderRadius = "0"; // square
     img.style.border = "1px solid black";
   } else {
-    img.style.borderRadius = "50%"; // circle for users
+    img.style.borderRadius = "50%"; // circle
     img.style.border = isSelf ? "3px solid #16a34a" : "1px solid black";
   }
 
   wrapper.appendChild(img);
   return wrapper;
 }
+
 
 function createPopupOverlay(lat, lng, title, description, image, link = null) {
   if (currentPopup) {
@@ -123,28 +124,41 @@ onMounted(() => {
     if (!firebaseUser) return;
 
     const currentUID = firebaseUser.uid;
+    const currentUser = await UserService.getUser();
+    const currentId = currentUser.user_id;
 
-    const [userLocs, users, venues] = await Promise.all([
+    const [userLocs, friends, users, venues] = await Promise.all([
       getAllUserLocations(),
+      getFriends(currentId),
       UserService.getAllUsers(),
       EventService.getAllEventVenues(),
     ]);
-    console.log("Venue data:", venues);
 
-    const locatedUsers = users.filter((u) => userLocs[u.firebase_uid]);
+    console.log("friends", friends);
 
-    userLocations.value = locatedUsers.map((user) => {
-      const { lat, lon } = userLocs[user.firebase_uid];
-      return {
-        id: user.user_id,
-        name: user.user_name || `User: ${user.user_id}`,
-        lat,
-        lon,
-        firebase_uid: user.firebase_uid,
-        profilePhotoUrl: user.profile_photo_url,
-        isSelf: user.firebase_uid === currentUID,
-      };
-    });
+    const friendData = friends
+      .map((f) => {
+        const fullUser = users.find((u) => u.user_id === f.user_id);
+        if (!fullUser || !userLocs[fullUser.firebase_uid]) {
+        console.log("No location for user", fullUser.firebase_uid);
+        return null;
+      }
+        const { lat, lon } = userLocs[fullUser.firebase_uid];
+
+        return {
+          id: fullUser.user_id,
+          name: fullUser.user_name || `Friend: ${fullUser.user_id}`,
+          firebase_uid: fullUser.firebase_uid,
+          profilePhotoUrl: fullUser.profile_photo_url,
+          lat,
+          lon,
+          isSelf: fullUser.firebase_uid === currentUID,
+        };
+      })
+      .filter(Boolean);
+
+    friendMarkers.value = friendData;
+
 
     const venueSet = new Map();
     venues.forEach((evt) => {
@@ -207,6 +221,7 @@ function loadGoogleMapsScript(callback) {
   document.head.appendChild(script);
 }
 
+
 function initMapCallback() {
   if (hasMapInitialised || !navigator.geolocation || !map.value) return;
 
@@ -229,28 +244,28 @@ function initMapCallback() {
         currentPopup = null;
       });
 
-      userLocations.value.forEach((user) => {
-        const imageSrc = user.profilePhotoUrl?.trim()
-          ? user.profilePhotoUrl
+      friendMarkers.value.forEach((friend) => {
+        const imageSrc = friend.profilePhotoUrl?.trim()
+          ? friend.profilePhotoUrl
           : "/demo/images/person_dark.svg";
 
-        const userImg = createMarkerImage(imageSrc, user.isSelf);
+        const friendImg = createMarkerImage(imageSrc, friend.isSelf);
 
         const marker = new google.maps.marker.AdvancedMarkerElement({
           map: mapInstance,
-          position: { lat: user.lat, lng: user.lon },
-          title: user.name,
-          content: userImg,
+          position: { lat: friend.lat, lng: friend.lon },
+          title: friend.name,
+          content: friendImg,
         });
 
         marker.addListener("click", () => {
           createPopupOverlay(
-            user.lat,
-            user.lon,
-            user.name,
+            friend.lat,
+            friend.lon,
+            friend.name,
             "Recently active in this area.",
             imageSrc,
-            `/profile?user_id=${user.id}`
+            `/profile?user_id=${friend.id}`
           );
         });
       });
@@ -285,11 +300,17 @@ function initMapCallback() {
 
 async function initMap() {
   mapLoaded.value = false;
-  await nextTick();
-  mapLoaded.value = true;
-  map.value.innerHTML = "";
+  await nextTick(); // Wait for DOM updates
+
+  if (!map.value) {
+    console.warn("Map DOM element is not ready.");
+    return;
+  }
+
+  map.value.innerHTML = ""; // Clear previous content
   mapInstance = null;
   hasMapInitialised = false;
+  mapLoaded.value = true;
 
   if (window.google?.maps) {
     initMapCallback();
