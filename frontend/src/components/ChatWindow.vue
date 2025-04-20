@@ -1,13 +1,13 @@
 <template>
     <div class="chat-container">
-        <!-- User List -->
+        <!-- Friend List -->
         <div class="user-list">
-            <h3>Users</h3>
+            <h3>Friends</h3>
             <ul>
-                <li v-for="user in users" :key="user.user_id" @click="joinRoom(user)"
-                    :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
-                    <Avatar :image="user.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
-                    {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
+                <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
+                    :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
+                    <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
+                    {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
                 </li>
             </ul>
         </div>
@@ -20,45 +20,21 @@
                 <Card class="chat-card">
                     <template #header>
                         <h3 class="chat-header">
-    <div class="user-info">
-        <img class="user-avatar" :src="room.otherUserProfilePic || 'default-avatar.jpg'" alt="User's Avatar" />
-        <span class="user-name">{{ room.otherUserName.charAt(0).toUpperCase() + room.otherUserName.slice(1) || "Loading..." }}</span>
-    </div>
-</h3>
-
+                            <div class="user-info">
+                                <img class="user-avatar" :src="room.otherUserProfilePic || 'default-avatar.jpg'" alt="User's Avatar" />
+                                <span class="user-name">{{ room.otherUserName.charAt(0).toUpperCase() + room.otherUserName.slice(1) || "Loading..." }}</span>
+                            </div>
+                        </h3>
                     </template>
 
                     <template #content>
-                        <div v-if="loading" class="card-spinner-container">
-                            <i class="pi pi-spin pi-spinner card-spinner"></i>
-                        </div>
-
-                        <div class="chat-body-wrapper">
-                            <div class="chat-body" :ref="el => setChatBodyRef(room.name, el)">
-                                <div v-if="room.messages.length === 0" class="no-messages">
-                                    It's quiet here… start the conversation and share the vibes ✨
-                                </div>
-                                <div v-else>
-                                    <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
-                                        :class="{ 'sent': message.isSent, 'received': !message.isSent }">
-                                        <div class="message-bubble">
-                                            {{ message.message }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Button v-if="room.showScrollArrow" icon="pi pi-arrow-down" class="scroll-to-bottom"
-                                @click="scrollToBottom(room.name)" />
-                        </div>
+                        <!-- Chat Content Goes Here -->
                     </template>
 
                     <template #footer>
                         <div class="chat-footer">
-                            <Textarea v-model="room.newMessage" rows="2" autoResize placeholder="Type your message..."
-                                @keyup.enter.exact="sendMessage(room)" class="chat-input" />
-                            <Button icon="pi pi-send" class="p-button-rounded p-button-primary"
-                                @click="sendMessage(room)" aria-label="Send" />
+                            <Textarea v-model="room.newMessage" rows="2" autoResize placeholder="Type your message..." @keyup.enter.exact="sendMessage(room)" class="chat-input" />
+                            <Button icon="pi pi-send" class="p-button-rounded p-button-primary" @click="sendMessage(room)" aria-label="Send" />
                         </div>
                     </template>
                 </Card>
@@ -66,13 +42,14 @@
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="loading-overlay">
-        </div>
+        <div v-if="loading" class="loading-overlay"></div>
     </div>
 </template>
 
+
 <script>
 import UserService from "@/service/UserService";
+import friendService from "@/service/FriendService";
 import axios from "axios";
 
 export default {
@@ -89,6 +66,7 @@ export default {
                 user_id: null,
                 user_name: null,
             },
+            friends:[],
             users: [],
             rooms: [],
             roomInput: "",
@@ -103,19 +81,20 @@ export default {
     async mounted() {
         await this.getCurrentUser();
         await this.fetchChatUsers();
+        await this.fetchFriends();
 
         if (this.selectedUserId) {
-            const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
+            const friend = this.friends.find(friend => friend.user_id === this.selectedUserId);
 
-            if (user) {
-                this.joinRoom(user);
+            if (friend) {
+                this.joinRoom(friend);
             } else {
                 console.warn(`User with ID ${this.selectedUserId} not found in chat history.`);
 
                 try {
                     const response = await UserService.getUserByFirebaseUID(this.selectedUserId);
                     if (response) {
-                        this.users.push(response);
+                        this.friends.push(response);
 
                         this.joinRoom(response);
                     } else {
@@ -139,6 +118,33 @@ export default {
                 console.error("Error getting user:", error);
             }
         },
+
+        async getFriends() {
+        // Add your logic to fetch friends here
+        console.log("Fetching friends...");
+        // Example: fetch friends data from API
+        try {
+            const response = await friendService.getFriends(this.currentUser.user_id);
+            this.users = response.data;
+        } catch (error) {
+            console.error("Error fetching friends:", error);
+        }
+        },
+        async fetchFriends() {
+            try {
+                const response = await axios.get("http://localhost:8080/friends", {
+                    withCredentials: true,
+                });
+                this.friends = response.data;
+
+                console.log("Fetched friends:", this.friends);
+            } catch (error) {
+                console.error("Error fetching friends:", error);
+                this.errorMessage = "Failed to load friends. Please try again later.";
+            }
+        },
+
+
         async getOtherUsers(userID) {
             try {
                 const response = await UserService.getUserByFirebaseUID(userID);
