@@ -73,6 +73,7 @@ func getUserPlaylistIds(userId string, apiKey string) ([]int, error) {
 	for _, playlist := range playlistObjIds {
 		playlistIds = append(playlistIds, playlist.PlaylistID)
 	}
+
 	return playlistIds, nil
 }
 
@@ -287,15 +288,14 @@ func GetTrackRecommendation(userId string) ([]RecommendationResponse, error) {
 	var recommendations []int
 	for _, playlists := range similarities {
 		for trackID := range playlists.Tracks {
-			if !userTrackSet[trackID] {
-				recommendations = append(recommendations, trackID)
-			}
 			if len(recommendations) == 10 {
 				break
 			}
+			if !userTrackSet[trackID] {
+				recommendations = append(recommendations, trackID)
+			}
 		}
 	}
-
 	var tracks []RecommendationResponse
 	for _, trackID := range recommendations {
 		track, err := getTrackDetails(trackID, apiKey)

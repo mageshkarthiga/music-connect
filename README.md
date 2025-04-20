@@ -1,47 +1,45 @@
-# 🎵 Music Connect
+# Music Connect
 
 **Music Connect** is a social music platform that allows users to discover what people nearby are listening to, connect through real-time messaging, match with music lovers, and receive personalised event and music recommendations. The platform combines music discovery, social interaction, and event management into a seamless, location-based experience.
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
-- [✨ Features](#-features)
-- [🚀 Frontend Setup](#-frontend-setup)
-- [🔧 Backend Setup](#-backend-setup)
-  - [📍 Location Autofill Service](#-location-autofill-service)
-- [▶️ Usage](#-usage)
-- [🪪 License](#-license)
+- [Features](#features)
+- [Frontend Setup](#frontend-setup)
+- [Backend Setup](#backend-setup)
+- [Usage](#usage)
 
 ---
 
-## ✨ Features
+## Features
 
-- 🤝 **Friend Matching & Messaging**  
+- **Friend Matching & Messaging**  
   Connect with users who share your music taste and chat with them through the in-app messaging system.
 
-- 🔍 **Music Discovery & Recommendations**  
+- **Music Discovery & Recommendations**  
   Discover what nearby users are listening to and get personalised music suggestions based on your and your friends’ playlists.
 
-- 📍 **Nearby User Locator**  
+- **Nearby User Locator**  
   Find and interact with users around your current location.
 
-- 🎶 **Listen, Like & Playlist Management**  
+- **Listen, Like & Playlist Management**  
   Play music, like tracks, and curate your own playlists with ease.
 
-- 🎫 **Event Suggestions**  
+- **Event Suggestions**  
   Receive personalised event recommendations based on your music taste and social activity.
 
 ---
 
-## 🚀 Frontend Setup
+## Frontend Setup
 
 To run the frontend locally:
 
 1. Navigate to the project directory:
 
    ```bash
-   cd frontend/src
+   cd frontend
    ```
 
 2. Install dependencies:
@@ -56,14 +54,11 @@ To run the frontend locally:
    npm run dev
    ```
 
-4. Open your browser and go to:
-   ```
-   http://localhost:5173/
-   ```
+4. Open your browser and go to: [http://localhost:5173/](http://localhost:5173/)
 
 ---
 
-## 🔧 Backend Setup
+## Backend Setup
 
 To run the backend services:
 
@@ -73,11 +68,22 @@ To run the backend services:
    cd backend
    ```
 
-2. Set up each backend service as per their individual setup guides (e.g. authentication, chat service, music recommender, etc.).
+2. Install dependencies:
+
+   ```go
+   go mod tidy
+   ```
+
+3. Build and run the service:
+
+   ```go
+   go build
+   go run .
+   ```
 
 ---
 
-### 📍 Location Autofill Service
+### Location Service Setup
 
 This service is written in Go and provides location autocomplete functionality:
 
@@ -89,25 +95,64 @@ This service is written in Go and provides location autocomplete functionality:
 
 2. Install dependencies:
 
-   ```bash
+   ```go
    go mod tidy
    ```
 
 3. Run the service:
-   ```bash
+
+   ```go
    go run main.go
    ```
 
 ---
 
-## ▶️ Usage
+### Cron Job to populate events and tracks
+
+Two services are used in this system: one written in Go and the other in Python.
+The Go service includes a scheduled job that runs every Sunday at 00:00. This job performs two tasks:
+
+- Calls the Spotify API to check for and store any newly released tracks.
+
+- Triggers the Python Scraper service, which scrapes Ticketmaster for new events and returns the data to be stored.
+
+To setup:
+
+1. Open 2 terminals. In the first terminal, go to the `ticketmaster scraper` service directory:
+
+   ```bash
+   cd ticketmaster-scraper
+   ```
+
+2. Run the service:
+
+   ```bash
+   python3 app.py
+   ```
+
+3. In the second terminal, go to the `cron-jobs` service directory:
+
+   ```bash
+   cd cron-jobs
+   ```
+
+4. Install dependencies:
+
+   ```go
+   go mod tidy
+   ```
+
+5. Build and run the service:
+
+   ```go
+   go build
+   go run .
+   ```
+
+---
+
+## Usage
 
 1. Start the frontend server ([see steps](#frontend-setup)).
 2. Start all required backend services ([see steps](#backend-setup)).
 3. Open the app in your browser and dive into the music-powered social world!
-
----
-
-## 🪪 License
-
-This project is licensed under the [MIT License](LICENSE). See the `LICENSE` file for more details.

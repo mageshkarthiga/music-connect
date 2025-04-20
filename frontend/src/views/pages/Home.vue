@@ -80,20 +80,6 @@
           </div>
         </div>
         <br>
-        <!-- User's liked events -->
-        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-          </div>
-        </div> -->
 
         <br>
 
@@ -134,7 +120,6 @@ import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
@@ -244,7 +229,7 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
-        this.user.events = response.data;
+        this.user.events = Array.isArray(response.data) ? response.data : [];
       } catch (err) {
         this.handleError(err, "events");
       }
