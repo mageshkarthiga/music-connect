@@ -1,5 +1,5 @@
+flask
+flask_cors
 selenium
 beautifulsoup4
 requests
-flask
-flask-cors

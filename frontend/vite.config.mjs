@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => {
       noDiscovery: true,
       include: [
         '@supabase/supabase-js', // Existing optimization
+        'node:fs', // Example Node.js package for optimization
+        'node:path', // Example Node.js package
       ],
 
     },

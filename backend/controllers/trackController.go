@@ -34,13 +34,24 @@ func GetTracks(c echo.Context) error {
 
 	offset := (pageNumber - 1) * pageSize
 
-	// Fetch tracks with pagination
-	if err := config.DB.Limit(pageSize).Offset(offset).Find(&tracks).Error; err != nil {
+	// Fetch tracks with pagination or all tracks if pagination is not provided
+	var query *gorm.DB
+	if page == "" || limit == "" {
+		// Fetch all tracks if no pagination
+		query = config.DB
+	} else {
+		// Apply pagination
+		query = config.DB.Limit(pageSize).Offset(offset)
+	}
+
+	// Fetch tracks
+	if err := query.Find(&tracks).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to fetch tracks")
 	}
 
 	return c.JSON(http.StatusOK, tracks)
 }
+
 
 // GetTrackByID fetches a single track by ID
 func GetTrackByID(c echo.Context) error {

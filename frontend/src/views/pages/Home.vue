@@ -110,7 +110,7 @@
 
         <!-- Recommended Music -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
-          <div class="font-semibold text-xl mb-4">Recommended music</div>
+          <div class="font-semibold text-xl mb-4">Recommended music </div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
@@ -124,7 +124,7 @@
     </template>
 
     <!-- Spotify Player -->
-    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
+    <SpotifyPlayer />
   </div>
 </template>
 
@@ -134,9 +134,11 @@ import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
+import { useSpotifyStore } from "@/store/SpotifyStore";
 
 export default {
   components: {
@@ -153,7 +155,6 @@ export default {
       likedTracks: [],
       selectedTracks: [],
       errorMessage: "",
-      selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
       filter: 'all',  // Default filter value
     };
   },
@@ -293,7 +294,9 @@ export default {
     },
 
     setSelectedTrackURI(trackURI) {
-      this.selectedTrackURI = trackURI;
+      const spotifyStore = useSpotifyStore();
+      spotifyStore.spotifyUri = trackURI;
+      // this.selectedTrackURI = trackURI;
     },
     // Filter Content based on selected category
     filterContent(category) {

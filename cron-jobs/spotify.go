@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-const SPOTIFY_BASE_URL = "https://api.spotify.com/v1";
-
 type SpotifyTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -41,7 +39,6 @@ type Track struct {
 }
 
 func getSpotifyToken() (string, error) {
-	tokenURL := "https://accounts.spotify.com/api/token"
 	clientID := os.Getenv("SPOTIFY_CLIENT_ID")
 	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
@@ -50,7 +47,7 @@ func getSpotifyToken() (string, error) {
 	form.Add("client_id", clientID)
 	form.Add("client_secret", clientSecret)
 
-	req, err := http.NewRequest(http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(http.MethodPost, SPOTIFY_AUTH_TOKEN, strings.NewReader(form.Encode()))
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +79,7 @@ func getSpotifyToken() (string, error) {
 func getArtistsInDB() ([]string, []int, error) {
 	apiKey := os.Getenv("publicApiKey")
 
-	req, err := http.NewRequest(http.MethodGet, SUPABASE_URL+"/rest/v1/artists", nil)
+	req, err := http.NewRequest(http.MethodGet, SUPABASE_URL + "/rest/v1/artists", nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -121,7 +118,7 @@ func getArtistsInDB() ([]string, []int, error) {
 func getAllTrackSpotifyIdsInDB() ([]string, error) {
 	apiKey := os.Getenv("publicApiKey")
 
-	req, err := http.NewRequest(http.MethodGet, SUPABASE_URL+"/rest/v1/tracks", nil)
+	req, err := http.NewRequest(http.MethodGet, SUPABASE_URL + "/rest/v1/tracks", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -330,21 +327,18 @@ func callSpotifyAPI() {
 			}
 
 			for _, track := range tracks {
-				if trackSpotifyIDSet[track.TrackSpotifyID] {
-					continue
+				if !trackSpotifyIDSet[track.TrackSpotifyID] {
+					trackId, err := insertTrackIntoSupabase(track, album.Image)
+					if err != nil {
+						log.Fatalln("Insert track error: ", err)
+						continue
+					}
+	
+					if err := insertTrackArtistIntoSupabase(trackId, artistIds[index]); err != nil {
+						log.Fatalln("Insert track_artist error: ", err)
+					}
 				}				
-
-				trackId, err := insertTrackIntoSupabase(track, album.Image)
-				if err != nil {
-					log.Fatalln("Insert track error: ", err)
-					continue
-				}
-
-				if err := insertTrackArtistIntoSupabase(trackId, artistIds[index]); err != nil {
-					log.Fatalln("Insert track_artist error: ", err)
-				}
 			}
-			
 		}
 	}
 	log.Println("Spotify API call completed successfully.")

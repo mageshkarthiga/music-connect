@@ -34,28 +34,17 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	// e.POST("/auth/login", controllers.RegisterAuthRoutes)
 	e.GET("/firebase/:uid", controllers.GetUserByFirebaseUID) // Fetch Firebase UID from token
 
-    e.POST("/users/friends", controllers.AddFriend)
-    e.GET("/users/:id/friends", controllers.GetFriends)
 
     //Friend Routes
 
-    e.POST("/friend/:friend_id/request", controllers.SendFriendRequest)
-    e.POST("/friend/:friend_id/accept", controllers.AcceptFriendRequest)
-    e.POST("/friend/:friend_id/reject", controllers.RejectFriendRequest)
-    e.POST("/friend/:friend_id/remove", controllers.RemoveFriend)
+    e.POST("/friends/:friend_id/request", controllers.SendFriendRequest)
+    e.POST("/friends/:friend_id/accept", controllers.AcceptFriendRequest)
+    e.POST("/friends/:friend_id/reject", controllers.RejectFriendRequest)
+    e.POST("/friends/:friend_id/remove", controllers.RemoveFriend)
     e.GET("/friends", controllers.GetFriends)
-
-
+	e.GET("/friendship/:friend_id/status", controllers.GetFriendshipStatus)
     e.POST("/users/friends", controllers.AddFriend)
     e.GET("/users/:id/friends", controllers.GetFriends)
-
-    //Friend Routes
-
-    e.POST("/friend/:friend_id/request", controllers.SendFriendRequest)
-    e.POST("/friend/:friend_id/accept", controllers.AcceptFriendRequest)
-    e.POST("/friend/:friend_id/reject", controllers.RejectFriendRequest)
-    e.POST("/friend/:friend_id/remove", controllers.RemoveFriend)
-    e.GET("/friends", controllers.GetFriends)
 
 
 	// Track Routes
@@ -102,6 +91,10 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 
 	// Service Routes
 	e.GET("/spotify/token", services.GetSpotifyToken)
+
+    e.GET("/calculateSimilarity", controllers.CalculateUserSimilarityHandler)
+    e.GET("/userProfile", controllers.GetUserProfileHandler)
+
 	// WebSocket Route
 	e.GET("/ws", func(c echo.Context) error {
 		chat.ServeWs(wsServer, c.Response().Writer, c.Request())
