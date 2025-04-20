@@ -3,13 +3,16 @@
         <!-- Friend List -->
         <div class="user-list">
             <h3 class="list-title">Friends</h3>
-            <ul>
+            <ul v-if="friends.length > 0">
                 <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
                     :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
                     <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
                     {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
                 </li>
             </ul>
+            <div v-else>
+                <p>No friends available. Connect with friends to start chatting!✨</p>
+            </div>
         </div>
 
         <!-- Chat Rooms -->
@@ -20,8 +23,8 @@
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <Avatar :image="room.otherUserProfilePhoto || '/profile.svg'" shape="circle" size="large"
-                                class="chat-header-avatar" />
+                            <Avatar :image="getFriendById(getOtherUserId(room.name))?.profile_photo_url || '/profile.svg'" shape="circle"
+                                size="large" class="chat-header-avatar" />
                             <h3 class="chat-header-name">
                                 {{ room.otherUserName.charAt(0).toUpperCase() +
                                     room.otherUserName.slice(1) || "Loading..." }}
@@ -76,7 +79,6 @@
 import UserService from "@/service/UserService";
 import axios from "axios";
 import FriendService from "@/service/FriendService";
-import apiConfig from "@/service/apiConfig";
 
 export default {
     name: "ChatWindow",
@@ -100,12 +102,12 @@ export default {
             currentRoom: null,
             loading: false,
             chatBodies: {},
-            errorMessage: ""
+            errorMessage: "",
+            CHAT_URL: process.env.VUE_APP_CHAT_URL,
         };
     },
     async mounted() {
         await this.getCurrentUser();
-        await this.fetchChatUsers();
         await this.fetchFriends();
 
         if (this.selectedUserId) {
@@ -151,7 +153,7 @@ export default {
                 return "Unknown User";
             }
         },
-        async fetchChatUsers() {
+        async fetchFriends() {
             try {
                 const response = await FriendService.getFriends();
                 this.friends = response;
@@ -271,7 +273,7 @@ export default {
                 const response = await this.getOtherUsers(otherUserID);
                 newRoom.otherUserName = response;
 
-                const messagesResponse = await axios.get(`${apiConfig.CHAT_URL}/rooms/${roomName}/messages`, { withCredentials: true });
+                const messagesResponse = await axios.get(`${this.CHAT_URL}/rooms/${roomName}/messages`, { withCredentials: true });
                 if (messagesResponse.data.length > 0) {
                     newRoom.messages = messagesResponse.data.map(msg => ({
                         message: msg.message,
@@ -356,10 +358,16 @@ export default {
         getWebSocketURL(userId, roomName) {
             const isLocalhost = false;
             const protocol = isLocalhost ? 'ws' : 'wss';
-            const host = isLocalhost ? 'localhost:8080' : apiConfig.CHAT_URL.replace(/^https?:\/\//, '');
-            console.log("WebSocket URL:", `${protocol}://${host}/ws?userid=${userId}&room=${roomName}`);
+            const host = isLocalhost ? 'localhost:8080' : this.CHAT_URL.replace(/^https?:\/\//, '');
 
             return `${protocol}://${host}/ws?userid=${userId}&room=${roomName}`;
+        },
+        getOtherUserId(roomName) {
+            const ids = roomName.split('-');
+            return ids.find(id => id !== this.currentUser.user_id);
+        },
+        getFriendById(userId) {
+            return this.friends.find(friend => friend.firebase_uid === userId);
         }
     },
 };

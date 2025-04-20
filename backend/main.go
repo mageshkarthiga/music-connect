@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"backend/services/chat"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
@@ -51,13 +50,6 @@ func main() {
 		log.Println("✅ Migrations completed successfully!")
 	}
 
-	// Initialize WebSocket server
-	wsServer := chat.NewWsServer()
-	go wsServer.Run() // Start the WebSocket server in a separate goroutine
-
-	// Initialize Firebase
-	chat.InitFirebase()
-
 	// Initialize Spotify services
 	services.SpotifyAuth()
 	token, err := services.GetSpotifyTokenRaw()
@@ -80,7 +72,7 @@ func main() {
 	log.Println("✅ CORS middleware applied")
 
 	// Register routes
-	routes.RegisterRoutes(e, wsServer)
+	routes.RegisterRoutes(e)
 	log.Println("✅ Routes registered")
 
 	// Health check

@@ -94,8 +94,8 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
 	e.GET("/users/:id/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavUserTracksByID))
 	e.GET("/likedTracks", middleware.AuthMiddleware(projectID)(controllers.GetLikedTracks))
-	e.POST("/likeTrack", middleware.AuthMiddleware(projectID)(controllers.LikeTrack))
-	e.DELETE("/likeTrack", middleware.AuthMiddleware(projectID)(controllers.UnlikeTrack))
+	e.PUT("/likeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.LikeTrack))
+	e.PUT("/unlikeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.UnlikeTrack))
 	e.GET("/tracks/top", middleware.AuthMiddleware(projectID)(controllers.GetTopPlayedTracks))
 	e.PUT("/tracks/:track_id/increment", middleware.AuthMiddleware(projectID)(controllers.IncrementTrackPlayCount))
 
@@ -121,9 +121,4 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 
 	// ---- recommendations ----
 	e.GET("/tracks/recommendations", middleware.AuthMiddleware(projectID)(controllers.GetTrackRecommendation))
-
-	// ---- chat ----
-	e.GET("/rooms/:roomName/messages", middleware.AuthMiddleware(projectID)(controllers.GetMessagesForRoom))
-	e.GET("/users/:userID/chat-history", middleware.AuthMiddleware(projectID)(controllers.GetUsersWithChatHistory))
-
 }

@@ -36,7 +36,7 @@
           </div>
         </div>
       </section>
-      <section v-if="user.friends.length" class="p-4">
+      <section v-if="user.friends" class="p-4">
         <h2 class="text-xl font-semibold mb-3 text-left">Friends</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
           <div v-for="u in user.friends" :key="u.user_id" class="min-w-[280px] max-w-md">

@@ -62,27 +62,25 @@ export default {
       try {
         const statusPromises = users.map(async (user) => {
           try {
-            const statusRes = await axios.get(`${this.API_BASE_URL}/friendship/${user.user_id}/status`, { withCredentials: true });
+            const statusRes = await axios.get(
+              `${this.API_BASE_URL}/friendship/${user.user_id}/status`,
+              { withCredentials: true }
+            );
 
-            if (statusRes.status === 200) {
-              const userStatus = statusRes.data.status;
+            const userStatus = statusRes.data.status;
 
-              // If the current user sent the request
-              if (userStatus === 'pending' && statusRes.data.friend_id == this.currentUserId) {
-                return {
-                  user_id: user.user_id,
-                  status: 'requested',
-                };
-              }
-
+            // If the current user sent the request
+            if (userStatus === 'pending' && statusRes.data.friend_id == this.currentUserId) {
               return {
                 user_id: user.user_id,
-                status: userStatus,
+                status: 'requested',
               };
             }
 
-            return { user_id: user.user_id, status: 'none' };
-
+            return {
+              user_id: user.user_id,
+              status: userStatus,
+            };
           } catch (error) {
             // Handle 404s gracefully (no friendship yet)
             if (error.response && error.response.status === 404) {
@@ -109,16 +107,14 @@ export default {
     },
     async getMusicSimilarity(userId) {
       try {
-        const response = await axios.get(`${this.API_BASE_URL}/calculateSimilarity?user_id1=${this.currentUserId}&user_id2=${userId}`, { withCredentials: true });
-        if (response.status === 200) {
-          return response.data.similarity;  // Ensure this matches the expected API response
-        } else {
-          console.error("Error fetching similarity:", response.statusText);
-          return 0;  // Default similarity score in case of error
-        }
+        const response = await axios.get(
+          `${this.API_BASE_URL}/calculateSimilarity?user_id1=${this.currentUserId}&user_id2=${userId}`,
+          { withCredentials: true }
+        );
+        return response.data.similarity || 0; // Default to 0 if similarity is not present
       } catch (error) {
         console.error("Error fetching similarity:", error);
-        return 0;  // Default similarity score in case of error
+        return 0; // Default similarity score in case of error
       }
     },
     onFilterSelect(value) {
@@ -165,67 +161,72 @@ export default {
     async addFriend(userId) {
       const user = this.allUsers.find(u => u.user_id === userId);
       if (user?.status === 'pending' || user?.status === 'accepted') {
-        this.toast.add({
+        this.$toast.add({
           severity: 'warn',
           summary: 'Friend Request Not Sent',
           detail: `${user?.user_name ?? 'This user'} is already your friend or has a pending request.`,
         });
         return;
       }
-
       try {
-        const response = await FriendService.sendFriendRequest(userId);
-        if (response.status === 200) {
-          if (user) {
-            user.status = 'pending';
-          }
-          this.toast.add({
-            severity: 'info',
-            summary: 'Friend Request Sent',
-            detail: `Sent a follow request to ${user?.user_name ?? 'this user'}`,
-          });
-        } else {
-          console.error("Failed to send friend request:", response);
+        console.log("Sending friend request to user:", userId);
+        await FriendService.sendFriendRequest(userId);
+        if (user) {
+          user.status = 'pending';
         }
+        this.$toast.add({
+          severity: 'info',
+          summary: 'Friend Request Sent',
+          detail: `Sent a follow request to ${user?.user_name ?? 'this user'}`,
+        });
       } catch (error) {
-        if (error.response && error.response.status === 409) {
-          if (user) {
-            user.status = 'pending';
+        if (this.$toast) {
+          if (error.response && error.response.status === 409) {
+            if (user) {
+              user.status = 'pending';
+            }
+            this.$toast.add({
+              severity: 'warn',
+              summary: 'Already Sent',
+              detail: `${user?.user_name ?? 'This user'} already has a pending or accepted request.`,
+            });
+          } else {
+            console.error("Failed to send friend request:", error);
+            if (this.$toast) {
+              this.$toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Failed to send friend request. Please try again.',
+              });
+            }
           }
-          this.toast.add({
-            severity: 'warn',
-            summary: 'Already Sent',
-            detail: `${user?.user_name ?? 'This user'} already has a pending or accepted request.`,
-          });
-        } else {
-          console.error("Failed to send friend request:", error);
         }
       }
     },
     async acceptRequest(userId) {
       const user = this.allUsers.find(u => u.user_id === userId);
-      const response = await FriendService.acceptFriendRequest(userId);
-      if (response.status === 200) {
-        this.toast.add({
+      try {
+        await FriendService.acceptFriendRequest(userId);
+        this.$toast.add({
           severity: 'info',
           summary: 'Friend Request Accepted',
           detail: `You are now friends with ${user?.user_name ?? 'this user'}`,
         });
-      } else {
-        console.error("Failed to accept friend request:", response);
+      } catch (error) {
+        console.error("Failed to accept friend request:", error);
       }
     },
     async rejectRequest(userId) {
       const user = this.allUsers.find(u => u.user_id === userId);
-      const response = await FriendService.rejectFriendRequest(userId);
-      if (response.status === 200) {
-        this.toast.add({
+      try {
+        await FriendService.rejectFriendRequest(userId);
+        this.$toast.add({
           severity: 'info',
           summary: 'Friend Request Rejected',
           detail: `You rejected the friend request from ${user?.user_name ?? 'this user'}`,
         });
-      } else {
-        console.error("Failed to reject friend request:", response);
+      } catch (error) {
+        console.error("Failed to reject friend request:", error);
       }
     },
   },
@@ -284,11 +285,11 @@ export default {
                       {{ data.user_name }}
                     </a>
                     <div class="text-xs font-bold" :class="{
-                      'text-green-500': (data.similarity ?? 0) >= 0.75,  // Green for high similarity
-                      'text-yellow-500': (data.similarity ?? 0) >= 0.5 && (data.similarity ?? 0) < 0.75,  // Yellow for medium similarity
-                      'text-red-500': (data.similarity ?? 0) < 0.5  // Red for low similarity
+                      'text-green-500': (data.similarity ?? 0) >= 0.6,  // Green for high similarity
+                      'text-yellow-500': (data.similarity ?? 0) >= 0.3 && (data.similarity ?? 0) < 0.6,  // Yellow for medium similarity
+                      'text-red-500': (data.similarity ?? 0) < 0.3  // Red for low similarity
                     }">
-                      Match: {{ (data.similarity ?? 0).toFixed(2) }}
+                      Match: {{ ((data.similarity ?? 0) * 100).toFixed(2) }}%
                     </div>
                   </span>
                 </template>
