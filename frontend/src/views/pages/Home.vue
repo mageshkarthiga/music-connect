@@ -45,7 +45,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-                @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
+                @track-selected="setSelectedTrackURI" @click="handleTrackClick(track.track_id) "
                 :selectedTracks="selectedTracks"
                 :liked="likedTrackIds.includes(track.track_id)"
                 class="bg-white p-4 rounded-lg">
@@ -167,6 +167,18 @@ export default {
     }
   },
   methods: {
+
+    handleTrackClick(trackId) {
+
+      this.incrementPlayCount(trackId);
+
+      if (this.isLiked(trackId)) {
+        this.handleTrackUnliked(trackId);
+      } else {
+        this.handleTrackLiked(trackId);
+      }
+    },
+
     async handleTrackLiked(trackId) {
       const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
       if (likedTrack) {
@@ -194,10 +206,10 @@ export default {
         this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
 
       this.$toast.add({
-        severity: 'warn',
+        severity: 'info',
         summary: 'Track Unliked',
         detail: 'This track has been removed from your liked tracks.',
-        life: 3000,
+
       });
       }
     },
@@ -213,7 +225,7 @@ export default {
         severity: 'success',
         summary: 'Event Liked',
         detail: 'This event has been added to your liked events!',
-        life: 3000,
+     
       });
     },
 

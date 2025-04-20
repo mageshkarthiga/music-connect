@@ -29,6 +29,11 @@ export default {
                 // Like the track locally and on the server
                 this.likedTracks.add(trackId);
                 await trackService.likeTrack(trackId); // API call to like the track
+                this.$toast.add({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: 'Track liked successfully!',
+                });
             } catch (error) {
                 console.error('Error liking track:', error);
             }
@@ -37,6 +42,11 @@ export default {
             try {
                 // Unlike the track locally and on the server
                 this.likedTracks.delete(trackId); // Correct method to remove the track from the set
+                this.$toast.add({
+                    severity: "info",
+                    summary: 'Success',
+                    detail: 'Track unliked successfully!',
+                });
                 await trackService.unlikeTrack(trackId); // API call to unlike the track
             } catch (error) {
                 console.error('Error unliking track:', error);
