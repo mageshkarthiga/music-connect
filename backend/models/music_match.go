@@ -6,7 +6,6 @@ import (
 	"strconv"
 )
 
-
 func CosineSimilarity(userProfile1, userProfile2 UserProfile) (float64, error) {
 	// Helper function to aggregate track data with custom weights
 	aggregateTracks := func(user UserProfile) map[string]float64 {
