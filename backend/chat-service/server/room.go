@@ -192,6 +192,7 @@ func ParseParticipantsFromRoomName(name string) []string {
 		log.Printf("Unexpected room format: %s", name)
 		return []string{}
 	}
+	log.Printf("Parsed participants from room name: %s", parts)
 	return parts
 }
 

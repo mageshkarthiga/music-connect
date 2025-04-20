@@ -10,21 +10,23 @@
 </template>
 
 <script>
-import { ref } from "vue";
 import AutoComplete from "primevue/autocomplete";
-import { API_BASE_URL } from "@/service/apiConfig";
+
 export default {
   name: "PlaceAutoComplete",
   components: { AutoComplete },
   emits: ["place-selected"],
-  setup(_, { emit }) {
-    const query = ref("");
-    const suggestions = ref([]);
-
-    const fetchSuggestions = async (event) => {
+  data() {
+    return {
+      query: "",
+      suggestions: [],
+    };
+  },
+  methods: {
+    async fetchSuggestions(event) {
       const input = event.query;
       if (!input) {
-        suggestions.value = [];
+        this.suggestions = [];
         return;
       }
       try {
@@ -35,25 +37,17 @@ export default {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        suggestions.value = data;
+        this.suggestions = data;
       } catch (error) {
         console.error(error);
       }
-    };
-
-    const selectSuggestion = (event) => {
+    },
+    selectSuggestion(event) {
       const selected = event.value;
-      query.value = selected;
-      suggestions.value = [];
-      emit("place-selected", selected);
-    };
-
-    return {
-      query,
-      suggestions,
-      fetchSuggestions,
-      selectSuggestion,
-    };
+      this.query = selected;
+      this.suggestions = [];
+      this.$emit("place-selected", selected);
+    },
   },
 };
 </script>

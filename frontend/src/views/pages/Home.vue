@@ -130,7 +130,6 @@
 
 <script>
 import axios from "axios";
-import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
@@ -156,6 +155,7 @@ export default {
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
+      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
     };
   },
   computed: {

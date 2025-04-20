@@ -166,6 +166,7 @@ func (client *Client) handleJoinRoom(message models.Message) {
 			log.Printf("Failed to store room in Firestore: %v\n", err)
 		} else {
 			log.Printf("Room %s saved to Firestore\n", roomName)
+			log.Printf("Participants: %v\n", participants)
 		}
 	} else {
 		fmt.Printf("Room %s already exists\n", roomName)
