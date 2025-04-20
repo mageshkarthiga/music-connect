@@ -79,21 +79,7 @@
             </p>
           </div>
         </div>
-        <br>
-        <!-- User's liked events -->
-        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-          </div>
-        </div> -->
+
 
         <br>
 
