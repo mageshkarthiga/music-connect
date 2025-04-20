@@ -169,9 +169,7 @@ export default {
   methods: {
 
     handleTrackClick(trackId) {
-
       this.incrementPlayCount(trackId);
-
       if (this.isLiked(trackId)) {
         this.handleTrackUnliked(trackId);
       } else {
@@ -312,12 +310,6 @@ export default {
 
         this.likedTracks = likedTracks;
         this.likedTrackIds = likedTracks.map(track => track.track_id);
-
-
-        console.log("Status:", response.status); // should be 200
-        console.log("Data:", response.data);     // check exact structure
-
-        console.log
       } catch (err) {
         this.handleError(err, "liked tracks");
       }
@@ -344,7 +336,6 @@ export default {
         this.loading = false;
       }
     },
-
     setSelectedTrackURI(trackURI) {
       const spotifyStore = useSpotifyStore();
       spotifyStore.spotifyUri = trackURI;
