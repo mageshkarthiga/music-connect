@@ -45,9 +45,8 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-                @track-selected="setSelectedTrackURI" @click="handleTrackClick(track.track_id) "
+                @track-selected="setSelectedTrackURI"
                 :selectedTracks="selectedTracks"
-                :liked="likedTrackIds.includes(track.track_id)"
                 class="bg-white p-4 rounded-lg">
                 <div class="flex items-center justify-between">
                   <!-- Track Info -->
@@ -353,6 +352,9 @@ export default {
         .catch((error) => {
           console.error(`Error incrementing play count for track ID: ${trackId}`, error);
         });
+    },
+    isLiked(trackId) {
+      return this.likedTrackIds.includes(trackId);
     },
   },
 
