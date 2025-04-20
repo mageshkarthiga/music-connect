@@ -8,14 +8,10 @@
 
 <script>
 import axios from "axios";
+import { useSpotifyStore } from "@/store/SpotifyStore";
+
 export default {
     name: "SpotifyPlayer",
-    props: {
-        spotifyUri: {
-            type: String,
-            required: true,
-        },
-    },
     data() {
         return {
             iframeSrc: "",
@@ -23,18 +19,25 @@ export default {
         };
     },
     async mounted() {
+        const spotifyStore = useSpotifyStore();
         const response = await axios.get("http://localhost:8080/spotify/token");
         this.accessToken = response.data.access_token;
-        this.loadSpotifyContent(this.spotifyUri);
-    },
-    watch: {
-        spotifyUri(newUri) {
-            this.loadSpotifyContent(newUri); 
-        },
+        this.loadSpotifyContent(spotifyStore.spotifyUri);
+
+        // Watch for store updates
+        this.$watch(
+            () => spotifyStore.spotifyUri,
+            (newUri) => {
+                this.loadSpotifyContent(newUri);
+            }
+        );
     },
     methods: {
         loadSpotifyContent(uri) {
-            this.iframeSrc = `https://open.spotify.com/embed/${uri.split(":")[1]}/${uri.split(":")[2]}?autoplay=1`;
+            if (uri && uri.includes(":")) {
+                const [type, id] = uri.split(":").slice(1);
+                this.iframeSrc = `https://open.spotify.com/embed/${type}/${id}?autoplay=1`;
+            }
         },
     },
 };

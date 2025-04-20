@@ -3,17 +3,18 @@ package controllers
 import (
 	"backend/config"
 	"backend/models"
-	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 // SendFriendRequest sends a friend request from one user to another
 func SendFriendRequest(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID from the context
-	
+	userID := c.Get("uid").(uint) // Get the current user ID from the context
+
 	// Convert friend_id from string to uint
 	friendIDStr := c.Param("friend_id")
 	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
@@ -34,9 +35,9 @@ func SendFriendRequest(c echo.Context) error {
 
 	// Create a new friendship with status "pending"
 	friendships := models.Friendship{
-		UserID:   userID,
-		FriendID: uint(friendID),
-		Status:   "pending",
+		UserID:    userID,
+		FriendID:  uint(friendID),
+		Status:    "pending",
 		CreatedAt: time.Now(),
 	}
 
@@ -50,8 +51,8 @@ func SendFriendRequest(c echo.Context) error {
 
 // AcceptFriendRequest accepts a pending friend request
 func AcceptFriendRequest(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID
-	
+	userID := c.Get("uid").(uint) // Get the current user ID
+
 	// Convert friend_id from string to uint
 	friendIDStr := c.Param("friend_id")
 	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
@@ -74,9 +75,9 @@ func AcceptFriendRequest(c echo.Context) error {
 
 	// Optionally, create a reciprocal friendships if needed
 	reciprocalfriendships := models.Friendship{
-		UserID:   userID,
-		FriendID: uint(friendID),
-		Status:   "accepted",
+		UserID:    userID,
+		FriendID:  uint(friendID),
+		Status:    "accepted",
 		CreatedAt: time.Now(),
 	}
 	if err := config.DB.Create(&reciprocalfriendships).Error; err != nil {
@@ -89,8 +90,8 @@ func AcceptFriendRequest(c echo.Context) error {
 
 // RejectFriendRequest rejects a pending friend request
 func RejectFriendRequest(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID
-	
+	userID := c.Get("uid").(uint) // Get the current user ID
+
 	// Convert friend_id from string to uint
 	friendIDStr := c.Param("friend_id")
 	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
@@ -115,8 +116,8 @@ func RejectFriendRequest(c echo.Context) error {
 
 // RemoveFriend removes a friend from the user's friends list
 func RemoveFriend(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID
-	
+	userID := c.Get("uid").(uint) // Get the current user ID
+
 	// Convert friend_id from string to uint
 	friendIDStr := c.Param("friend_id")
 	friendID, err := strconv.ParseUint(friendIDStr, 10, 64)
@@ -142,11 +143,9 @@ func RemoveFriend(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Friend removed successfully")
 }
 
-
-
 // GetFriends returns a list of friends for the current user
 func GetFriends(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID
+	userID := c.Get("uid").(uint) // Get the current user ID
 
 	var friends []models.User
 	// Fetch friends of the current user
@@ -160,7 +159,30 @@ func GetFriends(c echo.Context) error {
 	return c.JSON(http.StatusOK, friends)
 }
 
-//Get status of friendship between two users
+
+// GetPendingFriendRequests retrieves a list of pending friend requests for the current user
+func GetPendingFriendRequests(c echo.Context) error {
+	userID := c.Get("uid").(uint) // Get the current user ID
+
+	var pendingRequests []models.User
+	// Fetch pending friend requests where the current user is the friend_id
+	if err := config.DB.Table("users").Joins("join friendships on friendships.user_id = users.user_id").
+		Where("friendships.friend_id = ? AND friendships.status = ?", userID, "pending").
+		Find(&pendingRequests).Error; err != nil {
+		log.Printf("Error fetching pending friend requests: %v", err)
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch pending friend requests")
+	}
+
+	// Calculate the count of pending requests
+	count := len(pendingRequests)
+
+	// Return the pending requests along with the count
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"count": count,
+		"users": pendingRequests,
+	})
+}
+
 // Get status of friendship between two users
 func GetFriendshipStatus(c echo.Context) error {
 	userID := c.Get("uid").(uint) // Get the current user ID
@@ -190,18 +212,4 @@ func GetFriendshipStatus(c echo.Context) error {
 	})
 }
 
-// GetFriendRequests returns a list of users who have sent a friend request to the current user
-func GetFriendRequests(c echo.Context) error {
-	userID := c.Get("uid").(uint)  // Get the current user ID
 
-	var friendRequests []models.User
-	// Fetch users who have sent a pending friend request to the current user
-	if err := config.DB.Table("users").Joins("join friendships on friendships.user_id = users.user_id").
-		Where("friendships.friend_id = ? AND friendships.status = ?", userID, "pending").
-		Find(&friendRequests).Error; err != nil {
-		log.Printf("Error fetching friend requests: %v", err)
-		return c.JSON(http.StatusInternalServerError, "Failed to fetch friend requests")
-	}
-
-	return c.JSON(http.StatusOK, friendRequests)
-}

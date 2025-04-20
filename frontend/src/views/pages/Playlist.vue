@@ -5,13 +5,14 @@
         <!-- Pass tracks as a prop to MusicTracks -->
         <MusicTracks :tracks="tracks" @track-selected="onTrackSelected" />
         <!-- SpotifyPlayer Component -->
-        <SpotifyPlayer v-if="selectedTrackUri" :spotifyUri="selectedTrackUri" />
+        <SpotifyPlayer />
     </div>
 </template>
 
 <script>
 import MusicTracks from '@/components/MusicTracks.vue';
 import SpotifyPlayer from '@/components/SpotifyPlayer.vue';
+import { useSpotifyStore } from '@/store/SpotifyStore';
 import axios from 'axios';
 
 export default {
@@ -32,7 +33,6 @@ export default {
     data() {
         return {
             tracks: [], 
-            selectedTrackUri: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", 
         };
     },
     async mounted() {
@@ -53,7 +53,8 @@ export default {
             }
         },
         onTrackSelected(uri) {
-            this.selectedTrackUri = uri;
+            const spotifyStore = useSpotifyStore();
+            spotifyStore.setSpotifyUri(uri);
         },
     },
 };

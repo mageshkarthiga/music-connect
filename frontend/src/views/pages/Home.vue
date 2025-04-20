@@ -124,7 +124,7 @@
     </template>
 
     <!-- Spotify Player -->
-    <SpotifyPlayer v-if="selectedTrackURI" :spotifyUri="selectedTrackURI" />
+    <SpotifyPlayer />
   </div>
 </template>
 
@@ -138,6 +138,7 @@ import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
+import { useSpotifyStore } from "@/store/SpotifyStore";
 
 export default {
   components: {
@@ -154,7 +155,6 @@ export default {
       likedTracks: [],
       selectedTracks: [],
       errorMessage: "",
-      selectedTrackURI: "spotify:track:3lzUeaCbcCDB5IXYfqWRlF", // Updated to null initially
       filter: 'all',  // Default filter value
     };
   },
@@ -294,7 +294,9 @@ export default {
     },
 
     setSelectedTrackURI(trackURI) {
-      this.selectedTrackURI = trackURI;
+      const spotifyStore = useSpotifyStore();
+      spotifyStore.spotifyUri = trackURI;
+      // this.selectedTrackURI = trackURI;
     },
     // Filter Content based on selected category
     filterContent(category) {
