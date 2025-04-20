@@ -16,7 +16,7 @@
     <div v-else class="profile-details relative">
       <div class="bg-white shadow-lg rounded-2xl flex flex-col items-center overflow-hidden">
         <!-- Vue Green Background -->
-        <div class="w-full h-60 bg-[#42b883]"></div>
+        <div class="w-full bg-gradient-to-r from-green-400 via-green-500 to-green-600  h-60 bg-[#42b883]"></div>
 
         <!-- Profile Image -->
         <div class="w-32 h-32 rounded-full bg-white border-4 border-green-400 -mt-16 flex items-center justify-center z-10">
