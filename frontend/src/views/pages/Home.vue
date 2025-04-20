@@ -133,7 +133,6 @@ import axios from "axios";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
-// import { API_BASE_URL } from "@/service/apiConfig";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
