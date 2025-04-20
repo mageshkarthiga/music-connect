@@ -82,6 +82,33 @@ To run the backend services:
    ```
 
 ---
+### Chat Service
+
+This service is written in Go and provides real-time messaging functionality. It allows users to:
+- Send and receive messages from friends in real time.
+- Store chat history.
+
+To set up the chat service:
+
+1. Navigate to the `chat-service` directory:
+
+   ```bash
+   cd chat-service
+   ```
+
+2. Install dependencies:
+
+   ```go
+   go mod tidy
+   ```
+
+3. Run the service:
+
+   ```go
+   go run main.go
+   ```
+
+---
 
 ### Location Service Setup
 
