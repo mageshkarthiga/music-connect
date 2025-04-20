@@ -31,7 +31,7 @@
           :key="track.track_id"
           :track="track"
           :state="'select'"
-          :selectedTracks="selectedTracks"
+          :isSelected="isSelected(track)"
           @toggle="toggleTrack"
         />
       </div>
@@ -69,7 +69,10 @@ import TrackCard from "@/components/TrackCard.vue";
 import userService from "@/service/UserService";
 import trackService from "@/service/TrackService";
 
+
 export default {
+
+  
   components: {
     TrackCard,
   },
@@ -90,6 +93,12 @@ export default {
     };
   },
   methods: {
+
+    isSelected(track) {
+      console.log('Checking selection for track', track);
+    return this.selectedTracks.includes(track.track_id);
+  },
+
     async getUser() {
       try {
         const user = await userService.getUser();
@@ -108,23 +117,30 @@ export default {
       }
     },
 
-    toggleTrack(trackId) {
-      const index = this.selectedTracks.indexOf(trackId);
+    toggleTrack(track) {
+      const index = this.selectedTracks.indexOf(track.track_id);
+
+      console.log(track);
+
+      
+
+      const trackId = track.track_id;
+
+      console.log('Toggling track:', trackId);
+ 
+
 
       if (index > -1) {
-        this.selectedTracks.splice(index, 1);
-      } else {
-        this.selectedTracks.push(trackId);
-      }
+    this.selectedTracks.splice(index, 1); // Remove ID if already selected
+  } else {
+    this.selectedTracks.push(trackId); // Add ID if not selected
+  }
+      console.log("index" , index);
 
-      // if (this.selectedTracks.length > 0) {
-      //   const firstSelectedTrack = this.tracks.find(track => track.track_id === this.selectedTracks[0]);
-      //   if (firstSelectedTrack) {
-      //     this.trackImageUrl = firstSelectedTrack.track_image_url;
-      //   }
-      // } else {
-      //   this.trackImageUrl = "";
-      // }
+      this.$emit("toggle", track.track_id);
+      
+
+      console.log('Updated selectedTracks:', this.selectedTracks);
     },
 
     async savePlaylist() {
@@ -148,7 +164,11 @@ export default {
 
       try {
         const playlistId = newPlaylist.playlist_id;
+     
         if (this.selectedTracks.length > 0) {
+
+          console.log ("Selected tracks:", this.selectedTracks);
+
           await PlaylistService.addTracksToPlaylist(playlistId, this.selectedTracks);
         }
 
@@ -162,6 +182,8 @@ export default {
         console.error("Error saving playlist:", error);
       }
     },
+
+
 
     closeDialog() {
       if (this.onClose) {
@@ -180,7 +202,10 @@ export default {
     if (this.selectedTracks.length === 0) return "";
     const first = this.tracks.find(t => t.track_id === this.selectedTracks[0]);
     return first?.track_image_url || "";
+
   },
+
+
 },
 
 
@@ -199,6 +224,7 @@ export default {
 };
 
 
+
 </script>
 
 <style scoped>
@@ -211,5 +237,11 @@ export default {
   margin: 10px;
   justify-content: center; /* Centers the tracks horizontally */
   align-items: center; /* Centers the tracks vertically */
+}
+
+.track-card.selected {
+  background-color: rgba(0, 0, 0, 0.2); /* Lighter background to show selection */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2); /* Soft shadow to indicate selection */
+  border: none; /* Remove the previous border if still present */
 }
 </style>

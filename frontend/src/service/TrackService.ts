@@ -148,7 +148,7 @@ export const getFavUserTracksById = async (
 export const likeTrack = async (trackId: number) => {
   try {
     const response = await axios.put(
-      `http://localhost:8080/likeTrack/${trackId}`, // Assuming this is the endpoint to like the track
+      `https://music-connect-555448022527.us-central1.run.app/likeTrack/${trackId}`, // Assuming this is the endpoint to like the track
       {}, // You can send any data if needed, like { is_liked: true }
       { withCredentials: true } // Include credentials (cookies) if necessary
     );
@@ -171,7 +171,7 @@ export const likeTrack = async (trackId: number) => {
 export const unlikeTrack = async (trackId: number) => {
   try {
     const response = await axios.put(
-      `http://localhost:8080/unlikeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
+      `https://music-connect-555448022527.us-central1.run.app/unlikeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
       {},
       { withCredentials: true } // Include credentials (cookies) if necessary
     );

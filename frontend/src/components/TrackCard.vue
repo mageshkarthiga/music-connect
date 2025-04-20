@@ -1,6 +1,7 @@
 <template>
   <div
     class="track-card flex items-center gap-4 rounded-lg p-8 min-w-[280px] max-w-md hover:bg-surface-400 dark:bg-surface-900 dark:hover:bg-surface-800 transition cursor-pointer light:bg-surface-800 light:hover:bg-surface-300 relative"
+    :class="{ selected: isSelected }"
     @click="handleClick"
   >
     <img
@@ -28,7 +29,6 @@
 </template>
 
 <script>
-import { API_BASE_URL } from "@/service/apiConfig";
 import axios from "axios";
 
 export default {
@@ -36,6 +36,8 @@ export default {
     track: { type: Object, required: true },
     state: { type: String, required: true },
     liked: { type: Boolean, default: false }, // Default to true
+    isSelected: { type: Boolean, default: false }
+    
   },
   data() {
     return {
@@ -44,6 +46,15 @@ export default {
     };
   },
   methods: {
+
+    handleClick() {
+      if (this.state === "select") {
+        this.$emit("toggle", this.track);
+      } else if (this.state === "redirect") {
+        // Optional: redirect logic here if needed
+      }
+    },
+    
     toggleLike() {
       const trackId = this.track.track_id;
       const updateStatus = !this.likedStatus;
@@ -51,13 +62,13 @@ export default {
       // Toggle like/unlike logic
       if (updateStatus) {
         // If liking the track
-        axios.put(`${API_BASE_URL}//likeTrack/${trackId}`, { is_liked: true }, {
+        axios.put(`https://music-connect-555448022527.us-central1.run.app/likeTrack/${trackId}`, { is_liked: true }, {
           withCredentials: true,
         });
         this.$emit("track-liked", trackId);
       } else {
         // If unliking the track
-        axios.put(`${API_BASE_URL}/unlikeTrack/${trackId}`, { is_liked: false }, {
+        axios.put(`https://music-connect-555448022527.us-central1.run.app/unlikeTrack/${trackId}`, { is_liked: false }, {
           withCredentials: true,
         });
         this.$emit("track-unliked", trackId);

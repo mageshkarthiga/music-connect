@@ -9,7 +9,6 @@ export default {
             tracks: null,
             selectedTrackUri: null,
             likedTracks: new Set(), // to store liked track IDs
-            loading: true,
         };
     },
     methods: {
@@ -17,7 +16,8 @@ export default {
             try {
                 const data = await getRecommendedTracks();
                 this.tracks = data;
-                this.loading = false;
+
+                console.log('Recommended tracks:', this.tracks);
             } catch (error) {
                 console.error('Error fetching recommended tracks:', error);
             }
@@ -26,16 +26,35 @@ export default {
             this.selectedTrackUri = trackUri;
             this.$emit('track-selected', trackUri);
         },
+
+        async likedTracksHandler() {
+            try {
+        
+                const liked = await trackService.likedTracks(); 
+
+                if (!Array.isArray(liked)) {
+                    throw new Error('Invalid liked tracks data format');
+                }
+
+                this.likedTracks = new Set(liked.map(t => t.track_id));
+            } catch (error) {
+                console.error('Error initializing tracks:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async likeTrackHandler(trackId) {
             try {
                 // Like the track locally and on the server
                 this.likedTracks.add(trackId);
-                await trackService.likeTrack(trackId); // API call to like the track
                 this.$toast.add({
                     severity: 'success',
                     summary: 'Success',
                     detail: 'Track liked successfully!',
                 });
+                await trackService.likeTrack(trackId); // API call to like the track
+    
             } catch (error) {
                 console.error('Error liking track:', error);
             }
@@ -45,7 +64,7 @@ export default {
                 // Unlike the track locally and on the server
                 this.likedTracks.delete(trackId); // Correct method to remove the track from the set
                 this.$toast.add({
-                    severity: "info",
+                    severity: 'info',
                     summary: 'Success',
                     detail: 'Track unliked successfully!',
                 });
@@ -60,13 +79,14 @@ export default {
     },
     mounted() {
         this.fetchRecommendedTracks();
+        this.likedTracksHandler();
     },
 };
 </script>
 
 <template>
     <div class="card">
-        <DataTable :value="tracks" :rows="5" :paginator="true" responsiveLayout="scroll" :loading="loading">
+        <DataTable :value="tracks" :rows="5" :paginator="true" responsiveLayout="scroll">
             <Column field="title" header="Title" style="width: 50%">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
