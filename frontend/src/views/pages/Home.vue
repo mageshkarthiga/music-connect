@@ -45,8 +45,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-                @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
-                :selectedTracks="selectedTracks" :liked="likedTracks.includes(track.track_id)"
+                @track-selected="setSelectedTrackURI" @click="handleTrackClick(track.track_id) "
+                :selectedTracks="selectedTracks"
+                :liked="likedTrackIds.includes(track.track_id)"
                 class="bg-white p-4 rounded-lg">
                 <div class="flex items-center justify-between">
                   <!-- Track Info -->
@@ -132,18 +133,23 @@ export default {
     SpotifyPlayer,
     RecommendedTracks,
   },
+
+  
   data() {
     return {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       events: [],
-      likedTracks: [],
+      likedTrackIds: [],
+
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
       API_BASE_URL,
     };
   },
+
+  
   computed: {
     hasContent() {
       return (
@@ -154,16 +160,30 @@ export default {
       );
     },
 
+    
     otherEvents() {
       const userEventIds = new Set(this.user.events.map(e => e.event_id));
       return this.events.filter(e => !userEventIds.has(e.event_id));
     }
   },
   methods: {
+
+    handleTrackClick(trackId) {
+
+      this.incrementPlayCount(trackId);
+
+      if (this.isLiked(trackId)) {
+        this.handleTrackUnliked(trackId);
+      } else {
+        this.handleTrackLiked(trackId);
+      }
+    },
+
     async handleTrackLiked(trackId) {
       const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
       if (likedTrack) {
-        this.likedTracks.push(likedTrack.track_id);
+        this.likedTrackIds.push(likedTrack.track_id);
+
         this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
       }
 
@@ -173,6 +193,25 @@ export default {
         detail: 'This track has been added to your liked tracks!',
         life: 3000,
       });
+    },
+
+    async handleTrackUnliked(trackId) {
+      const unlikedTrack = this.user.tracks.find(t => t.track_id === trackId);
+
+      if (unlikedTrack) {
+        // Call the API to unlike the track on the backend
+        await EventService.unlikeTrack(trackId);
+
+        // Remove the track from user.tracks (liked tracks)
+        this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
+
+      this.$toast.add({
+        severity: 'info',
+        summary: 'Track Unliked',
+        detail: 'This track has been removed from your liked tracks.',
+
+      });
+      }
     },
 
     async handleEventLiked(eventId) {
@@ -186,7 +225,7 @@ export default {
         severity: 'success',
         summary: 'Event Liked',
         detail: 'This event has been added to your liked events!',
-        life: 3000,
+     
       });
     },
 
@@ -258,6 +297,32 @@ export default {
       }
     },
 
+    async getLikedTracks() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
+          withCredentials: true,
+        });
+
+        // this.likedTracks = response.data;
+        // this.likedTrackIds = response.data.likedTracks.map(track => track.track_id);
+
+        const likedTracks = Array.isArray(response.data)
+          ? response.data
+          : response.data?.likedTracks ?? [];
+
+        this.likedTracks = likedTracks;
+        this.likedTrackIds = likedTracks.map(track => track.track_id);
+
+
+        console.log("Status:", response.status); // should be 200
+        console.log("Data:", response.data);     // check exact structure
+
+        console.log
+      } catch (err) {
+        this.handleError(err, "liked tracks");
+      }
+    },
+
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
       this.errorMessage =
@@ -273,6 +338,7 @@ export default {
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
           this.getTracksForUser(),
+          this.getLikedTracks(),
         ]);
       } finally {
         this.loading = false;
@@ -301,6 +367,7 @@ export default {
 
   mounted() {
     this.fetchEvents();
+    this.getLikedTracks();
   },
 };
 </script>

@@ -28,6 +28,8 @@ export interface Track {
 
 const TRACK_URL = `${API_BASE_URL}/tracks`; // Assuming this is the endpoint for tracks
 
+
+
 // Function to fetch all tracks
 export const getTracks = async () => {
   try {
@@ -141,14 +143,85 @@ export const getFavUserTracksById = async (
   }
 };
 
-export default {
+
+// Like a track by calling the backend API
+export const likeTrack = async (trackId: number) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:8080/likeTrack/${trackId}`, // Assuming this is the endpoint to like the track
+      {}, // You can send any data if needed, like { is_liked: true }
+      { withCredentials: true } // Include credentials (cookies) if necessary
+    );
+
+    // Handle the response if needed
+    if (response.status === 201) {
+      console.log("Track liked successfully:", response.data);
+      return response.data;
+    } else {
+      console.error("Failed to like track:", response.data);
+      throw new Error("Failed to like track");
+    }
+  } catch (error) {
+    console.error("Error liking track:", error);
+    throw error;
+  }
+}
+
+// Unlike a track by calling the backend API
+export const unlikeTrack = async (trackId: number) => {
+  try {
+    const response = await axios.put(
+      `http://localhost:8080/unlikeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
+      {},
+      { withCredentials: true } // Include credentials (cookies) if necessary
+    );
+
+    // Handle the response if needed
+    if (response.status === 200) {
+      console.log("Track unliked successfully:", response.data);
+      return response.data;
+    } else {
+      console.error("Failed to unlike track:", response.data);
+      throw new Error("Failed to unlike track");
+    }
+  } catch (error) {
+    console.error("Error unliking track:", error);
+    throw error;
+  }
+}
+
+export const likedTracks = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
+      withCredentials: true,
+    });
+    return response.data as Track[];
+  }
+  catch (error) {
+    console.error("Error fetching liked tracks:", error);
+    throw error;
+  }
+};
+
+
+
+const TrackService = {
   getTracks,
   getTrackById,
   addTrackForUser,
   updateTrackForUser,
   deleteTrackForUser,
   getUserTracks,
-  getUserTracksById,};
+  getUserTracksById,
+  getFavUserTracks,
+  getFavUserTracksById,
+  likeTrack,
+  unlikeTrack,
+  likedTracks,
+};
+
+export default TrackService;
+
   
 
 export const incrementTrackPlayCount = async (trackId: number) => {

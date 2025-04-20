@@ -71,7 +71,7 @@ func main() {
 	}))
 	log.Println("✅ CORS middleware applied")
 
-	// Register routes
+	// Register routes 
 	routes.RegisterRoutes(e)
 	log.Println("✅ Routes registered")
 
@@ -80,7 +80,7 @@ func main() {
 		return c.String(200, "✅ Server is live on port 8080!")
 	})
 
-	// Example secure route with JWT
+	// Example secure route with JWT authentication
 	e.GET("/secure", func(c echo.Context) error {
 		uid := c.Get("uid").(string)
 		return c.JSON(200, map[string]string{

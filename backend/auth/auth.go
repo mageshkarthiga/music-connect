@@ -94,8 +94,9 @@ func RegisterAuthRoutes(e *echo.Echo, projectID string) {
 	e.GET("/users/:id/tracks", middleware.AuthMiddleware(projectID)(controllers.GetUserTracksByID))
 	e.GET("/users/:id/favtracks", middleware.AuthMiddleware(projectID)(controllers.GetFavUserTracksByID))
 	e.GET("/likedTracks", middleware.AuthMiddleware(projectID)(controllers.GetLikedTracks))
-	e.PUT("/likeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.LikeTrack))
-	e.PUT("/unlikeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.UnlikeTrack))
+	e.PUT("/likeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.LikeTrack))   // PUT request to like a track
+	e.PUT("/unlikeTrack/:track_id", middleware.AuthMiddleware(projectID)(controllers.UnlikeTrack)) // PUT request to unlike a track
+	
 	e.GET("/tracks/top", middleware.AuthMiddleware(projectID)(controllers.GetTopPlayedTracks))
 	e.PUT("/tracks/:track_id/increment", middleware.AuthMiddleware(projectID)(controllers.IncrementTrackPlayCount))
 

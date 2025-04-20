@@ -27,7 +27,7 @@ func main() {
 
 	// CORS middleware
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:8002"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:8002", "https://music-connect-three.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "x-xsrf-token"},
 		AllowCredentials: true,
@@ -46,7 +46,7 @@ func main() {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	// Start the server
+	// Start the server on the specified port
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default to 8080 if not set
@@ -56,3 +56,4 @@ func main() {
 		log.Fatal("❌ Echo server error:", err)
 	}
 }
+
