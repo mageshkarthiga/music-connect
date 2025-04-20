@@ -1,21 +1,30 @@
 <template>
     <Card class="user-card">
         <template #content>
-            <div class="user-card-content">
-                <Avatar :image="user.profile_photo_url || defaultProfilePic" shape="circle" size="large" />
-                <div class="user-info">
-                    <h3 class="user-name clickable-link" v-on:click="redirectToProfile">{{ user.user_name }}</h3>
-                    <p>&nbsp;{{ user.email_address }}</p>
+            <div class="user-card-content grid grid-cols-[1fr_auto] items-center gap-4 w-full">
+                <!-- Left: Profile Picture & Username -->
+                <div class="flex items-center space-x-6 p-3 min-w-0">
+                    <Avatar :image="user.profile_photo_url || defaultProfilePic" shape="circle" size="large" />
+                    <div class="truncate max-w-xs">
+                        <h3 class="user-name clickable-link truncate" @click="redirectToProfile">{{ user.user_name }}</h3>
+                        <p class="truncate text-sm text-gray-600">{{ user.email_address }}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="actions">
-                <Button v-if="accept" label="Accept" icon="pi pi-user-plus" @click="onAccept" severity="success"/>
-                <Button v-if="reject" label="Reject" icon="pi pi-times" @click="onReject" severity="danger"/>
-                <Button v-if="remove" label="Remove" icon="pi pi-user-minus"  @click="onRemove" severity="danger" />
+
+                <!-- Right: Action Buttons -->
+                <div class="flex justify-end items-center space-x-2 px-5">
+                    <Button v-if="accept" label="Accept" icon="pi pi-user-plus" @click="onAccept" severity="success"/>
+                    <Button v-if="reject" label="Reject" icon="pi pi-times" @click="onReject" severity="danger"/>
+                    <Button v-if="remove" label="Remove" icon="pi pi-user-minus" @click="onRemove" severity="danger" />
+                </div>
             </div>
         </template>
     </Card>
 </template>
+
+
+
+
 
 <script>
 export default {

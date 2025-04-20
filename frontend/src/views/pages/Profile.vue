@@ -63,11 +63,11 @@
       </div>
 
       <!-- Right Column: Pending Friend Requests & Friends -->
-      <div class="lg:col-span-1 flex flex-col space-y-6 max-h-[900px] overflow-hidden">
+      <div class="lg:col-span-1 flex flex-col space-y-6 max-h-[900px]">
         
         <!-- Pending Friend Requests -->
-        <section v-if="user.friendRequests?.users?.length" class="space-y-6 overflow-y-auto">
-          <h2 class="text-xl font-semibold mb-3 text-left">Pending Friend Requests</h2>
+        <section v-if="user.friendRequests?.users?.length" class="space-y-6  flex-grow lg:order-first">
+          <h2 class="text-xl font-semibold mb-3 text-left overflow-y-auto">Pending Friend Requests</h2>
           <div class="space-y-1">
             <UserCard
               v-for="u in user.friendRequests.users"
@@ -80,17 +80,23 @@
           </div>
         </section>
 
-        <section v-if="user.friends.length" class="space-y-6 overflow-y-auto flex-grow lg:order-first">
-          <h2 class="text-xl font-semibold mb-3 text-left">Friends · {{ user.friends.length }}</h2>
-          <div class="space-y-4">
-            <UserCard
-              v-for="u in user.friends"
-              :key="u.user_id"
-              :user="u"
-              :remove="true"
-              @remove="handleRemove(u.user_id)" />
-          </div>
-        </section>
+        <section
+        v-if="user.friends.length"
+        class="space-y-6 flex-grow lg:order-first max-h-[500px] pr-2"
+      >
+        <h2 class="text-xl font-semibold mb-3 text-left">Friends · {{ user.friends.length }}</h2>
+        <div class="space-y-4">
+          <UserCard
+            v-for="u in user.friends"
+            :key="u.user_id"
+            :user="u"
+            :remove="true"
+            @remove="handleRemove(u.user_id)"
+          />
+        </div>
+      </section>
+
+
       </div>
     </div>
   </div>

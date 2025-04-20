@@ -22,6 +22,9 @@ const currentUserId = ref(null);
 const toast = ref(null);
 const router = useRouter();
 
+
+    
+
 onBeforeMount(async () => {
   try {
     const meResponse = await axios.get("http://localhost:8080/me", { withCredentials: true });
@@ -234,6 +237,8 @@ async function rejectRequest(userId) {
 </script>
 
 <template>
+
+    
   <div class="card">
     <Toast ref="toast" />
 
