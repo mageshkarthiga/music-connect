@@ -123,6 +123,7 @@ import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
 import { useSpotifyStore } from "@/store/SpotifyStore";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
   components: {
@@ -140,7 +141,7 @@ export default {
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
-      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+      API_BASE_URL,
     };
   },
   computed: {

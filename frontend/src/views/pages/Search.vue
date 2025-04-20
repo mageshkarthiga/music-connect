@@ -3,6 +3,7 @@ import UserService from '@/service/UserService';
 import EventService from '@/service/EventService';
 import FriendService from '@/service/FriendService';
 import axios from 'axios';
+import { API_BASE_URL } from '@/service/apiConfig';
 
 export default {
   name: 'Search',
@@ -20,7 +21,7 @@ export default {
       ],
       currentUserId: null,
       toast: null,
-      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+      API_BASE_URL,
     };
   },
   methods: {

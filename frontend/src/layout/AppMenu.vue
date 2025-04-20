@@ -51,6 +51,7 @@
 <script>
 import axios from "axios";
 import AddPlaylistDialog from "@/components/AddPlaylistDialog.vue";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
   components: {
@@ -63,7 +64,7 @@ export default {
       errorMessage: "",
       darkTheme: localStorage.getItem("theme") === "dark",
       showPlaylistDialog: false,
-      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+      API_BASE_URL,
     };
   },
   methods: {

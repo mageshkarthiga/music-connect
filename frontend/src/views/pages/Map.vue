@@ -17,6 +17,7 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { getAllUserLocations } from "@/firebase/locationController";
 import UserService from "@/service/UserService";
 import EventService from "@/service/EventService";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
   name: "Map",
@@ -143,7 +144,7 @@ export default {
       if (existingScript) return;
 
       const script = document.createElement("script");
-      script.src = `${this.API_BASE_URL}/maps?libraries=maps,marker&callback=${callback}&loading=async`;
+      script.src = `${API_BASE_URL}/maps?libraries=maps,marker&callback=${callback}&loading=async`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);

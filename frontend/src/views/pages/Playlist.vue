@@ -12,6 +12,7 @@
 <script>
 import MusicTracks from '@/components/MusicTracks.vue';
 import SpotifyPlayer from '@/components/SpotifyPlayer.vue';
+import { API_BASE_URL } from '@/service/apiConfig';
 import { useSpotifyStore } from '@/store/SpotifyStore';
 import axios from 'axios';
 
@@ -33,7 +34,7 @@ export default {
     data() {
         return {
             tracks: [],
-            API_BASE_URL: process.env.VUE_APP_API_BASE_URL, 
+            API_BASE_URL, 
         };
     },
     async mounted() {

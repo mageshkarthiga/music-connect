@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import { API_BASE_URL } from "@/service/apiConfig";
 import AutoComplete from "primevue/autocomplete";
 
 export default {
@@ -20,7 +21,7 @@ export default {
     return {
       query: "",
       suggestions: [],
-      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+      API_BASE_URL,
     };
   },
   methods: {

@@ -9,6 +9,7 @@
 <script>
 import axios from "axios";
 import { useSpotifyStore } from "@/store/SpotifyStore";
+import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
     name: "SpotifyPlayer",
@@ -16,7 +17,7 @@ export default {
         return {
             iframeSrc: "",
             accessToken: "",
-            API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+            API_BASE_URL,
         };
     },
     async mounted() {
