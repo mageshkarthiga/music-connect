@@ -29,17 +29,17 @@
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
           <!-- Tracks Section -->
-          <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg"
+          <div class="p-6 bg-gradient-to-r from-green-400 via-green-500 to-green-600 rounded-lg shadow-lg"
             v-if="user.tracks.length">
             <!-- Title with Emoji -->
-            <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4">
-              🏆 Top Played Tracks
-            </h2>
+            <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4 animate-heading">
+            Top Played Tracks
+          </h2>
 
-            <!-- Subheading with Emoji -->
-            <p class="text-center text-lg  text-gray-700 mb-6 opacity-90">
-              🌟 Your most played tracks, right here!
-            </p>
+          <!-- Subheading with Emoji -->
+          <p class="text-center text-lg text-gray-700 mb-6 opacity-90 animate-subheading">
+            Your most played tracks, right here!
+          </p>
 
             <!-- Track Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
@@ -109,7 +109,7 @@
         <br />
 
         <!-- Recommended Music -->
-        <div class="p-4" v-if="filter === 'all' || filter === 'music'">
+        <div class v-if="filter === 'all' || filter === 'music'">
           <div class="font-semibold text-xl mb-4">Recommended music </div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
@@ -317,4 +317,50 @@ export default {
     this.fetchEvents();
   },
 };
+
+
 </script>
+
+<style scoped>
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+
+  }
+}
+
+@keyframes colorPop {
+  0% {
+    color: #000000; /* Initial color */
+  }
+  50% {
+    color: #000000; /* Midway color */
+    text-shadow: 0 0 2px #ffeb3b, 0 0 10px #ffeb3b;
+  
+  }
+  100% {
+    color: #000000; /* Final color */
+  }
+}
+
+.animate-heading {
+  animation: bounceIn 1.2s ease-out, colorPop 2s ease-in-out ;
+}
+
+.animate-subheading {
+  animation: bounceIn 1.5s ease-out, colorPop 2s ease-in-out ;
+}
+
+
+</style>
