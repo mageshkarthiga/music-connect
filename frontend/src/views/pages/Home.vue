@@ -100,14 +100,14 @@
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
-    </div>
 
-    <!-- No Content -->
-    <template v-else>
-      <div class="p-4">
-        <p>No events, playlists, or tracks found.</p>
-      </div>
-    </template>
+      <!-- No Content -->
+      <template v-else>
+        <div class="p-4">
+          <p>No events, playlists, or tracks found.</p>
+        </div>
+      </template>
+    </div>
 
     <!-- Spotify Player -->
     <SpotifyPlayer />
