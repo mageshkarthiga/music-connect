@@ -46,7 +46,8 @@
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
                 @track-selected="setSelectedTrackURI" @click="incrementPlayCount(track.track_id)"
-                :selectedTracks="selectedTracks" :liked="likedTracks.includes(track.track_id)"
+                :selectedTracks="selectedTracks"
+                :liked="likedTrackIds.includes(track.track_id)"
                 class="bg-white p-4 rounded-lg">
                 <div class="flex items-center justify-between">
                   <!-- Track Info -->
@@ -80,20 +81,6 @@
           </div>
         </div>
         <br>
-        <!-- User's liked events -->
-        <!-- <div v-if="(filter === 'all' || filter === 'events') && user.events.length">
-          <h2 class="text-xl font-semibold mb-3">Liked Events</h2>
-          <div class="flex space-x-4 overflow-x-auto pb-4">
-            <EventCard
-              v-for="event in user.events"
-              :key="event.event_id"
-              :event="event"
-              :liked="true"
-              @event-unliked="handleEventUnliked"
-              @event-liked="handleEventLiked"
-            />
-          </div>
-        </div> -->
 
         <br>
 
@@ -147,17 +134,22 @@ export default {
     SpotifyPlayer,
     RecommendedTracks,
   },
+
+  
   data() {
     return {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       events: [],
-      likedTracks: [],
+      likedTrackIds: [],
+
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
     };
   },
+
+  
   computed: {
     hasContent() {
       return (
@@ -168,6 +160,7 @@ export default {
       );
     },
 
+    
     otherEvents() {
       const userEventIds = new Set(this.user.events.map(e => e.event_id));
       return this.events.filter(e => !userEventIds.has(e.event_id));
@@ -177,7 +170,8 @@ export default {
     async handleTrackLiked(trackId) {
       const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
       if (likedTrack) {
-        this.likedTracks.push(likedTrack.track_id);
+        this.likedTrackIds.push(likedTrack.track_id);
+
         this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
       }
 
@@ -187,6 +181,25 @@ export default {
         detail: 'This track has been added to your liked tracks!',
         life: 3000,
       });
+    },
+
+    async handleTrackUnliked(trackId) {
+      const unlikedTrack = this.user.tracks.find(t => t.track_id === trackId);
+
+      if (unlikedTrack) {
+        // Call the API to unlike the track on the backend
+        await EventService.unlikeTrack(trackId);
+
+        // Remove the track from user.tracks (liked tracks)
+        this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
+
+      this.$toast.add({
+        severity: 'warn',
+        summary: 'Track Unliked',
+        detail: 'This track has been removed from your liked tracks.',
+        life: 3000,
+      });
+      }
     },
 
     async handleEventLiked(eventId) {
@@ -272,6 +285,21 @@ export default {
       }
     },
 
+    async getLikedTracks() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
+          withCredentials: true,
+        });
+
+        this.likedTracks = response.data;
+        this.likedTrackIds = response.data.map(track => track.track_id);
+
+        console.log("Liked Tracks:", this.likedTracks);
+      } catch (err) {
+        this.handleError(err, "liked tracks");
+      }
+    },
+
     handleError(error, dataType) {
       console.error(`${dataType} fetch error:`, error);
       this.errorMessage =
@@ -287,6 +315,7 @@ export default {
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
           this.getTracksForUser(),
+          this.getLikedTracks(),
         ]);
       } finally {
         this.loading = false;
@@ -315,6 +344,7 @@ export default {
 
   mounted() {
     this.fetchEvents();
+    this.getLikedTracks();
   },
 };
 </script>

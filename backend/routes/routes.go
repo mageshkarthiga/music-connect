@@ -42,10 +42,10 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
     e.POST("/friends/:friend_id/reject", controllers.RejectFriendRequest)
     e.POST("/friends/:friend_id/remove", controllers.RemoveFriend)
     e.GET("/friends", controllers.GetFriends)
-	e.GET("/friendship/:friend_id/status", controllers.GetFriendshipStatus)
     e.POST("/users/friends", controllers.AddFriend)
     e.GET("/users/:id/friends", controllers.GetFriends)
-
+	e.GET("/friendship/:friend_id/status", controllers.GetFriendshipStatus)
+	e.GET("/friends/pending", controllers.GetPendingFriendRequests) // Fetch pending friend requests
 
 	// Track Routes
 	e.GET("/tracks", controllers.GetTracks)          // Fetch all tracks
@@ -56,8 +56,9 @@ func RegisterRoutes(e *echo.Echo, wsServer *chat.WsServer) {
 	e.DELETE("/tracks/:id", controllers.DeleteTrack) // Delete a track by ID
     // e.GET("/tracks/:id/playlist", controllers.GetPlaylistByTrackID) // Fetch playlist by track ID
     e.GET("/likedTracks", controllers.GetLikedTracks) // Fetch liked tracks for a user
-    e.POST("/likeTrack", controllers.LikeTrack) // Post request to like a track
-    e.DELETE("/likeTrack", controllers.UnlikeTrack) // Delete request to unlike a track
+	e.PUT("/likeTrack/:track_id", controllers.LikeTrack)   // PUT request to like a track
+	e.PUT("/unlikeTrack/:track_id", controllers.UnlikeTrack) // PUT request to unlike a track
+	
 
 	// Event Routes
 	e.GET("/events", controllers.GetEvents)                      // Fetch all events

@@ -22,6 +22,9 @@ const currentUserId = ref(null);
 const toast = ref(null);
 const router = useRouter();
 
+
+    
+
 onBeforeMount(async () => {
   try {
     const meResponse = await axios.get("http://localhost:8080/me", { withCredentials: true });
@@ -168,7 +171,7 @@ async function addFriend(userId) {
   }
 
   try {
-    await axios.post(`http://localhost:8080/friend/${userId}/request`, {}, { withCredentials: true });
+    await axios.post(`http://localhost:8080/friends/${userId}/request`, {}, { withCredentials: true });
     if (user) {
       user.status = 'pending';
     }
@@ -197,7 +200,7 @@ async function addFriend(userId) {
 async function acceptRequest(userId) {
   const user = allUsers.value.find(u => u.user_id === userId);
   try {
-    await axios.post(`http://localhost:8080/friend/${userId}/accept`, {}, { withCredentials: true });
+    await axios.post(`http://localhost:8080/friends/${userId}/accept`, {}, { withCredentials: true });
     if (user) {
       user.status = 'accepted';
     }
@@ -215,7 +218,7 @@ async function acceptRequest(userId) {
 async function rejectRequest(userId) {
   const user = allUsers.value.find(u => u.user_id === userId);
   try {
-    await axios.post(`http://localhost:8080/friend/${userId}/reject`, {}, { withCredentials: true });
+    await axios.post(`http://localhost:8080/friends/${userId}/reject`, {}, { withCredentials: true });
     if (user) {
       user.status = 'none'; // Reset status to "none"
     }
@@ -234,6 +237,8 @@ async function rejectRequest(userId) {
 </script>
 
 <template>
+
+    
   <div class="card">
     <Toast ref="toast" />
 
