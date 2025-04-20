@@ -101,12 +101,13 @@ export default {
             <i class="pi pi-comments"></i>
             <span>Chat</span>
           </button>
-          <button type="button" class="profile-button" @click="goToProfile">
+          <button type="button" class="profile-button layout-topbar-action" @click="goToProfile">
             <div class="icon-wrapper">
               <i class="pi pi-user user-icon"></i>
               <Badge v-if="pendingFriendRequestsCount > 0" :value="pendingFriendRequestsCount" severity="danger"
                 class="badge-overlay" />
             </div>
+            <span>Profile</span>
           </button>
           <button type="button" class="layout-topbar-action" @click="logout">
             <i class="pi pi-sign-out"></i>

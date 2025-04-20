@@ -9,21 +9,6 @@ const router = createRouter({
       component: AppLayout,
       children: [
         {
-          path: "/pages/map",
-          name: "map",
-          component: () => import("@/views/pages/Map.vue"),
-        },
-        {
-          path: "/pages/crud",
-          name: "crud",
-          component: () => import("@/views/pages/Crud.vue"),
-        },
-        {
-          path: "/pages/map",
-          name: "map",
-          component: () => import("@/views/pages/Map.vue"),
-        },
-        {
           path: "/pages/home",
           name: "home",
           component: () => import("@/views/pages/Home.vue"),
