@@ -1,6 +1,7 @@
 music-connect/src/.DS_Store
 
 .env
+env-vars.json
 
 music-connect/node_modules
 .DS_Store
