@@ -57,7 +57,7 @@ export default {
         this.$emit("track-liked", trackId);
       } else {
         // If unliking the track
-        axios.put(`${API_BASE_URL}//unlikeTrack/${trackId}`, { is_liked: false }, {
+        axios.put(`${API_BASE_URL}/unlikeTrack/${trackId}`, { is_liked: false }, {
           withCredentials: true,
         });
         this.$emit("track-unliked", trackId);
