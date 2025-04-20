@@ -21,7 +21,7 @@ export default {
     },
     async mounted() {
         const spotifyStore = useSpotifyStore();
-        const response = await axios.get(`${API_BASE_URL}/spotify/token`);
+        const response = await axios.get(`${this.API_BASE_URL}/spotify/token`);
         this.accessToken = response.data.access_token;
         this.loadSpotifyContent(spotifyStore.spotifyUri);
 

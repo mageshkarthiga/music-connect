@@ -143,7 +143,7 @@ export default {
       if (existingScript) return;
 
       const script = document.createElement("script");
-      script.src = `${API_BASE_URL}/maps?libraries=maps,marker&callback=${callback}&loading=async`;
+      script.src = `${this.API_BASE_URL}/maps?libraries=maps,marker&callback=${callback}&loading=async`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);

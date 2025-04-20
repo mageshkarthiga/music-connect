@@ -133,6 +133,7 @@ import axios from "axios";
 import EventService from "@/service/EventService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
+// import { API_BASE_URL } from "@/service/apiConfig";
 import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
@@ -230,7 +231,7 @@ export default {
 
     async getEvents() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/events`, {
+        const response = await axios.get(`${this.API_BASE_URL}/events`, {
           withCredentials: true,
         });
         this.events = response.data;
@@ -241,7 +242,7 @@ export default {
 
     async getEventsByUserId() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/events`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
         this.user.events = response.data;
@@ -252,7 +253,7 @@ export default {
 
     async getPlaylistsForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
         this.user.playlists = response.data;
@@ -263,7 +264,7 @@ export default {
 
     async getTracksForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/tracks/top`, {
+        const response = await axios.get(`${this.API_BASE_URL}/tracks/top`, {
           withCredentials: true,
         });
         this.user.tracks = response.data;

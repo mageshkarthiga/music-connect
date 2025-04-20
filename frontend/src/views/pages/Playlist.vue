@@ -47,7 +47,7 @@ export default {
     methods: {
         async fetchPlaylistTracks() {
             try {
-                const response = await axios.get(`${API_BASE_URL}/playlists/${this.playlist_id}/tracks`);
+                const response = await axios.get(`${this.API_BASE_URL}/playlists/${this.playlist_id}/tracks`);
                 this.tracks = response.data; // Populate tracks
             } catch (error) {
                 console.error("Error fetching playlist tracks:", error);

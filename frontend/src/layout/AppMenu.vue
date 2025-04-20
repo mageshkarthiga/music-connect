@@ -69,7 +69,7 @@ export default {
   methods: {
     async getCurrentUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me`, {
           withCredentials: true,
         });
         this.currentUser = response.data;
@@ -80,7 +80,7 @@ export default {
 
     async getPlaylistsForUser() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
+        const response = await axios.get(`${this.API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
 

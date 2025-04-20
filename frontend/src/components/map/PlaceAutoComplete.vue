@@ -20,6 +20,7 @@ export default {
     return {
       query: "",
       suggestions: [],
+      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
     };
   },
   methods: {
@@ -31,7 +32,7 @@ export default {
       }
       try {
         const response = await fetch(
-          `${API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
+          `${this.API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(input)}`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

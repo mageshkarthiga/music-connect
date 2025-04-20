@@ -20,12 +20,13 @@ export default {
       ],
       currentUserId: null,
       toast: null,
+      API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
     };
   },
   methods: {
     async fetchData() {
       try {
-        const meResponse = await axios.get("http://localhost:8080/me", { withCredentials: true });
+        const meResponse = await axios.get(`${this.API_BASE_URL}/me`, { withCredentials: true });
         this.currentUserId = meResponse.data.user_id;
 
         const users = await UserService.getAllUsers();
@@ -61,7 +62,7 @@ export default {
       try {
         const statusPromises = users.map(async (user) => {
           try {
-            const statusRes = await axios.get(`http://localhost:8080/friendship/${user.user_id}/status`, { withCredentials: true });
+            const statusRes = await axios.get(`${this.API_BASE_URL}/friendship/${user.user_id}/status`, { withCredentials: true });
 
             if (statusRes.status === 200) {
               const userStatus = statusRes.data.status;
@@ -108,7 +109,7 @@ export default {
     },
     async getMusicSimilarity(userId) {
       try {
-        const response = await axios.get(`http://localhost:8080/calculateSimilarity?user_id1=${this.currentUserId}&user_id2=${userId}`, { withCredentials: true });
+        const response = await axios.get(`${this.API_BASE_URL}/calculateSimilarity?user_id1=${this.currentUserId}&user_id2=${userId}`, { withCredentials: true });
         if (response.status === 200) {
           return response.data.similarity;  // Ensure this matches the expected API response
         } else {
@@ -277,7 +278,7 @@ export default {
                   <Skeleton />
                 </template>
                 <template v-else>
-                  <Avatar :image="data.profile_photo_url || '/public/profile.svg'" shape="circle" size="large" />
+                  <Avatar :image="data.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
                   <span class="clickable-link">
                     <a :href="`/profile?user_id=${data.user_id}`">
                       {{ data.user_name }}

@@ -1,13 +1,13 @@
 <template>
     <div class="chat-container">
-        <!-- User List -->
+        <!-- Friend List -->
         <div class="user-list">
-            <h3>Users</h3>
+            <h3 class="list-title">Friends</h3>
             <ul>
-                <li v-for="user in users" :key="user.user_id" @click="joinRoom(user)"
-                    :class="{ active: currentChatUser && currentChatUser.user_id === user.user_id }">
-                    <Avatar :image="user.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
-                    {{ user.user_name.charAt(0).toUpperCase() + user.user_name.slice(1) }}
+                <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
+                    :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
+                    <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
+                    {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
                 </li>
             </ul>
         </div>
@@ -20,8 +20,12 @@
                 <Card class="chat-card">
                     <template #header>
                         <div class="chat-header">
-                            <h3>💬 Chat With: {{ room.otherUserName.charAt(0).toUpperCase() +
-                                room.otherUserName.slice(1) || "Loading..." }}</h3>
+                            <Avatar :image="room.otherUserProfilePhoto || '/profile.svg'" shape="circle" size="large"
+                                class="chat-header-avatar" />
+                            <h3 class="chat-header-name">
+                                {{ room.otherUserName.charAt(0).toUpperCase() +
+                                    room.otherUserName.slice(1) || "Loading..." }}
+                            </h3>
                         </div>
                     </template>
 
@@ -71,6 +75,8 @@
 <script>
 import UserService from "@/service/UserService";
 import axios from "axios";
+import FriendService from "@/service/FriendService";
+import apiConfig from "@/service/apiConfig";
 
 export default {
     name: "ChatWindow",
@@ -86,7 +92,7 @@ export default {
                 user_id: null,
                 user_name: null,
             },
-            users: [],
+            friends: [],
             rooms: [],
             roomInput: "",
             ws: null,
@@ -100,9 +106,10 @@ export default {
     async mounted() {
         await this.getCurrentUser();
         await this.fetchChatUsers();
+        await this.fetchFriends();
 
         if (this.selectedUserId) {
-            const user = this.users.find(user => user.firebase_uid === this.selectedUserId);
+            const user = this.friends.find(user => user.firebase_uid === this.selectedUserId);
 
             if (user) {
                 this.joinRoom(user);
@@ -112,8 +119,7 @@ export default {
                 try {
                     const response = await UserService.getUserByFirebaseUID(this.selectedUserId);
                     if (response) {
-                        this.users.push(response);
-
+                        this.friends.push(response);
                         this.joinRoom(response);
                     } else {
                         console.warn(`Unable to fetch details for user ID ${this.selectedUserId}`);
@@ -147,29 +153,12 @@ export default {
         },
         async fetchChatUsers() {
             try {
-                const response = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/users/${this.currentUser.user_id}/chat-history`, {
-                    withCredentials: true,
-                });
-                const userIds = response.data;
-                console.log("Fetched user IDs:", this.selectedUserId);
-
-                const userDetailsPromises = userIds.filter(userID => userID).map(async (userID) => {
-                    try {
-                        const userResponse = await UserService.getUserByFirebaseUID(userID);
-                        return userResponse;
-                    } catch (error) {
-                        console.error(`Error fetching details for user ID ${userID}:`, error);
-                        return null;
-                    }
-                });
-
-                const users = await Promise.all(userDetailsPromises);
-                this.users = users.filter(user => user !== null);
-
-                console.log("Fetched chat users:", this.users);
+                const response = await FriendService.getFriends();
+                this.friends = response;
+                console.log("Fetched friends:", this.friends);
             } catch (error) {
-                console.error("Error fetching chat history:", error);
-                this.errorMessage = "Failed to load chat users. Please try again later.";
+                console.error("Error fetching friends:", error);
+                this.errorMessage = "Failed to load friends. Please try again later.";
             }
         },
         handleNewMessage(event) {
@@ -282,7 +271,7 @@ export default {
                 const response = await this.getOtherUsers(otherUserID);
                 newRoom.otherUserName = response;
 
-                const messagesResponse = await axios.get(`https://music-connect-chat-555448022527.us-central1.run.app/rooms/${roomName}/messages`, { withCredentials: true });
+                const messagesResponse = await axios.get(`${apiConfig.CHAT_URL}/rooms/${roomName}/messages`, { withCredentials: true });
                 if (messagesResponse.data.length > 0) {
                     newRoom.messages = messagesResponse.data.map(msg => ({
                         message: msg.message,
@@ -298,7 +287,7 @@ export default {
                 this.errorMessage = "Failed to load chat history. Please try again later.";
             }
 
-            const ws = new WebSocket(`wss://music-connect-chat-555448022527.us-central1.run.app/ws?userid=${this.currentUser.user_id}&room=${roomName}`);
+            const ws = new WebSocket(this.getWebSocketURL(this.currentUser.user_id, roomName));
 
             ws.onopen = () => {
                 console.log(`WebSocket connection established for room: ${roomName}`);
@@ -363,6 +352,14 @@ export default {
         isChatScrolledToBottom(roomName) {
             const el = this.chatBodies[roomName];
             return el && el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+        },
+        getWebSocketURL(userId, roomName) {
+            const isLocalhost = false;
+            const protocol = isLocalhost ? 'ws' : 'wss';
+            const host = isLocalhost ? 'localhost:8080' : apiConfig.CHAT_URL.replace(/^https?:\/\//, '');
+            console.log("WebSocket URL:", `${protocol}://${host}/ws?userid=${userId}&room=${roomName}`);
+
+            return `${protocol}://${host}/ws?userid=${userId}&room=${roomName}`;
         }
     },
 };
@@ -380,10 +377,10 @@ export default {
 .user-list {
     flex: 1;
     max-width: 300px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 1rem;
-    background-color: #ffffff;
+    background-color: var(--primary-bg-light);
     max-height: 600px;
     overflow-y: auto;
     display: flex;
@@ -408,7 +405,7 @@ export default {
 }
 
 .user-list li:hover {
-    background-color: #e0e0e0;
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 
@@ -420,8 +417,8 @@ export default {
     padding: 0.5rem 0;
     margin: 0;
     font-size: 1.2rem;
-    border-bottom: 1px solid #ddd;
-    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-light);
+    background-color: var(--primary-bg-light);
     position: static;
     top: auto;
     z-index: auto;
@@ -432,17 +429,28 @@ export default {
 }
 
 .chat-card {
-    margin-top: 50px;
+    margin-top: 60px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .chat-header {
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 600;
-    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
     background-color: #f5f5f5;
     border-radius: 8px 8px 0 0;
+}
+
+.chat-header-avatar {
+    flex-shrink: 0;
+}
+
+.chat-header-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #343a40;
 }
 
 .chat-body {
@@ -452,6 +460,12 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem;
+}
+
+.separator {
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    margin: 0 0 1rem 0;
 }
 
 .message-wrapper {
