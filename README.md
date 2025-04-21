@@ -222,3 +222,9 @@ Password: P@ssword123
 2. The backend deployment links are:
 - https://music-connect-555448022527.us-central1.run.app (for the backend, excluding chat)
 - https://music-connect-chat-555448022527.us-central1.run.app (for the chat)
+
+---
+
+## Demo Link
+
+https://drive.google.com/drive/folders/1z0TNDRxVBQ9lTsizB1iSGrbajQYcf_Lb?usp=sharing
