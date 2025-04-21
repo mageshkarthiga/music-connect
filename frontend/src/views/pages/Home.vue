@@ -29,26 +29,28 @@
         <!-- Tracks -->
         <div class="p-4" v-if="filter === 'all' || filter === 'music'">
           <!-- Tracks Section -->
-          <div class="p-6 bg-gradient-to-r from-green-400 via-green-400 to-green-500 rounded-lg shadow-lg"
+          <div class="p-6 bg-gradient-to-r from-green-400 via-green-500 to-green-600 rounded-lg shadow-lg"
             v-if="user.tracks.length">
             <!-- Title with Emoji -->
-            <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4">
-              🏆 Top Played Tracks
-            </h2>
+            <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-4 animate-heading">
+            Top Played Tracks
+          </h2>
 
-            <!-- Subheading with Emoji -->
-            <p class="text-center text-lg  text-gray-700 mb-6 opacity-90">
-              🌟 Your most played tracks, right here!
-            </p>
+          <!-- Subheading with Emoji -->
+          <p class="text-center text-lg text-gray-700 mb-6 opacity-90 animate-subheading">
+            Your most played tracks, right here!
+          </p>
 
             <!-- Track Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               <!-- Track Card Loop -->
               <TrackCard v-for="track in user.tracks" :key="track.track_id" :track="track" :state="'redirect'"
-                @track-selected="setSelectedTrackURI" @click="handleTrackClick(track.track_id) "
-                :selectedTracks="selectedTracks"
-                :liked="likedTrackIds.includes(track.track_id)"
+                @track-selected="setSelectedTrackURI" @click="handleTrackFunction(track.track_id)"
+                :selectedTracks="selectedTracks"  :liked="likedTracks.includes(track.track_id)"  @track-unliked="handleTrackUnliked"
+                @track-liked="handleTrackLiked" 
                 class="bg-white p-4 rounded-lg">
+
+
                 <div class="flex items-center justify-between">
                   <!-- Track Info -->
                   <div class="flex items-center space-x-3">
@@ -80,7 +82,7 @@
             </p>
           </div>
         </div>
-        <br>
+
 
         <br>
 
@@ -96,19 +98,19 @@
         <br />
 
         <!-- Recommended Music -->
-        <div class="p-4" v-if="filter === 'all' || filter === 'music'">
+        <div class v-if="filter === 'all' || filter === 'music'">
           <div class="font-semibold text-xl mb-4">Recommended music </div>
           <RecommendedTracks @track-selected="setSelectedTrackURI" />
         </div>
       </template>
-
-      <!-- No Content -->
-      <template v-else>
-        <div class="p-4">
-          <p>No events, playlists, or tracks found.</p>
-        </div>
-      </template>
     </div>
+
+    <!-- No Content -->
+    <template v-else>
+      <div class="p-4">
+        <p>No events, playlists, or tracks found.</p>
+      </div>
+    </template>
 
     <!-- Spotify Player -->
     <SpotifyPlayer />
@@ -117,14 +119,16 @@
 
 <script>
 import axios from "axios";
+import { API_BASE_URL } from "@/service/apiConfig";
 import EventService from "@/service/EventService";
+import TrackService from "@/service/TrackService";
 import EventCard from "@/components/EventCard.vue";
 import TrackCard from "@/components/TrackCard.vue";
+import PlaylistCard from "@/components/PlaylistCard.vue";
 import SpotifyPlayer from "@/components/SpotifyPlayer.vue";
 import RecommendedTracks from "@/components/RecommendedTracks.vue";
 import { incrementTrackPlayCount } from "@/service/TrackService";
 import { useSpotifyStore } from "@/store/SpotifyStore";
-import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
   components: {
@@ -133,23 +137,17 @@ export default {
     SpotifyPlayer,
     RecommendedTracks,
   },
-
-  
   data() {
     return {
       loading: false,
       user: { events: [], playlists: [], tracks: [] },
       events: [],
-      likedTrackIds: [],
-
+      likedTracks: [],
       selectedTracks: [],
       errorMessage: "",
       filter: 'all',  // Default filter value
-      API_BASE_URL,
     };
   },
-
-  
   computed: {
     hasContent() {
       return (
@@ -160,59 +158,110 @@ export default {
       );
     },
 
-    
     otherEvents() {
       const userEventIds = new Set(this.user.events.map(e => e.event_id));
       return this.events.filter(e => !userEventIds.has(e.event_id));
     }
   },
   methods: {
+  async handleTrackFunction(trackId) {
+    try {
+      await incrementTrackPlayCount(trackId);
+      await this.refreshLikedTracks();
 
-    handleTrackClick(trackId) {
+      const isLiked = this.likedTracks.includes(trackId);
 
-      this.incrementPlayCount(trackId);
+      console.log("likedTracks", this.likedTracks);
 
-      if (this.isLiked(trackId)) {
-        this.handleTrackUnliked(trackId);
+      if (isLiked) {
+        await this.handleTrackUnliked(trackId);
       } else {
-        this.handleTrackLiked(trackId);
-      }
-    },
-
-    async handleTrackLiked(trackId) {
-      const likedTrack = this.user.tracks.find(t => t.track_id === trackId);
-      if (likedTrack) {
-        this.likedTrackIds.push(likedTrack.track_id);
-
-        this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
+        await this.handleTrackLiked(trackId);
       }
 
+      // Optional double-check to ensure liked tracks are updated
+      await this.refreshLikedTracks();
+
+      // Emit event with track ID
+      this.$emit("track-selected", trackId);
+    } catch (error) {
+      console.error("Error handling track:", error);
+      this.$toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Something went wrong while updating the track. Please try again.',
+        life: 3000,
+      });
+    }
+  },
+
+  async refreshLikedTracks() {
+  try {
+    const response = await TrackService.likedTracks();
+    if (Array.isArray(response)) {
+      this.likedTracks = response.map(t => t.track_id);
+      console.log("Updated likedTracks:", this.likedTracks); // Add this log
+    } else {
+      console.error("Invalid liked tracks data format");
+      this.$toast.add({
+        severity: 'warn',
+        summary: 'Warning',
+        detail: 'Could not fetch liked tracks properly. Please try again.',
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching liked tracks:", error);
+    this.$toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Unable to fetch liked tracks. Please check your connection.',
+      life: 3000,
+    });
+  }
+},
+
+
+  async handleTrackLiked(trackId) {
+    try {
+      await TrackService.likeTrack(trackId);
       this.$toast.add({
         severity: 'success',
         summary: 'Track Liked',
         detail: 'This track has been added to your liked tracks!',
         life: 3000,
       });
-    },
+    } catch (error) {
+      console.error("Error liking track:", error);
+      this.$toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to like the track. Please try again.',
+        life: 3000,
+      });
+    }
+  },
 
-    async handleTrackUnliked(trackId) {
-      const unlikedTrack = this.user.tracks.find(t => t.track_id === trackId);
-
-      if (unlikedTrack) {
-        // Call the API to unlike the track on the backend
-        await EventService.unlikeTrack(trackId);
-
-        // Remove the track from user.tracks (liked tracks)
-        this.user.tracks = this.user.tracks.filter(t => t.track_id !== trackId);
-
+  async handleTrackUnliked(trackId) {
+    try {
+      await TrackService.unlikeTrack(trackId);
       this.$toast.add({
         severity: 'info',
         summary: 'Track Unliked',
         detail: 'This track has been removed from your liked tracks.',
-
+        life: 3000,
       });
-      }
-    },
+    } catch (error) {
+      console.error("Error unliking track:", error);
+      this.$toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to unlike the track. Please try again.',
+        life: 3000,
+      });
+    }
+  },
+
 
     async handleEventLiked(eventId) {
       const likedEvent = this.otherEvents.find(e => e.event_id === eventId);
@@ -225,7 +274,7 @@ export default {
         severity: 'success',
         summary: 'Event Liked',
         detail: 'This event has been added to your liked events!',
-     
+        life: 3000,
       });
     },
 
@@ -255,7 +304,7 @@ export default {
 
     async getEvents() {
       try {
-        const response = await axios.get(`${this.API_BASE_URL}/events`, {
+        const response = await axios.get(`${API_BASE_URL}/events`, {
           withCredentials: true,
         });
         this.events = response.data;
@@ -266,10 +315,10 @@ export default {
 
     async getEventsByUserId() {
       try {
-        const response = await axios.get(`${this.API_BASE_URL}/me/events`, {
+        const response = await axios.get(`${API_BASE_URL}/me/events`, {
           withCredentials: true,
         });
-        this.user.events = Array.isArray(response.data) ? response.data : [];
+        this.user.events = response.data;
       } catch (err) {
         this.handleError(err, "events");
       }
@@ -277,7 +326,7 @@ export default {
 
     async getPlaylistsForUser() {
       try {
-        const response = await axios.get(`${this.API_BASE_URL}/me/playlists`, {
+        const response = await axios.get(`${API_BASE_URL}/me/playlists`, {
           withCredentials: true,
         });
         this.user.playlists = response.data;
@@ -288,38 +337,12 @@ export default {
 
     async getTracksForUser() {
       try {
-        const response = await axios.get(`${this.API_BASE_URL}/tracks/top`, {
+        const response = await axios.get(`${API_BASE_URL}/tracks/top`, {
           withCredentials: true,
         });
         this.user.tracks = response.data;
       } catch (err) {
         this.handleError(err, "tracks");
-      }
-    },
-
-    async getLikedTracks() {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
-          withCredentials: true,
-        });
-
-        // this.likedTracks = response.data;
-        // this.likedTrackIds = response.data.likedTracks.map(track => track.track_id);
-
-        const likedTracks = Array.isArray(response.data)
-          ? response.data
-          : response.data?.likedTracks ?? [];
-
-        this.likedTracks = likedTracks;
-        this.likedTrackIds = likedTracks.map(track => track.track_id);
-
-
-        console.log("Status:", response.status); // should be 200
-        console.log("Data:", response.data);     // check exact structure
-
-        console.log
-      } catch (err) {
-        this.handleError(err, "liked tracks");
       }
     },
 
@@ -338,7 +361,6 @@ export default {
           this.getEventsByUserId(),
           this.getPlaylistsForUser(),
           this.getTracksForUser(),
-          this.getLikedTracks(),
         ]);
       } finally {
         this.loading = false;
@@ -365,9 +387,62 @@ export default {
     },
   },
 
-  mounted() {
-    this.fetchEvents();
-    this.getLikedTracks();
-  },
+  async mounted() {
+  this.loading = true;
+  await Promise.all([
+    this.getTracksForUser(),
+    this.getPlaylistsForUser(),
+    this.getEventsByUserId(),
+    this.getEvents(),
+    this.refreshLikedTracks(),
+  ]);
+  this.loading = false;
+},
 };
+
+
 </script>
+
+<style scoped>
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+
+  }
+}
+
+@keyframes colorPop {
+  0% {
+    color: #000000; /* Initial color */
+  }
+  50% {
+    color: #000000; /* Midway color */
+    text-shadow: 0 0 2px #ffeb3b, 0 0 10px #ffeb3b;
+  
+  }
+  100% {
+    color: #000000; /* Final color */
+  }
+}
+
+.animate-heading {
+  animation: bounceIn 1.2s ease-out, colorPop 2s ease-in-out ;
+}
+
+.animate-subheading {
+  animation: bounceIn 1.5s ease-out, colorPop 2s ease-in-out ;
+}
+
+
+</style>

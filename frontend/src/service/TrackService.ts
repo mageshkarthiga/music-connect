@@ -142,68 +142,68 @@ export const getFavUserTracksById = async (
     throw error;
   }
 };
-
-
 // Like a track by calling the backend API
 export const likeTrack = async (trackId: number) => {
   try {
     const response = await axios.put(
-      `http://localhost:8080/likeTrack/${trackId}`, // Assuming this is the endpoint to like the track
+      `${API_BASE_URL}/likeTrack/${trackId}`,
       {}, // You can send any data if needed, like { is_liked: true }
-      { withCredentials: true } // Include credentials (cookies) if necessary
+      { withCredentials: true }
     );
 
-    // Handle the response if needed
-    if (response.status === 201) {
+    if (response.status === 201 || response.status === 200) {
       console.log("Track liked successfully:", response.data);
       return response.data;
     } else {
-      console.error("Failed to like track:", response.data);
-      throw new Error("Failed to like track");
+      console.error("Failed to like track. Server response:", response.data);
+      throw new Error("Failed to like track. Unexpected server response.");
     }
   } catch (error) {
     console.error("Error liking track:", error);
-    throw error;
+    throw error; // Re-throw the error to be handled upstream
   }
-}
+};
 
 // Unlike a track by calling the backend API
 export const unlikeTrack = async (trackId: number) => {
   try {
     const response = await axios.put(
-      `http://localhost:8080/unlikeTrack/${trackId}`, // Assuming this is the endpoint to unlike the track
+      `${API_BASE_URL}/unlikeTrack/${trackId}`,
       {},
-      { withCredentials: true } // Include credentials (cookies) if necessary
+      { withCredentials: true }
     );
 
-    // Handle the response if needed
-    if (response.status === 200) {
+    if (response.status === 200 || response.status === 201) {
       console.log("Track unliked successfully:", response.data);
       return response.data;
     } else {
-      console.error("Failed to unlike track:", response.data);
-      throw new Error("Failed to unlike track");
+      console.error("Failed to unlike track. Server response:", response.data);
+      throw new Error("Failed to unlike track. Unexpected server response.");
     }
   } catch (error) {
     console.error("Error unliking track:", error);
-    throw error;
+    throw error; // Re-throw the error to be handled upstream
   }
-}
+};
 
+// Fetch liked tracks
 export const likedTracks = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/likedTracks`, {
       withCredentials: true,
     });
-    return response.data as Track[];
-  }
-  catch (error) {
+
+    if (response.status === 200 || response.status === 201) {
+      return response.data as Track[];
+    } else {
+      console.error("Failed to fetch liked tracks. Server response:", response.data);
+      throw new Error("Failed to fetch liked tracks.");
+    }
+  } catch (error) {
     console.error("Error fetching liked tracks:", error);
-    throw error;
+    throw error; // Re-throw the error to be handled upstream
   }
 };
-
-
 
 const TrackService = {
   getTracks,

@@ -16,6 +16,8 @@ export default {
             try {
                 const data = await getRecommendedTracks();
                 this.tracks = data;
+
+                console.log('Recommended tracks:', this.tracks);
             } catch (error) {
                 console.error('Error fetching recommended tracks:', error);
             }
@@ -24,16 +26,35 @@ export default {
             this.selectedTrackUri = trackUri;
             this.$emit('track-selected', trackUri);
         },
+
+        async likedTracksHandler() {
+            try {
+        
+                const liked = await trackService.likedTracks(); 
+
+                if (!Array.isArray(liked)) {
+                    throw new Error('Invalid liked tracks data format');
+                }
+
+                this.likedTracks = new Set(liked.map(t => t.track_id));
+            } catch (error) {
+                console.error('Error initializing tracks:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async likeTrackHandler(trackId) {
             try {
                 // Like the track locally and on the server
                 this.likedTracks.add(trackId);
-                await trackService.likeTrack(trackId); // API call to like the track
                 this.$toast.add({
                     severity: 'success',
                     summary: 'Success',
                     detail: 'Track liked successfully!',
                 });
+                await trackService.likeTrack(trackId); // API call to like the track
+    
             } catch (error) {
                 console.error('Error liking track:', error);
             }
@@ -43,7 +64,7 @@ export default {
                 // Unlike the track locally and on the server
                 this.likedTracks.delete(trackId); // Correct method to remove the track from the set
                 this.$toast.add({
-                    severity: "info",
+                    severity: 'info',
                     summary: 'Success',
                     detail: 'Track unliked successfully!',
                 });
@@ -58,6 +79,7 @@ export default {
     },
     mounted() {
         this.fetchRecommendedTracks();
+        this.likedTracksHandler();
     },
 };
 </script>
@@ -85,7 +107,7 @@ export default {
                     <div class="flex gap-2">
                         <!-- Play Button -->
                         <Button icon="pi pi-play" type="button" class="p-button-text"
-                            @click="handleClick(data.track_id)"></Button>
+                            @click="handleClick(data.track_uri)"></Button>
 
                         <!-- Like/Unlike Button -->
                         <Button 

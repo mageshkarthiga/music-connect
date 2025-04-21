@@ -10,6 +10,7 @@
 - [Frontend Setup](#frontend-setup)
 - [Backend Setup](#backend-setup)
 - [Usage](#usage)
+- [Deployed Application](#deployed-application)
 
 ---
 
@@ -115,6 +116,22 @@ To set up the chat service:
 
 ---
 
+### Docker Setup for Backend
+
+You can also run the backend using Docker for each of the services mentioned above, using the following commands:
+
+```bash
+docker build -t music-connect .
+docker run -p 8080:8080 music-connect
+```
+
+```bash
+docker build -t music-connect-chat .
+docker run -p 8002:8002 music-connect-chat
+```
+
+---
+
 ### Location Service Setup
 
 This service is written in Go and provides location autocomplete functionality:
@@ -187,4 +204,21 @@ To setup:
 
 1. Start the frontend server ([see steps](#frontend-setup)).
 2. Start all required backend services ([see steps](#backend-setup)).
-3. Open the app in your browser and dive into the music-powered social world!
+3. Open the app in your browser.
+4. To use the application as a test user, you may login using the following credentials:
+
+```text
+Email: testing1@gmail.com
+Password: P@ssword123
+```
+
+5. Have fun diving into a music-powered social world!
+
+---
+
+## Deployed Application
+
+1. To view the deployed app, please visit this [link](https://music-connect-three.vercel.app/auth/login).
+2. The backend deployment links are:
+- https://music-connect-555448022527.us-central1.run.app (for the backend, excluding chat)
+- https://music-connect-chat-555448022527.us-central1.run.app (for the chat)

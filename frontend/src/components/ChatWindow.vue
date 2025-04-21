@@ -1,22 +1,18 @@
 <template>
     <div class="chat-container">
         <!-- Friend List -->
-        <!-- Friend List -->
         <div class="user-list">
-      <h3>Friends</h3>
-
-      <ul v-if="friends.length > 0">
-        <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
-            :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
-          <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
-          {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
-        </li>
-      </ul>
-
-      <div v-else>
-        <p>No friends available. Connect with friends to start chatting!✨</p>
-      </div>
-    </div>
+            <h3 class="list-title">Friends</h3>
+            <ul v-if="friends.length > 0">
+                <li v-for="friend in friends" :key="friend.user_id" @click="joinRoom(friend)"
+                    :class="{ active: currentChatUser && currentChatUser.user_id === friend.user_id }">
+                    <Avatar :image="friend.profile_photo_url || '/profile.svg'" shape="circle" size="large" />
+                    {{ friend.user_name.charAt(0).toUpperCase() + friend.user_name.slice(1) }}
+                </li>
+            </ul>
+            <div v-else>
+                <p>No friends available. Connect with friends to start chatting!✨</p>
+            </div>
         </div>
 
         <!-- Chat Rooms -->
@@ -26,22 +22,47 @@
                 <Message v-if="errorMessage" severity="error" :content="errorMessage" class="error-message" />
                 <Card class="chat-card">
                     <template #header>
-                        <h3 class="chat-header">
-                            <div class="user-info">
-                                <img class="user-avatar" :src="room.otherUserProfilePic || 'default-avatar.jpg'" alt="User's Avatar" />
-                                <span class="user-name">{{ room.otherUserName.charAt(0).toUpperCase() + room.otherUserName.slice(1) || "Loading..." }}</span>
-                            </div>
-                        </h3>
+                        <div class="chat-header">
+                            <Avatar :image="getFriendById(getOtherUserId(room.name))?.profile_photo_url || '/profile.svg'" shape="circle"
+                                size="large" class="chat-header-avatar" />
+                            <h3 class="chat-header-name">
+                                {{ room.otherUserName.charAt(0).toUpperCase() +
+                                    room.otherUserName.slice(1) || "Loading..." }}
+                            </h3>
+                        </div>
                     </template>
 
                     <template #content>
-                        <!-- Chat Content Goes Here -->
+                        <div v-if="loading" class="card-spinner-container">
+                            <i class="pi pi-spin pi-spinner card-spinner"></i>
+                        </div>
+
+                        <div class="chat-body-wrapper">
+                            <div class="chat-body" :ref="el => setChatBodyRef(room.name, el)">
+                                <div v-if="room.messages.length === 0" class="no-messages">
+                                    It's quiet here… start the conversation and share the vibes 🎧✨
+                                </div>
+                                <div v-else>
+                                    <div v-for="(message, index) in room.messages" :key="index" class="message-wrapper"
+                                        :class="{ 'sent': message.isSent, 'received': !message.isSent }">
+                                        <div class="message-bubble">
+                                            {{ message.message }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Button v-if="room.showScrollArrow" icon="pi pi-arrow-down" class="scroll-to-bottom"
+                                @click="scrollToBottom(room.name)" />
+                        </div>
                     </template>
 
                     <template #footer>
                         <div class="chat-footer">
-                            <Textarea v-model="room.newMessage" rows="2" autoResize placeholder="Type your message..." @keyup.enter.exact="sendMessage(room)" class="chat-input" />
-                            <Button icon="pi pi-send" class="p-button-rounded p-button-primary" @click="sendMessage(room)" aria-label="Send" />
+                            <Textarea v-model="room.newMessage" rows="2" autoResize placeholder="Type your message..."
+                                @keyup.enter.exact="sendMessage(room)" class="chat-input" />
+                            <Button icon="pi pi-send" class="p-button-rounded p-button-primary"
+                                @click="sendMessage(room)" aria-label="Send" />
                         </div>
                     </template>
                 </Card>
@@ -49,17 +70,15 @@
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="loading-overlay"></div>
-
+        <div v-if="loading" class="loading-overlay">
+        </div>
+    </div>
 </template>
-
 
 <script>
 import UserService from "@/service/UserService";
-import friendService from "@/service/FriendService";
 import axios from "axios";
 import FriendService from "@/service/FriendService";
-import { API_BASE_URL } from "@/service/apiConfig";
 
 export default {
     name: "ChatWindow",
@@ -75,8 +94,7 @@ export default {
                 user_id: null,
                 user_name: null,
             },
-            friends:[],
-            users: [],
+            friends: [],
             rooms: [],
             roomInput: "",
             ws: null,
@@ -93,10 +111,10 @@ export default {
         await this.fetchFriends();
 
         if (this.selectedUserId) {
-            const friend = this.friends.find(friend => friend.user_id === this.selectedUserId);
+            const user = this.friends.find(user => user.firebase_uid === this.selectedUserId);
 
-            if (friend) {
-                this.joinRoom(friend);
+            if (user) {
+                this.joinRoom(user);
             } else {
                 console.warn(`User with ID ${this.selectedUserId} not found in chat history.`);
 
@@ -104,7 +122,6 @@ export default {
                     const response = await UserService.getUserByFirebaseUID(this.selectedUserId);
                     if (response) {
                         this.friends.push(response);
-
                         this.joinRoom(response);
                     } else {
                         console.warn(`Unable to fetch details for user ID ${this.selectedUserId}`);
@@ -127,33 +144,6 @@ export default {
                 console.error("Error getting user:", error);
             }
         },
-
-        async getFriends() {
-        // Add your logic to fetch friends here
-        console.log("Fetching friends...");
-        // Example: fetch friends data from API
-        try {
-            const response = await friendService.getFriends(this.currentUser.user_id);
-            this.users = response.data;
-        } catch (error) {
-            console.error("Error fetching friends:", error);
-        }
-        },
-        async fetchFriends() {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/friends`, {
-                    withCredentials: true,
-                });
-                this.friends = response.data;
-
-                console.log("Fetched friends:", this.friends);
-            } catch (error) {
-                console.error("Error fetching friends:", error);
-                this.errorMessage = "Failed to load friends. Please try again later.";
-            }
-        },
-
-
         async getOtherUsers(userID) {
             try {
                 const response = await UserService.getUserByFirebaseUID(userID);
@@ -273,7 +263,6 @@ export default {
                 messages: [],
                 newMessage: '',
                 otherUserName: user.user_name || "Loading...",
-                otherUserProfilePic: user.profile_photo_url || "/profile.svg",
                 showScrollArrow: false,
             };
 
@@ -385,54 +374,6 @@ export default {
 </script>
 
 <style scoped>
-:root {
-    --primary-bg-light: #ffffff;
-    --primary-bg-dark: #1f1f1f;
-    --secondary-bg-light: #f5f5f5;
-    --secondary-bg-dark: #333333;
-    --text-light: #343a40;
-    --text-dark: #f5f5f5;
-    --border-light: #eee;
-    --border-dark: #555555;
-    --button-bg-light: #007bff;
-    --button-bg-dark: #0066cc;
-    --message-sent-light: #ffffff;
-    --message-sent-dark: rgba(0, 123, 255, 0.5);
-    --message-received-light: #ffffff;
-    --message-received-dark: #444444;
-}
-
-.chat-header {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0;
-    background-color: var(--secondary-bg-light);
-    border-radius: 8px 8px 0 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-avatar {
-    width: 30px;   /* Smaller size */
-    height: 30px;  /* Smaller size */
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ddd;
-}
-
-.user-name {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--text-light);
-}
-
-
 .chat-container {
     display: flex;
     max-width: 900px;
@@ -477,7 +418,7 @@ export default {
 
 
 .user-list li.active {
-    background-color: var(--message-sent-light);
+    background-color: #d1e7dd;
 }
 
 .user-list h3 {
@@ -559,15 +500,15 @@ export default {
 }
 
 .message-wrapper.sent .message-bubble {
-    background-color: var(--message-sent-light);
-    color: var(--text-light);
-    border: 1px solid var(--border-light);
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
 }
 
 .message-wrapper.received .message-bubble {
-    background-color: var(--message-received-light);
-    color: var(--text-light);
-    border: 1px solid var(--border-light);
+    background-color: #ffffff;
+    color: #343a40;
+    border: 1px solid #dee2e6;
 }
 
 .message-sender {
@@ -589,7 +530,7 @@ export default {
     align-items: flex-end;
     gap: 0.5rem;
     padding: 1rem;
-    background-color: var(--secondary-bg-light);
+    background-color: #f5f5f5;
     border-radius: 0 0 8px 8px;
 }
 
@@ -642,67 +583,5 @@ export default {
     width: 2.5rem;
     height: 2.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: var(--primary-bg-dark);
-        color: var(--text-dark);
-    }
-
-    .chat-container {
-        background-color: var(--primary-bg-dark);
-    }
-
-    .user-list {
-        background-color: var(--primary-bg-dark);
-        border: 1px solid var(--border-dark);
-    }
-
-    .user-list li:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    
-    .user-list li.active {
-        background-color: rgba(255, 255, 255, 0.1);
-
-    }
-
-    .chat-card {
-        background-color: var(--secondary-bg-dark);
-        border: 1px solid var(--border-dark);
-    }
-
-    .chat-header {
-        background-color: var(--secondary-bg-dark);
-    }
-
-    .chat-body {
-        background-color: var(--secondary-bg-dark);
-    }
-
-    .message-wrapper.sent .message-bubble {
-        background-color: var(--message-sent-dark);
-        color: var(--text-dark);
-        border: 1px;
-        border-color: var(--border-dark);
-    }
-
-    .message-wrapper.received .message-bubble {
-        background-color: var(--message-received-dark);
-        color: var(--text-dark);
-        border: 1px solid var(--border-dark);
-    }
-
-    .user-list li.active {
-        background-color: rgba(0, 0, 0, 0.1);
-    }
-
-    .chat-footer {
-        background-color: var(--secondary-bg-dark);
-        color: var(--text-dark);
-    }
 }
 </style>
