@@ -9,6 +9,7 @@ export default {
             tracks: null,
             selectedTrackUri: null,
             likedTracks: new Set(), // to store liked track IDs
+            loading: true, // to manage loading state
         };
     },
     methods: {
@@ -16,6 +17,7 @@ export default {
             try {
                 const data = await getRecommendedTracks();
                 this.tracks = data;
+                this.loading = false; // Set loading to false after fetching data
 
                 console.log('Recommended tracks:', this.tracks);
             } catch (error) {
@@ -86,7 +88,7 @@ export default {
 
 <template>
     <div class="card">
-        <DataTable :value="tracks" :rows="5" :paginator="true" responsiveLayout="scroll">
+        <DataTable :value="tracks" :rows="5" :paginator="true" :loading="loading" responsiveLayout="scroll">
             <Column field="title" header="Title" style="width: 50%">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
