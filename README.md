@@ -218,7 +218,7 @@ Password: P@ssword123
 
 ## Deployed Application
 
-1. To view the deployed app, please visit this [link](https://music-connect-three.vercel.app/auth/login).
+1. To view the deployed app, please visit this [link](https://music-connect-five.vercel.app/auth/login).
 2. The backend deployment links are:
 - https://music-connect-555448022527.us-central1.run.app (for the backend, excluding chat)
 - https://music-connect-chat-555448022527.us-central1.run.app (for the chat)
